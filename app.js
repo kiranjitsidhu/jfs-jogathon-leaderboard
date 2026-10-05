@@ -233,7 +233,7 @@ function initDonationIframe() {
 // ==========================================================
 function calculateAndRender() {
   renderHeaderStats();
-  populateTeacherFilterOptions();
+  populateFilterOptions();
   renderOverallTab();
   renderWeeklyTab();
   renderClassesTab();
@@ -260,25 +260,41 @@ function renderHeaderStats() {
     amountRemainingText.textContent = remaining > 0 ? `${formatCurrency(remaining)} remaining` : '🎉 Goal Met!';
   }
 
-  // Top Individual
+  // Top Individual (with tie handling)
   const sortedStudents = [...state.students].sort((a, b) => b.total - a.total);
-  const topStudent = sortedStudents[0];
+  const maxStudentTotal = sortedStudents[0]?.total || 0;
+  const topStudents = sortedStudents.filter(s => s.total === maxStudentTotal && s.total > 0);
   const topStudentText = document.getElementById('topStudentText');
   const topStudentSub = document.getElementById('topStudentSub');
-  if (topStudent && topStudentText) {
-    topStudentText.textContent = formatStudentName(topStudent.name);
-    topStudentSub.textContent = `${formatCurrency(topStudent.total)} (${topStudent.teacher})`;
+
+  if (topStudents.length > 1) {
+    topStudentText.textContent = `Tied: ${topStudents.map(s => formatStudentName(s.name)).join(' & ')}`;
+    topStudentSub.textContent = `${formatCurrency(maxStudentTotal)} each (${topStudents.length} tied)`;
+  } else if (topStudents.length === 1) {
+    topStudentText.textContent = formatStudentName(topStudents[0].name);
+    topStudentSub.textContent = `${formatCurrency(topStudents[0].total)} (${topStudents[0].teacher})`;
+  } else {
+    topStudentText.textContent = '-';
+    topStudentSub.textContent = 'Awaiting donations';
   }
 
-  // Top Class
+  // Top Class (with tie handling)
   const classMap = aggregateClasses();
   const sortedClasses = Object.values(classMap).sort((a, b) => b.total - a.total);
-  const topClass = sortedClasses[0];
+  const maxClassTotal = sortedClasses[0]?.total || 0;
+  const topClasses = sortedClasses.filter(c => c.total === maxClassTotal && c.total > 0);
   const leadingClassText = document.getElementById('leadingClassText');
   const leadingClassSub = document.getElementById('leadingClassSub');
-  if (topClass && leadingClassText) {
-    leadingClassText.textContent = topClass.teacher;
-    leadingClassSub.textContent = `${formatCurrency(topClass.total)} (${topClass.count} students)`;
+
+  if (topClasses.length > 1) {
+    leadingClassText.textContent = `Tied: ${topClasses.map(c => c.teacher).join(' & ')}`;
+    leadingClassSub.textContent = `${formatCurrency(maxClassTotal)} each (${topClasses.length} classes tied)`;
+  } else if (topClasses.length === 1) {
+    leadingClassText.textContent = topClasses[0].teacher;
+    leadingClassSub.textContent = `${formatCurrency(topClasses[0].total)} (${topClasses[0].count} students)`;
+  } else {
+    leadingClassText.textContent = '-';
+    leadingClassSub.textContent = 'Awaiting donations';
   }
 }
 
@@ -311,46 +327,93 @@ function aggregateClasses() {
 }
 
 // ==========================================================
-// OVERALL INDIVIDUAL TAB
+// OVERALL INDIVIDUAL TAB (With Tied Co-Leader Display)
 // ==========================================================
 function renderOverallTab() {
   const sorted = [...state.students].sort((a, b) => b.total - a.total);
-
-  // Render Podium for Top 3
   const podiumEl = document.getElementById('individualPodium');
+
   if (podiumEl) {
-    const first = sorted[0];
-    const second = sorted[1];
-    const third = sorted[2];
+    const positiveStudents = sorted.filter(s => s.total > 0);
+    const distinctAmounts = Array.from(new Set(positiveStudents.map(s => s.total))).sort((a, b) => b - a);
 
-    podiumEl.innerHTML = `
-      ${second ? `
-        <div class="podium-card rank-2">
-          <div class="podium-badge">🥈</div>
-          <div class="podium-name">${formatStudentName(second.name)}</div>
-          <div class="podium-meta">Grade ${second.grade} &bull; ${second.teacher}</div>
-          <div class="podium-amount">${formatCurrency(second.total)}</div>
+    if (distinctAmounts.length === 0) {
+      podiumEl.innerHTML = `
+        <div class="podium-card" style="flex: 1; max-width: 500px; padding: 28px;">
+          <div class="podium-badge">🐾</div>
+          <div class="podium-name">Fundraising In Progress!</div>
+          <div class="podium-meta">Top student fundraisers will appear here as donations arrive.</div>
         </div>
-      ` : ''}
+      `;
+    } else {
+      const firstTier = positiveStudents.filter(s => s.total === distinctAmounts[0]);
 
-      ${first ? `
-        <div class="podium-card rank-1">
-          <div class="podium-badge">🥇</div>
-          <div class="podium-name">${formatStudentName(first.name)}</div>
-          <div class="podium-meta">Grade ${first.grade} &bull; ${first.teacher}</div>
-          <div class="podium-amount">${formatCurrency(first.total)}</div>
-        </div>
-      ` : ''}
+      // If multiple students tie for 1st place!
+      if (firstTier.length > 1) {
+        let html = firstTier.map(s => `
+          <div class="podium-card tied-co-leader">
+            <div class="podium-badge" style="background: linear-gradient(135deg, #ffd700 0%, #ffae00 100%);">🥇</div>
+            <div class="podium-name">${formatStudentName(s.name)}</div>
+            <div class="podium-meta">Grade ${s.grade} &bull; ${s.teacher}</div>
+            <div class="podium-amount" style="color: #b45309;">${formatCurrency(s.total)}</div>
+            <span class="co-leader-pill">🥇 Tied for 1st</span>
+          </div>
+        `).join('');
 
-      ${third ? `
-        <div class="podium-card rank-3">
-          <div class="podium-badge">🥉</div>
-          <div class="podium-name">${formatStudentName(third.name)}</div>
-          <div class="podium-meta">Grade ${third.grade} &bull; ${third.teacher}</div>
-          <div class="podium-amount">${formatCurrency(third.total)}</div>
-        </div>
-      ` : ''}
-    `;
+        // If there's a 3rd distinct runner-up, show them
+        if (distinctAmounts.length > 1 && firstTier.length === 2) {
+          const secondTier = positiveStudents.filter(s => s.total === distinctAmounts[1]);
+          if (secondTier.length > 0) {
+            const runnerUp = secondTier[0];
+            html += `
+              <div class="podium-card rank-3">
+                <div class="podium-badge">🥉</div>
+                <div class="podium-name">${formatStudentName(runnerUp.name)}</div>
+                <div class="podium-meta">Grade ${runnerUp.grade} &bull; ${runnerUp.teacher}</div>
+                <div class="podium-amount">${formatCurrency(runnerUp.total)}</div>
+                <span class="co-leader-pill" style="background: #ffedd5; color: #9a3412;">3rd Place</span>
+              </div>
+            `;
+          }
+        }
+        podiumEl.innerHTML = html;
+      } else {
+        // Single 1st place student: Olympic 2-1-3 layout
+        const first = firstTier[0];
+        const secondTier = distinctAmounts.length > 1 ? positiveStudents.filter(s => s.total === distinctAmounts[1]) : [];
+        const second = secondTier[0];
+        const thirdTier = distinctAmounts.length > 2 ? positiveStudents.filter(s => s.total === distinctAmounts[2]) : [];
+        const third = thirdTier[0];
+
+        podiumEl.innerHTML = `
+          ${second ? `
+            <div class="podium-card rank-2">
+              <div class="podium-badge">🥈</div>
+              <div class="podium-name">${formatStudentName(second.name)}</div>
+              <div class="podium-meta">Grade ${second.grade} &bull; ${second.teacher}</div>
+              <div class="podium-amount">${formatCurrency(second.total)}</div>
+              ${secondTier.length > 1 ? `<span class="co-leader-pill" style="background:#f1f5f9; color:#475569;">🥈 Tied for 2nd</span>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="podium-card rank-1">
+            <div class="podium-badge">🥇</div>
+            <div class="podium-name">${formatStudentName(first.name)}</div>
+            <div class="podium-meta">Grade ${first.grade} &bull; ${first.teacher}</div>
+            <div class="podium-amount">${formatCurrency(first.total)}</div>
+          </div>
+
+          ${third ? `
+            <div class="podium-card rank-3">
+              <div class="podium-badge">🥉</div>
+              <div class="podium-name">${formatStudentName(third.name)}</div>
+              <div class="podium-meta">Grade ${third.grade} &bull; ${third.teacher}</div>
+              <div class="podium-amount">${formatCurrency(third.total)}</div>
+            </div>
+          ` : ''}
+        `;
+      }
+    }
   }
 
   // Filter and populate table
@@ -369,9 +432,9 @@ function filterStudents() {
   const sortOrder = sortSelect ? sortSelect.value : 'total_desc';
 
   let list = state.students.filter(s => {
-    const matchesSearch = !query || 
-      s.name.toLowerCase().includes(query) || 
-      s.teacher.toLowerCase().includes(query) || 
+    const matchesSearch = !query ||
+      s.name.toLowerCase().includes(query) ||
+      s.teacher.toLowerCase().includes(query) ||
       String(s.grade).toLowerCase().includes(query);
 
     const matchesGrade = selectedGrade === 'ALL' || String(s.grade).toUpperCase() === selectedGrade.toUpperCase();
@@ -409,18 +472,23 @@ function filterStudents() {
     return;
   }
 
-  // Find natural rank among all students for consistent badge numbering
+  // Standard competition ranking with ties (1, 1, 3...)
+  const sortedAll = [...state.students].sort((a, b) => b.total - a.total);
   const allRankedMap = new Map();
-  [...state.students].sort((a, b) => b.total - a.total).forEach((s, idx) => {
-    allRankedMap.set(s.name, idx + 1);
-  });
+  let currentRank = 1;
+  for (let i = 0; i < sortedAll.length; i++) {
+    if (i > 0 && sortedAll[i].total < sortedAll[i - 1].total) {
+      currentRank = i + 1;
+    }
+    allRankedMap.set(sortedAll[i].name, currentRank);
+  }
 
   tbody.innerHTML = list.map(student => {
     const rank = allRankedMap.get(student.name) || '-';
     let rankBadgeClass = 'normal';
-    if (rank === 1) rankBadgeClass = 'top-1';
-    else if (rank === 2) rankBadgeClass = 'top-2';
-    else if (rank === 3) rankBadgeClass = 'top-3';
+    if (rank === 1 && student.total > 0) rankBadgeClass = 'top-1';
+    else if (rank === 2 && student.total > 0) rankBadgeClass = 'top-2';
+    else if (rank === 3 && student.total > 0) rankBadgeClass = 'top-3';
 
     return `
       <tr>
@@ -441,19 +509,28 @@ function filterStudents() {
   }).join('');
 }
 
-function populateTeacherFilterOptions() {
+function populateFilterOptions() {
+  // 1. Grade Select (Strictly unique grades in active roster)
+  const gradeSelect = document.getElementById('gradeFilterSelect');
+  if (gradeSelect) {
+    const currentGrade = gradeSelect.value;
+    const grades = Array.from(new Set(state.students.map(s => s.grade))).filter(Boolean).sort();
+    gradeSelect.innerHTML = `<option value="ALL">All Grades (${grades.length})</option>` +
+      grades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g.toLowerCase().startsWith('grade') ? g : 'Grade ' + g}</option>`).join('');
+  }
+
+  // 2. Teacher Select (Strictly unique teachers in active roster)
   const teacherSelect = document.getElementById('teacherFilterSelect');
-  if (!teacherSelect) return;
-
-  const currentVal = teacherSelect.value;
-  const teachers = Array.from(new Set(state.students.map(s => s.teacher))).sort();
-
-  teacherSelect.innerHTML = `<option value="ALL">All Teachers</option>` +
-    teachers.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
+  if (teacherSelect) {
+    const currentTeacher = teacherSelect.value;
+    const teachers = Array.from(new Set(state.students.map(s => s.teacher))).filter(Boolean).sort();
+    teacherSelect.innerHTML = `<option value="ALL">All Teachers (${teachers.length})</option>` +
+      teachers.map(t => `<option value="${t}" ${t === currentTeacher ? 'selected' : ''}>${t}</option>`).join('');
+  }
 }
 
 // ==========================================================
-// WEEKLY LEADERS TAB
+// WEEKLY LEADERS TAB (With Tie Handling)
 // ==========================================================
 function renderWeeklyTab() {
   const weekNum = state.activeWeek;
@@ -463,25 +540,57 @@ function renderWeeklyTab() {
   const sortedWeekly = [...state.students].sort((a, b) => b[weekKey] - a[weekKey]);
   const weeklyTotal = state.students.reduce((acc, s) => acc + s[weekKey], 0);
 
-  // Active Week Spotlight
-  const topWeekly = sortedWeekly[0];
+  // Active Week Spotlight (With tie handling)
+  const maxWeekly = sortedWeekly[0]?.[weekKey] || 0;
+  const topWeeklyStudents = sortedWeekly.filter(s => s[weekKey] === maxWeekly && s[weekKey] > 0);
   const spotlightEl = document.getElementById('weekSpotlightCard');
-  if (spotlightEl && topWeekly) {
-    spotlightEl.innerHTML = `
-      <div class="spotlight-left">
-        <div class="spotlight-trophy">🐆</div>
-        <div>
-          <div class="spotlight-meta-label">🏆 ${weekLabel} Leading Fundraiser</div>
-          <div class="spotlight-leader-name">${formatStudentName(topWeekly.name)}</div>
-          <div class="spotlight-meta-sub">Grade ${topWeekly.grade} &bull; ${topWeekly.teacher}</div>
+
+  if (spotlightEl) {
+    if (topWeeklyStudents.length === 0) {
+      spotlightEl.innerHTML = `
+        <div class="spotlight-left">
+          <div class="spotlight-trophy">🐾</div>
+          <div>
+            <div class="spotlight-meta-label">${weekLabel} Leaderboard</div>
+            <div class="spotlight-leader-name">Awaiting ${weekLabel} donations</div>
+            <div class="spotlight-meta-sub">Donations recorded for this week will show up here!</div>
+          </div>
         </div>
-      </div>
-      <div class="spotlight-stats">
-        <div class="spotlight-meta-label">${weekLabel} Raised</div>
-        <div class="spotlight-amount">${formatCurrency(topWeekly[weekKey])}</div>
-        <div class="spotlight-sub">Total across all weeks: ${formatCurrency(topWeekly.total)}</div>
-      </div>
-    `;
+      `;
+    } else if (topWeeklyStudents.length > 1) {
+      spotlightEl.innerHTML = `
+        <div class="spotlight-left">
+          <div class="spotlight-trophy">🐆</div>
+          <div>
+            <div class="spotlight-meta-label">🏆 ${weekLabel} Co-Leaders (Tied)</div>
+            <div class="spotlight-leader-name">${topWeeklyStudents.map(s => formatStudentName(s.name)).join(' & ')}</div>
+            <div class="spotlight-meta-sub">${topWeeklyStudents.map(s => `Grade ${s.grade} (${s.teacher})`).join(' &bull; ')}</div>
+          </div>
+        </div>
+        <div class="spotlight-stats">
+          <div class="spotlight-meta-label">${weekLabel} Raised</div>
+          <div class="spotlight-amount">${formatCurrency(maxWeekly)}</div>
+          <div class="spotlight-sub">Tied for 1st this week!</div>
+        </div>
+      `;
+    } else {
+      const topWeekly = topWeeklyStudents[0];
+      spotlightEl.innerHTML = `
+        <div class="spotlight-left">
+          <div class="spotlight-trophy">🐆</div>
+          <div>
+            <div class="spotlight-meta-label">🏆 ${weekLabel} Leading Fundraiser</div>
+            <div class="spotlight-leader-name">${formatStudentName(topWeekly.name)}</div>
+            <div class="spotlight-meta-sub">Grade ${topWeekly.grade} &bull; ${topWeekly.teacher}</div>
+          </div>
+        </div>
+        <div class="spotlight-stats">
+          <div class="spotlight-meta-label">${weekLabel} Raised</div>
+          <div class="spotlight-amount">${formatCurrency(topWeekly[weekKey])}</div>
+          <div class="spotlight-sub">Total across all weeks: ${formatCurrency(topWeekly.total)}</div>
+        </div>
+      `;
+    }
   }
 
   // Update card heading
@@ -493,17 +602,21 @@ function renderWeeklyTab() {
   if (badgeRaised) badgeRaised.textContent = `${formatCurrency(weeklyTotal)} Raised in ${weekLabel}`;
   if (colHead) colHead.textContent = `${weekLabel} Amount`;
 
-  // Weekly Table (Top 10)
+  // Weekly Table (Top 15 with competition ranking)
   const tbody = document.getElementById('weeklyTableBody');
   if (!tbody) return;
 
-  const top10 = sortedWeekly.slice(0, 15);
-  tbody.innerHTML = top10.map((student, idx) => {
-    const rank = idx + 1;
+  const top15 = sortedWeekly.slice(0, 15);
+  let currentRank = 1;
+  tbody.innerHTML = top15.map((student, idx) => {
+    if (idx > 0 && student[weekKey] < top15[idx - 1][weekKey]) {
+      currentRank = idx + 1;
+    }
+    const rank = currentRank;
     let badgeClass = 'normal';
-    if (rank === 1) badgeClass = 'top-1';
-    else if (rank === 2) badgeClass = 'top-2';
-    else if (rank === 3) badgeClass = 'top-3';
+    if (rank === 1 && student[weekKey] > 0) badgeClass = 'top-1';
+    else if (rank === 2 && student[weekKey] > 0) badgeClass = 'top-2';
+    else if (rank === 3 && student[weekKey] > 0) badgeClass = 'top-3';
 
     return `
       <tr>
@@ -521,16 +634,24 @@ function renderWeeklyTab() {
 }
 
 // ==========================================================
-// CLASSES & TEACHERS TAB
+// CLASSES & TEACHERS TAB (With Tied Class Handling & Dynamic Grades)
 // ==========================================================
 function renderClassesTab() {
   const classMap = aggregateClasses();
   const sortedClasses = Object.values(classMap).sort((a, b) => b.total - a.total);
   const classesGrid = document.getElementById('classesGrid');
 
+  const maxClassTotal = sortedClasses[0]?.total || 0;
+  const topClasses = sortedClasses.filter(c => c.total === maxClassTotal && c.total > 0);
+  const isTied = topClasses.length > 1;
+
   if (classesGrid) {
+    let currentRank = 1;
     classesGrid.innerHTML = sortedClasses.map((cls, idx) => {
-      const isTop = idx === 0;
+      if (idx > 0 && cls.total < sortedClasses[idx - 1].total) {
+        currentRank = idx + 1;
+      }
+      const isTop = cls.total === maxClassTotal && cls.total > 0;
       return `
         <div class="class-card ${isTop ? 'top-class' : ''}">
           <div>
@@ -539,7 +660,7 @@ function renderClassesTab() {
                 <h4 class="class-teacher-name">${cls.teacher}</h4>
                 <span class="class-grade-tag">Grade ${cls.grade}</span>
               </div>
-              ${isTop ? '<span class="class-trophy-tag">🏆 #1 Class</span>' : `<span class="rank-badge normal">#${idx + 1}</span>`}
+              ${isTop ? `<span class="class-trophy-tag">🏆 ${isTied ? 'Tied for #1 Class' : '#1 Class'}</span>` : `<span class="rank-badge normal">#${currentRank}</span>`}
             </div>
 
             <div class="class-raised-amount">${formatCurrency(cls.total)}</div>
@@ -548,14 +669,14 @@ function renderClassesTab() {
 
           <div class="class-metrics-row">
             <span><strong>${cls.count}</strong> Participating Students</span>
-            <span>Week 3: <strong>${formatCurrency(cls.week3)}</strong></span>
+            <span>Week 1: <strong>${formatCurrency(cls.week1)}</strong></span>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  // Grade Breakdown summary
+  // Grade Breakdown summary (Strictly dynamically from roster!)
   const gradeMap = {};
   state.students.forEach(s => {
     gradeMap[s.grade] = (gradeMap[s.grade] || 0) + s.total;
@@ -563,26 +684,30 @@ function renderClassesTab() {
 
   const gradeGrid = document.getElementById('gradeBarsGrid');
   if (gradeGrid) {
-    const gradesOrder = ['K', '1', '2', '3', '4', '5', '6'];
+    const uniqueGrades = Array.from(new Set(state.students.map(s => s.grade))).filter(Boolean).sort();
     const maxGradeAmount = Math.max(...Object.values(gradeMap), 1);
 
-    gradeGrid.innerHTML = gradesOrder.map(grade => {
-      const amount = gradeMap[grade] || 0;
-      const pct = Math.round((amount / maxGradeAmount) * 100);
-      const label = grade === 'K' ? 'Kindergarten' : `Grade ${grade}`;
+    if (uniqueGrades.length === 0) {
+      gradeGrid.innerHTML = `<p style="color:var(--gray-500); padding: 12px;">No grades loaded in roster.</p>`;
+    } else {
+      gradeGrid.innerHTML = uniqueGrades.map(grade => {
+        const amount = gradeMap[grade] || 0;
+        const pct = Math.round((amount / maxGradeAmount) * 100);
+        const label = grade.toLowerCase().startsWith('grade') ? grade : `Grade ${grade}`;
 
-      return `
-        <div class="grade-bar-item">
-          <div class="grade-bar-title">
-            <span>${label}</span>
-            <span>${formatCurrency(amount)}</span>
+        return `
+          <div class="grade-bar-item">
+            <div class="grade-bar-title">
+              <span>${label}</span>
+              <span>${formatCurrency(amount)}</span>
+            </div>
+            <div class="grade-bar-track">
+              <div class="grade-bar-fill" style="width: ${pct}%;"></div>
+            </div>
           </div>
-          <div class="grade-bar-track">
-            <div class="grade-bar-fill" style="width: ${pct}%;"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    }
   }
 }
 

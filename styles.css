@@ -593,6 +593,27 @@ body {
   padding-bottom: 28px;
 }
 
+.podium-card.tied-co-leader {
+  order: unset !important;
+  border-color: var(--accent-gold);
+  background: linear-gradient(180deg, #fffcf0 0%, #ffffff 100%);
+  box-shadow: 0 12px 24px rgba(255, 184, 0, 0.18);
+  padding-top: 30px;
+  padding-bottom: 26px;
+}
+
+.co-leader-pill {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  display: inline-block;
+}
+
 .podium-card.rank-2 {
   border-color: #cbd5e1;
   order: 1;

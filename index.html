@@ -46,10 +46,6 @@
         <button class="btn btn-secondary" onclick="switchTab('event')">
           <span class="btn-icon">🤝</span> Volunteer Sign-Up
         </button>
-        <!-- Admin button is hidden from public view. Visible only via ?admin=true or 3 clicks on mascot -->
-        <button class="btn btn-outline" id="openAdminBtn" onclick="openAdminModal()" style="display: none;">
-          <span class="btn-icon">⚙️</span> Organizer Portal
-        </button>
       </div>
     </div>
   </header>
@@ -155,14 +151,7 @@
         <div class="filter-group">
           <label for="gradeFilterSelect" class="sr-only">Filter by Grade</label>
           <select id="gradeFilterSelect" onchange="filterStudents()">
-            <option value="ALL">All Grades (K - 6)</option>
-            <option value="K">Kindergarten</option>
-            <option value="1">1st Grade</option>
-            <option value="2">2nd Grade</option>
-            <option value="3">3rd Grade</option>
-            <option value="4">4th Grade</option>
-            <option value="5">5th Grade</option>
-            <option value="6">6th Grade</option>
+            <option value="ALL">All Grades</option>
           </select>
 
           <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
