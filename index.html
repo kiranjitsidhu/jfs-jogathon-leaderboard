@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JFS PTA Jog-a-Thon Leaderboard | James Franklin Smith Elementary</title>
+  <meta name="description" content="Live donation leaderboard, class rankings, and weekly stats for the James Franklin Smith (JFS) Elementary PTA Jog-a-Thon.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <aside class="announcement-bar">
+    <div class="container bar-content">
+      <span class="badge pulse-badge">🐾 GO JAGUARS!</span>
+      <span>Culmination Celebration & Run Day on <strong>Friday, Nov 13th!</strong></span>
+      <a href="#donate" class="bar-link" onclick="switchTab('donate')">Donate Now &rarr;</a>
+    </div>
+  </aside>
+
+  <!-- Hero & School Header -->
+  <header class="hero-header">
+    <div class="container hero-container">
+      <div class="hero-brand">
+        <div class="brand-crest">
+          <div class="crest-circle">
+            <span class="crest-icon">🐆</span>
+          </div>
+          <div class="crest-paw paw-1">🐾</div>
+          <div class="crest-paw paw-2">🐾</div>
+        </div>
+        <div class="brand-text">
+          <div class="sub-label">James Franklin Smith Elementary PTA</div>
+          <h1 class="main-title">JOG-A-THON <span>LEADERBOARD</span></h1>
+          <p class="tagline">Supporting our Jaguars! Every bit of help, large or small, makes a huge impact.</p>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="switchTab('donate')">
+          <span class="btn-icon">💛</span> Donate Now
+        </button>
+        <button class="btn btn-secondary" onclick="switchTab('event')">
+          <span class="btn-icon">🤝</span> Volunteer Sign-Up
+        </button>
+        <button class="btn btn-outline" id="openAdminBtn" onclick="openAdminModal()">
+          <span class="btn-icon">⚙️</span> Data & Settings
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Campaign Stats Banner -->
+  <section class="stats-ribbon">
+    <div class="container ribbon-grid">
+      <!-- Thermometer Progress -->
+      <div class="ribbon-card goal-card">
+        <div class="card-header-flex">
+          <div>
+            <div class="card-caption">Total Raised So Far</div>
+            <div class="stat-highlight" id="totalRaisedText">$0</div>
+          </div>
+          <div class="goal-target-wrap">
+            <span class="target-label">School Goal:</span>
+            <span class="target-amount" id="schoolGoalText">$45,000</span>
+          </div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="goalProgressBar" style="width: 0%;">
+            <div class="progress-shimmer"></div>
+          </div>
+        </div>
+        <div class="progress-meta">
+          <span id="percentGoalText">0% of target reached</span>
+          <span id="amountRemainingText">$45,000 remaining</span>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="ribbon-card metric-card">
+        <div class="metric-icon gold">🏆</div>
+        <div>
+          <div class="metric-label">Leading Class</div>
+          <div class="metric-value" id="leadingClassText">-</div>
+          <div class="metric-sub" id="leadingClassSub">-</div>
+        </div>
+      </div>
+
+      <div class="ribbon-card metric-card">
+        <div class="metric-icon blue">🌟</div>
+        <div>
+          <div class="metric-label">Top Fundraiser</div>
+          <div class="metric-value" id="topStudentText">-</div>
+          <div class="metric-sub" id="topStudentSub">-</div>
+        </div>
+      </div>
+
+      <div class="ribbon-card metric-card">
+        <div class="metric-icon coral">⏱️</div>
+        <div>
+          <div class="metric-label">Countdown</div>
+          <div class="metric-value countdown-digits" id="countdownDaysText">--</div>
+          <div class="metric-sub">Until Big Run Day (Nov 13)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Application Wrapper -->
+  <main class="container main-content">
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav" aria-label="Leaderboard views">
+      <button class="tab-btn active" id="tabBtn-overall" onclick="switchTab('overall')">
+        <span class="tab-emoji">🏆</span> Overall Students
+      </button>
+      <button class="tab-btn" id="tabBtn-weekly" onclick="switchTab('weekly')">
+        <span class="tab-emoji">📅</span> Weekly Leaders
+      </button>
+      <button class="tab-btn" id="tabBtn-classes" onclick="switchTab('classes')">
+        <span class="tab-emoji">🏫</span> Classes & Teachers
+      </button>
+      <button class="tab-btn" id="tabBtn-donate" onclick="switchTab('donate')">
+        <span class="tab-emoji">💛</span> Donate Page
+      </button>
+      <button class="tab-btn" id="tabBtn-event" onclick="switchTab('event')">
+        <span class="tab-emoji">📋</span> Event & Volunteer
+      </button>
+    </nav>
+
+    <!-- TAB 1: OVERALL INDIVIDUAL LEADERS -->
+    <section id="tabContent-overall" class="tab-panel active">
+      <!-- Podium for Top 3 -->
+      <div class="podium-section">
+        <h2 class="section-title">Top Individual Fundraisers</h2>
+        <p class="section-subtitle">A huge jaguar shout-out to all our amazing students running and raising funds!</p>
+        
+        <div class="podium-wrapper" id="individualPodium">
+          <!-- Dynamically populated 2nd, 1st, 3rd -->
+        </div>
+      </div>
+
+      <!-- Controls: Search, Filters, Privacy Mode -->
+      <div class="controls-toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="studentSearchInput" placeholder="Search student name, teacher, or grade..." oninput="filterStudents()">
+        </div>
+
+        <div class="filter-group">
+          <label for="gradeFilterSelect" class="sr-only">Filter by Grade</label>
+          <select id="gradeFilterSelect" onchange="filterStudents()">
+            <option value="ALL">All Grades (K - 6)</option>
+            <option value="K">Kindergarten</option>
+            <option value="1">1st Grade</option>
+            <option value="2">2nd Grade</option>
+            <option value="3">3rd Grade</option>
+            <option value="4">4th Grade</option>
+            <option value="5">5th Grade</option>
+            <option value="6">6th Grade</option>
+          </select>
+
+          <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
+          <select id="teacherFilterSelect" onchange="filterStudents()">
+            <option value="ALL">All Teachers</option>
+          </select>
+
+          <label for="sortOrderSelect" class="sr-only">Sort by</label>
+          <select id="sortOrderSelect" onchange="filterStudents()">
+            <option value="total_desc">Highest Total ($)</option>
+            <option value="name_asc">Student Name (A-Z)</option>
+            <option value="week3_desc">Week 3 ($)</option>
+            <option value="week2_desc">Week 2 ($)</option>
+            <option value="week1_desc">Week 1 ($)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="data-table" id="studentsTable">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Rank</th>
+                <th>Student</th>
+                <th>Grade</th>
+                <th>Teacher</th>
+                <th class="num-col">Week 1</th>
+                <th class="num-col">Week 2</th>
+                <th class="num-col">Week 3</th>
+                <th class="num-col highlight-head">Total Raised</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer" id="studentsTableFooter">
+          Showing <span id="visibleStudentCount">0</span> students
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 2: WEEKLY LEADERS -->
+    <section id="tabContent-weekly" class="tab-panel">
+      <div class="weekly-header">
+        <div>
+          <h2 class="section-title">Weekly Sprint Leaders</h2>
+          <p class="section-subtitle">Tracking weekly momentum across each stage of our 3-week Jog-a-Thon campaign!</p>
+        </div>
+
+        <!-- Week Sub Tabs -->
+        <div class="week-pills" role="tablist">
+          <button class="pill-btn active" id="weekPill-1" onclick="selectWeeklyTab(1)">Week 1 Kickoff</button>
+          <button class="pill-btn" id="weekPill-2" onclick="selectWeeklyTab(2)">Week 2 Midpoint</button>
+          <button class="pill-btn" id="weekPill-3" onclick="selectWeeklyTab(3)">Week 3 Final Push</button>
+        </div>
+      </div>
+
+      <!-- Active Week Spotlight -->
+      <div class="week-spotlight-card" id="weekSpotlightCard">
+        <!-- Dynamically Populated -->
+      </div>
+
+      <!-- Top 10 Weekly Table -->
+      <div class="table-card mt-6">
+        <div class="card-heading-row">
+          <h3 class="card-inner-title" id="weeklyTableTitle">Top Fundraisers for Week 1</h3>
+          <span class="badge badge-light" id="weeklyTotalRaisedBadge">$0 Raised This Week</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Rank</th>
+                <th>Student</th>
+                <th>Grade</th>
+                <th>Teacher</th>
+                <th class="num-col highlight-head" id="weeklyColHead">Week 1 Amount</th>
+                <th class="num-col">Overall Total</th>
+              </tr>
+            </thead>
+            <tbody id="weeklyTableBody">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 3: CLASSES & TEACHERS -->
+    <section id="tabContent-classes" class="tab-panel">
+      <div class="classes-header-wrap">
+        <div>
+          <h2 class="section-title">Classroom & Teacher Competition</h2>
+          <p class="section-subtitle">Classes are competing for the Grand Jaguar Spirit Trophy and classroom celebration party!</p>
+        </div>
+      </div>
+
+      <!-- Grade Breakdown Summary Bars -->
+      <div class="grade-breakdown-card">
+        <h3 class="card-inner-title">Donations by Grade Level</h3>
+        <div class="grade-bars-grid" id="gradeBarsGrid">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Class Cards Grid -->
+      <h3 class="section-divider-title">Class Leaderboard</h3>
+      <div class="classes-grid" id="classesGrid">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+
+    <!-- TAB 4: DONATE PAGE -->
+    <section id="tabContent-donate" class="tab-panel">
+      <div class="donate-container">
+        <div class="donate-header-card">
+          <div class="donate-copy">
+            <span class="badge badge-gold">🐾 100% Goes To Our Students & School</span>
+            <h2>Support the JFS PTA Jog-a-Thon</h2>
+            <p>Your generous contributions fund STEM programs, art instruction, classroom materials, campus technology, library books, and student enrichment events throughout the academic year.</p>
+            
+            <div class="donate-quick-actions">
+              <a id="externalDonationBtn" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+                <span>💛</span> Open Official Donation Page in New Tab &rarr;
+              </a>
+              <button class="btn btn-secondary" onclick="copyDonationLink()">
+                <span>📋</span> Copy Donation Link
+              </button>
+            </div>
+            <p class="small-hint">💡 Pro-tip: Many employers (Apple, Google, Cisco, Intel, Adobe, etc.) provide 100% corporate matching for JFS PTA donations through platforms like Benevity!</p>
+          </div>
+
+          <div class="donate-qr-box">
+            <div class="qr-placeholder">
+              <span class="qr-icon">📱</span>
+              <p>Scan with Phone Camera</p>
+              <div class="qr-badge">JFS PTA Jaguar Pride</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Embedded Portal / Iframe Preview Container -->
+        <div class="iframe-container-card">
+          <div class="iframe-top-bar">
+            <div class="browser-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="browser-address" id="iframeUrlDisplay">https://forms.gle/8XA8oq5FmHDBwYHFA</div>
+            <a id="iframePopoutBtn" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="popout-link" title="Open in new window">
+              Open Outside ↗
+            </a>
+          </div>
+
+          <div class="iframe-wrapper">
+            <iframe id="donationIframe" src="about:blank" title="Official Donation Portal" loading="lazy"></iframe>
+            <div class="iframe-notice" id="iframeNotice">
+              <p>⚠️ <strong>Note:</strong> Some donation security providers or payment gateways prevent embedding inside other websites.</p>
+              <p>If the preview is blocked or blank, please click the button below to complete your donation directly:</p>
+              <a id="iframeFallbackLink" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                Open Donation Portal in New Window &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 5: EVENT & VOLUNTEER -->
+    <section id="tabContent-event" class="tab-panel">
+      <div class="event-layout-grid">
+        <!-- Event Overview & Flyer -->
+        <div class="flyer-card">
+          <img src="assets/flyer.png" alt="JFS PTA Jog-a-Thon Needs You! Flyer" class="flyer-img">
+        </div>
+
+        <div class="event-details-card">
+          <span class="badge badge-blue">Key Event Details</span>
+          <h2 class="event-heading">JFS PTA Jog-a-Thon 2026</h2>
+          
+          <div class="event-milestones">
+            <div class="milestone-item">
+              <div class="milestone-icon">🏁</div>
+              <div class="milestone-info">
+                <h4>Three-Week Fundraising Sprint</h4>
+                <p>Students gather sponsorships and donations from family, friends, and community supporters across Weeks 1, 2, and 3.</p>
+              </div>
+            </div>
+
+            <div class="milestone-item">
+              <div class="milestone-icon">🎉</div>
+              <div class="milestone-info">
+                <h4>Culmination & Big Run Day: Friday, Nov 13th</h4>
+                <p>Held on campus during school hours! Students run laps with their class, cheer each other on, and celebrate school spirit.</p>
+              </div>
+            </div>
+
+            <div class="milestone-item">
+              <div class="milestone-icon">🤝</div>
+              <div class="milestone-info">
+                <h4>Volunteers Needed!</h4>
+                <p>We need parents and guardians to help with lap marking, water stations, fruit snacks, spirit cheer tunnels, and class escorting.</p>
+                <a href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm mt-3">
+                  Sign Up on Volunteer Form &rarr;
+                </a>
+              </div>
+            </div>
+
+            <div class="milestone-item">
+              <div class="milestone-icon">✉️</div>
+              <div class="milestone-info">
+                <h4>Fundraising Committee Contact</h4>
+                <p><strong>Poonam Sidhu</strong> &ndash; Fundraising Chair</p>
+                <p>Email: <a href="mailto:poonam.jolly@gmail.com" class="text-link">poonam.jolly@gmail.com</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Admin / Data Manager Modal -->
+  <div class="modal-backdrop" id="adminModal" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">⚙️ Jog-a-Thon Data & Settings Manager</h3>
+        <button class="modal-close" onclick="closeAdminModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="admin-notice">
+          <strong>Tip for Organizers:</strong> You can upload a CSV exported from Google Sheets or Excel every week to refresh the leaderboard. All changes are saved instantly!
+        </div>
+
+        <!-- Section 1: CSV Upload & Download -->
+        <div class="admin-section">
+          <h4 class="admin-section-title">1. Weekly CSV Data Upload</h4>
+          <p class="admin-desc">Upload a CSV containing your students and weekly donation totals.</p>
+
+          <div class="upload-dropzone" id="csvDropzone">
+            <span class="dropzone-icon">📁</span>
+            <p><strong>Click to browse</strong> or drag & drop your CSV file here</p>
+            <input type="file" id="csvFileInput" accept=".csv" onchange="handleCsvFile(event)">
+          </div>
+
+          <div class="admin-buttons-row">
+            <button class="btn btn-outline btn-sm" onclick="downloadCsvTemplate()">
+              📥 Download Sample CSV Template
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportCurrentDataCsv()">
+              📤 Export Current Data as CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 2: Privacy & Campaign Settings -->
+        <div class="admin-section">
+          <h4 class="admin-section-title">2. Student Privacy & Display</h4>
+          <div class="form-checkbox-row">
+            <label class="switch">
+              <input type="checkbox" id="privacyToggle" onchange="togglePrivacyMode()">
+              <span class="slider round"></span>
+            </label>
+            <label for="privacyToggle" class="switch-label">
+              <strong>Student Privacy Mode</strong> (Show <em>First Name + Last Initial</em>, e.g. "Maya S." instead of full name)
+            </label>
+          </div>
+        </div>
+
+        <!-- Section 3: Campaign Configuration -->
+        <div class="admin-section">
+          <h4 class="admin-section-title">3. Campaign Settings</h4>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="goalAmountInput">School Goal Amount ($):</label>
+              <input type="number" id="goalAmountInput" value="45000" min="1000" step="500">
+            </div>
+            <div class="form-field">
+              <label for="donationUrlInput">Donation Page URL (link/iframe):</label>
+              <input type="url" id="donationUrlInput" placeholder="https://forms.gle/8XA8oq5FmHDBwYHFA">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Google Sheets Live Sync Option -->
+        <div class="admin-section">
+          <h4 class="admin-section-title">4. Automatic Google Sheets Live Sync (Optional)</h4>
+          <p class="admin-desc">Want zero-upload weekly updates? Publish your Google Sheet to the web as CSV (<em>File &rarr; Share &rarr; Publish to web &rarr; CSV</em>) and paste the link below:</p>
+          <div class="sync-input-row">
+            <input type="url" id="googleSheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+            <button class="btn btn-secondary btn-sm" onclick="syncFromGoogleSheets()">Sync Now</button>
+          </div>
+        </div>
+
+        <!-- Section 5: Reset / Demo Data -->
+        <div class="admin-section admin-danger-zone">
+          <h4 class="admin-section-title">5. Reset Options</h4>
+          <button class="btn btn-danger btn-sm" onclick="resetToDefaultData()">
+            🔄 Reset to Default JFS Sample Data
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAdminModal()">Close</button>
+        <button class="btn btn-primary" onclick="saveAdminSettings()">Save All Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <p><strong>James Franklin Smith Elementary PTA</strong> &bull; Jog-a-Thon 2026</p>
+        <p>Organized with 💛 for our students, teachers, and school community.</p>
+      </div>
+      <div class="footer-right">
+        <p>Contact: <a href="mailto:poonam.jolly@gmail.com">poonam.jolly@gmail.com</a></p>
+        <p class="footer-small">Culmination Day: Friday, Nov 13th &bull; Go Jaguars! 🐾</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
