@@ -42,7 +42,7 @@ const DEFAULT_STUDENTS = [
 const DEFAULT_CONFIG = {
   schoolGoal: 45000,
   donationUrl: "https://forms.gle/8XA8oq5FmHDBwYHFA",
-  googleSheetUrl: "",
+  googleSheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=99878568&single=true&output=csv",
   privacyMode: false,
   targetDate: "2026-11-13T09:00:00",
   adminPin: "1113"
@@ -90,7 +90,16 @@ function loadStoredData() {
 
     const savedStudents = localStorage.getItem('jfs_jogathon_data_v1');
     if (savedStudents) {
-      state.students = JSON.parse(savedStudents);
+      const parsed = JSON.parse(savedStudents);
+      // Clean up corrupt HTML data if it was accidentally saved
+      const isCorrupted = parsed.some(s => s.name && (s.name.includes('<') || s.name.includes('function') || s.total > 10000000));
+      if (isCorrupted) {
+        console.warn("Corrupted HTML cache detected. Resetting to default sample data.");
+        state.students = normalizeStudentList(DEFAULT_STUDENTS);
+        saveStudentsToStorage();
+      } else {
+        state.students = parsed;
+      }
     } else {
       state.students = normalizeStudentList(DEFAULT_STUDENTS);
       saveStudentsToStorage();
@@ -675,7 +684,16 @@ function setupAdminAccessTriggers() {
 }
 
 function parseCsvText(text) {
-  const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+  if (!text || typeof text !== 'string') return [];
+
+  // Guard against HTML web pages
+  const trimmed = text.trim();
+  if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.includes('<script') || trimmed.includes('<head')) {
+    console.warn("Rejected HTML response from Google Sheets URL. URL must be CSV format (output=csv).");
+    return [];
+  }
+
+  const lines = trimmed.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) return [];
 
   // Parse header row
@@ -874,32 +892,65 @@ function exportCurrentDataCsv() {
 // ==========================================================
 // GOOGLE SHEETS LIVE SYNC
 // ==========================================================
+function normalizeGoogleSheetsCsvUrl(rawUrl) {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim();
+
+  // 1. If user pasted a /pubhtml URL, convert it to /pub
+  if (url.includes('/pubhtml')) {
+    url = url.replace('/pubhtml', '/pub');
+  }
+
+  // 2. Ensure output=csv parameter is present for /pub URLs
+  if (url.includes('/pub')) {
+    if (!url.includes('output=csv')) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}output=csv`;
+    }
+    return url;
+  }
+
+  // 3. If user pasted a standard Google Sheet edit/view URL
+  const docMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (docMatch && docMatch[1]) {
+    const docId = docMatch[1];
+    const gidMatch = url.match(/gid=([0-9]+)/);
+    const gidParam = gidMatch ? `&gid=${gidMatch[1]}` : '';
+    return `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv${gidParam}`;
+  }
+
+  return url;
+}
+
 async function syncFromGoogleSheets() {
   const urlInput = document.getElementById('googleSheetUrlInput');
-  const url = urlInput ? urlInput.value.trim() : '';
+  const rawUrl = urlInput ? urlInput.value.trim() : '';
 
-  if (!url) {
+  if (!rawUrl) {
     showToast("⚠️ Please enter a published Google Sheets CSV URL first.");
     return;
   }
 
+  const normalizedUrl = normalizeGoogleSheetsCsvUrl(rawUrl);
+  if (urlInput) urlInput.value = normalizedUrl;
+
   showToast("🔄 Fetching latest data from Google Sheets...");
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(normalizedUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const csvText = await res.text();
     const parsed = parseCsvText(csvText);
 
     if (parsed.length > 0) {
       state.students = parsed;
-      state.config.googleSheetUrl = url;
+      state.config.googleSheetUrl = normalizedUrl;
       saveStudentsToStorage();
       saveConfigToStorage();
       calculateAndRender();
       showToast(`🎉 Synced ${parsed.length} students live from Google Sheets!`);
     } else {
-      showToast("⚠️ No valid data rows found in Google Sheet CSV.");
+      showToast("⚠️ Could not parse CSV rows. Ensure sheet is published as CSV.");
     }
   } catch (err) {
     console.error(err);
@@ -909,7 +960,10 @@ async function syncFromGoogleSheets() {
 
 async function autoSyncFromGoogleSheets() {
   try {
-    const res = await fetch(state.config.googleSheetUrl);
+    const targetUrl = normalizeGoogleSheetsCsvUrl(state.config.googleSheetUrl);
+    if (!targetUrl) return;
+
+    const res = await fetch(targetUrl);
     if (res.ok) {
       const csvText = await res.text();
       const parsed = parseCsvText(csvText);
