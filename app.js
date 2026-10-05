@@ -44,7 +44,8 @@ const DEFAULT_CONFIG = {
   donationUrl: "https://forms.gle/8XA8oq5FmHDBwYHFA",
   googleSheetUrl: "",
   privacyMode: false,
-  targetDate: "2026-11-13T09:00:00"
+  targetDate: "2026-11-13T09:00:00",
+  adminPin: "1113"
 };
 
 // ==========================================================
@@ -55,6 +56,7 @@ let state = {
   config: { ...DEFAULT_CONFIG },
   activeWeek: 1,
   activeTab: 'overall',
+  isAdminUnlocked: false,
   filters: {
     search: '',
     grade: 'ALL',
@@ -68,9 +70,15 @@ let state = {
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
   loadStoredData();
+  setupAdminAccessTriggers();
   setupEventListeners();
   calculateAndRender();
   setupCountdown();
+
+  // If a Google Sheet live sync URL is configured, auto-refresh live data silently!
+  if (state.config.googleSheetUrl) {
+    autoSyncFromGoogleSheets();
+  }
 });
 
 function loadStoredData() {
@@ -90,6 +98,11 @@ function loadStoredData() {
   } catch (err) {
     console.error("Error loading data from localStorage:", err);
     state.students = normalizeStudentList(DEFAULT_STUDENTS);
+  }
+
+  // Check if admin is unlocked in this browser session
+  if (sessionStorage.getItem('jfs_admin_session') === 'true') {
+    state.isAdminUnlocked = true;
   }
 
   // Populate Config UI fields
@@ -620,17 +633,110 @@ function handleCsvFile(event) {
   reader.readAsText(file);
 }
 
+function setupAdminAccessTriggers() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminParam = urlParams.get('admin');
+  const openAdminBtn = document.getElementById('openAdminBtn');
+
+  // 1. Reveal if URL has ?admin=true or ?admin=jaguars
+  if (adminParam === 'true' || adminParam === 'jaguars' || adminParam === '1' || state.isAdminUnlocked) {
+    if (openAdminBtn) openAdminBtn.style.display = 'inline-flex';
+  }
+
+  // 2. Secret Mascot 3-Click Trigger
+  const mascot = document.querySelector('.brand-crest');
+  if (mascot) {
+    let clickCount = 0;
+    let clickTimer = null;
+    mascot.style.cursor = 'pointer';
+    mascot.title = "James Franklin Smith Jaguars";
+
+    mascot.addEventListener('click', () => {
+      clickCount++;
+      clearTimeout(clickTimer);
+      if (clickCount >= 3) {
+        clickCount = 0;
+        if (openAdminBtn) openAdminBtn.style.display = 'inline-flex';
+        openAdminModal();
+      } else {
+        clickTimer = setTimeout(() => { clickCount = 0; }, 1500);
+      }
+    });
+  }
+
+  // 3. Secret Keyboard Shortcut (Cmd+Shift+A or Ctrl+Shift+A)
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+      e.preventDefault();
+      if (openAdminBtn) openAdminBtn.style.display = 'inline-flex';
+      openAdminModal();
+    }
+  });
+}
+
 function parseCsvText(text) {
   const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length < 2) return [];
 
-  // Parse header
+  // Parse header row
   const headers = splitCsvRow(lines[0]).map(h => h.trim().toLowerCase());
 
-  // Find column indices
+  // Check if this is a TRANSACTION / DONATION LOG format (has Date/Timestamp + Amount)
+  const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('time') || h.includes('when'));
+  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('donation') || h.includes('pledge') || h.includes('$'));
   const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('student'));
   const gradeIdx = headers.findIndex(h => h.includes('grade'));
   const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('class') || h.includes('room'));
+
+  const isTransactionLog = dateIdx !== -1 && amountIdx !== -1 && nameIdx !== -1;
+
+  if (isTransactionLog) {
+    // Aggregation mode: Group donation transactions by student!
+    const studentMap = new Map();
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = splitCsvRow(lines[i]);
+      if (row.length === 0 || !row[nameIdx]) continue;
+
+      const rawName = row[nameIdx]?.trim();
+      if (!rawName) continue;
+
+      const grade = gradeIdx !== -1 && row[gradeIdx] ? row[gradeIdx].trim() : 'K';
+      const teacher = teacherIdx !== -1 && row[teacherIdx] ? row[teacherIdx].trim() : 'General';
+      const amt = cleanNumber(row[amountIdx]);
+      const dateStr = row[dateIdx] ? row[dateIdx].trim() : '';
+
+      // Determine which week this donation belongs to based on date
+      const weekNum = determineWeekFromDate(dateStr);
+
+      if (!studentMap.has(rawName)) {
+        studentMap.set(rawName, {
+          name: rawName,
+          grade: grade,
+          teacher: teacher,
+          week1: 0,
+          week2: 0,
+          week3: 0,
+          total: 0,
+          laps: 0
+        });
+      }
+
+      const s = studentMap.get(rawName);
+      if (grade && grade !== 'K') s.grade = grade;
+      if (teacher && teacher !== 'General') s.teacher = teacher;
+
+      if (weekNum === 1) s.week1 += amt;
+      else if (weekNum === 2) s.week2 += amt;
+      else s.week3 += amt;
+
+      s.total += amt;
+    }
+
+    return Array.from(studentMap.values());
+  }
+
+  // ROSTER FORMAT (Columns: Student Name, Grade, Teacher, Week 1, Week 2, Week 3, Laps)
   const w1Idx = headers.findIndex(h => h.includes('week 1') || h.includes('week1') || h.includes('w1'));
   const w2Idx = headers.findIndex(h => h.includes('week 2') || h.includes('week2') || h.includes('w2'));
   const w3Idx = headers.findIndex(h => h.includes('week 3') || h.includes('week3') || h.includes('w3'));
@@ -671,6 +777,34 @@ function parseCsvText(text) {
   }
 
   return students;
+}
+
+function determineWeekFromDate(dateStr) {
+  if (!dateStr) return 1;
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) {
+    // If not a standard date format, check if string mentions "week 1", "week 2", "week 3"
+    const lower = dateStr.toLowerCase();
+    if (lower.includes('3')) return 3;
+    if (lower.includes('2')) return 2;
+    return 1;
+  }
+
+  // Culmination is Friday, Nov 13.
+  // 3-Week Schedule:
+  // Week 1: Kickoff to Oct 30
+  // Week 2: Oct 31 to Nov 6
+  // Week 3: Nov 7 to Nov 13
+  const month = parsed.getMonth(); // 9 = Oct, 10 = Nov
+  const day = parsed.getDate();
+
+  if (month === 9) { // October
+    return day <= 30 ? 1 : 2;
+  } else if (month === 10) { // November
+    if (day <= 6) return 2;
+    return 3;
+  }
+  return 1;
 }
 
 function splitCsvRow(rowStr) {
@@ -763,20 +897,53 @@ async function syncFromGoogleSheets() {
       saveStudentsToStorage();
       saveConfigToStorage();
       calculateAndRender();
-      showToast(`🎉 Synced ${parsed.length} students from Google Sheets!`);
+      showToast(`🎉 Synced ${parsed.length} students live from Google Sheets!`);
     } else {
       showToast("⚠️ No valid data rows found in Google Sheet CSV.");
     }
   } catch (err) {
     console.error(err);
-    showToast("❌ Could not sync. Make sure the Sheet is published as CSV.");
+    showToast("❌ Could not sync. Make sure Sheet is published: File > Share > Publish to web > CSV.");
+  }
+}
+
+async function autoSyncFromGoogleSheets() {
+  try {
+    const res = await fetch(state.config.googleSheetUrl);
+    if (res.ok) {
+      const csvText = await res.text();
+      const parsed = parseCsvText(csvText);
+      if (parsed.length > 0) {
+        state.students = parsed;
+        saveStudentsToStorage();
+        calculateAndRender();
+        console.log(`Auto-synced ${parsed.length} students from Google Sheets`);
+      }
+    }
+  } catch (e) {
+    console.warn("Auto-sync from Google Sheets skipped:", e);
   }
 }
 
 // ==========================================================
-// ADMIN MODAL & CONTROLS
+// ADMIN MODAL & CONTROLS (PIN Protected)
 // ==========================================================
 function openAdminModal() {
+  if (!state.isAdminUnlocked) {
+    const enteredPin = prompt("🔒 Organizer Access\nPlease enter the 4-digit Admin PIN to open settings:");
+    if (!enteredPin) return;
+
+    const expectedPin = state.config.adminPin || "1113";
+    if (enteredPin.trim() === expectedPin) {
+      state.isAdminUnlocked = true;
+      sessionStorage.setItem('jfs_admin_session', 'true');
+      showToast("🔓 Organizer access granted!");
+    } else {
+      alert("❌ Incorrect PIN. Access denied.");
+      return;
+    }
+  }
+
   const modal = document.getElementById('adminModal');
   if (modal) {
     modal.classList.add('open');

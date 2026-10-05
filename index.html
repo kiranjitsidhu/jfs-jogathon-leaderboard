@@ -46,8 +46,9 @@
         <button class="btn btn-secondary" onclick="switchTab('event')">
           <span class="btn-icon">🤝</span> Volunteer Sign-Up
         </button>
-        <button class="btn btn-outline" id="openAdminBtn" onclick="openAdminModal()">
-          <span class="btn-icon">⚙️</span> Data & Settings
+        <!-- Admin button is hidden from public view. Visible only via ?admin=true or 3 clicks on mascot -->
+        <button class="btn btn-outline" id="openAdminBtn" onclick="openAdminModal()" style="display: none;">
+          <span class="btn-icon">⚙️</span> Organizer Portal
         </button>
       </div>
     </div>
