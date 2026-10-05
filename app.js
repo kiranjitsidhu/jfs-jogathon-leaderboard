@@ -1062,7 +1062,9 @@ async function syncFromGoogleSheets() {
   showToast("🔄 Fetching latest data from Google Sheets...");
 
   try {
-    const res = await fetch(normalizedUrl);
+    const cacheBuster = `&_cb=${Date.now()}`;
+    const fetchUrl = normalizedUrl.includes('?') ? `${normalizedUrl}${cacheBuster}` : `${normalizedUrl}?${cacheBuster}`;
+    const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const csvText = await res.text();
     const parsed = parseCsvText(csvText);
@@ -1088,7 +1090,9 @@ async function autoSyncFromGoogleSheets() {
     const targetUrl = normalizeGoogleSheetsCsvUrl(state.config.googleSheetUrl);
     if (!targetUrl) return;
 
-    const res = await fetch(targetUrl);
+    const cacheBuster = `&_cb=${Date.now()}`;
+    const fetchUrl = targetUrl.includes('?') ? `${targetUrl}${cacheBuster}` : `${targetUrl}?${cacheBuster}`;
+    const res = await fetch(fetchUrl);
     if (res.ok) {
       const csvText = await res.text();
       const parsed = parseCsvText(csvText);
