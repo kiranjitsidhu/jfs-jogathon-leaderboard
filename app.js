@@ -892,7 +892,9 @@ function renderWeeklyTab() {
     } else if (topWeeklyStudents.length > 1) {
       spotlightEl.innerHTML = `
         <div class="spotlight-left">
-          <div class="spotlight-trophy">🐆</div>
+          <div class="spotlight-trophy">
+            <img src="jfs-logo.png" alt="JFS Jaguars Mascot" class="spotlight-mascot-img">
+          </div>
           <div>
             <div class="spotlight-meta-label">🏆 ${weekLabel} Co-Leaders (Tied)</div>
             <div class="spotlight-leader-name">${topWeeklyStudents.map(s => formatStudentName(s.name)).join(' & ')}</div>
@@ -909,7 +911,9 @@ function renderWeeklyTab() {
       const topWeekly = topWeeklyStudents[0];
       spotlightEl.innerHTML = `
         <div class="spotlight-left">
-          <div class="spotlight-trophy">🐆</div>
+          <div class="spotlight-trophy">
+            <img src="jfs-logo.png" alt="JFS Jaguars Mascot" class="spotlight-mascot-img">
+          </div>
           <div>
             <div class="spotlight-meta-label">🏆 ${weekLabel} Leading Fundraiser</div>
             <div class="spotlight-leader-name">${formatStudentName(topWeekly.name)}</div>

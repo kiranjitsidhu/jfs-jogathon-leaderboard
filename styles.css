@@ -900,6 +900,15 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.spotlight-mascot-img {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .spotlight-meta-label {
