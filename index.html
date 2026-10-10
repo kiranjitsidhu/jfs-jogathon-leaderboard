@@ -150,17 +150,17 @@
 
         <div class="filter-group">
           <label for="gradeFilterSelect" class="sr-only">Filter by Grade</label>
-          <select id="gradeFilterSelect" onchange="filterStudents()">
+          <select id="gradeFilterSelect" onchange="onGradeFilterChange()">
             <option value="ALL">All Grades</option>
           </select>
 
           <label for="roomFilterSelect" class="sr-only">Filter by Room</label>
-          <select id="roomFilterSelect" onchange="filterStudents()">
+          <select id="roomFilterSelect" onchange="onRoomFilterChange()">
             <option value="ALL">All Rooms</option>
           </select>
 
           <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
-          <select id="teacherFilterSelect" onchange="filterStudents()">
+          <select id="teacherFilterSelect" onchange="onTeacherFilterChange()">
             <option value="ALL">All Teachers</option>
           </select>
 
@@ -223,9 +223,14 @@
         </div>
       </div>
 
-      <!-- Active Week Spotlight -->
-      <div class="week-spotlight-card" id="weekSpotlightCard">
-        <!-- Dynamically Populated -->
+      <!-- Active Week Spotlight Grid (Individual + Classroom) -->
+      <div class="weekly-spotlights-grid">
+        <div class="week-spotlight-card" id="weekSpotlightCard">
+          <!-- Dynamically Populated Student Leader -->
+        </div>
+        <div class="week-spotlight-card weekly-classroom-spotlight" id="weekClassSpotlightCard">
+          <!-- Dynamically Populated Classroom Leader -->
+        </div>
       </div>
 
       <!-- Top 10 Weekly Table -->
@@ -346,8 +351,7 @@
         <!-- Grand Highlights Banner -->
         <div class="prizes-hero-banner">
           <div class="prizes-hero-copy">
-            <span class="badge badge-gold">🏆 Master Incentive Rewards</span>
-            <h2>Jag-a-Thon Prizes & Incentives</h2>
+            <h2>Jag-a-Thon Prizes</h2>
             <p>Every dollar raised supports student STEM, arts, library books, and campus technology. Check out the rewards our Jaguars are running for!</p>
           </div>
           <div class="prizes-hero-badge">
@@ -415,6 +419,99 @@
             <p>All participating students and runners receive an official school Jag-a-Thon t-shirt!</p>
           </div>
 
+        </div>
+
+        <!-- Master Incentive Matrix Table -->
+        <h3 class="section-divider-title">📜 Master Incentive Matrix</h3>
+        <p class="section-subtitle">Official distribution timeline and reward qualifications across all schoolwide Jag-a-Thon milestones.</p>
+        
+        <div class="table-card mt-6 mb-8">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Level</th>
+                  <th>Distro On</th>
+                  <th>Qualification Criterion</th>
+                  <th>Reward / Prize</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Weekly raised &ge; $1</strong></td>
+                  <td>Mondays, week 2–4</td>
+                  <td>Collected at least 1 donation the previous week</td>
+                  <td>Tchotchkes, raffle prize</td>
+                </tr>
+                <tr>
+                  <td><strong>Weekly raised &ge; $25</strong></td>
+                  <td>Mondays, week 2–4</td>
+                  <td>Raised at least $25 in the previous week</td>
+                  <td>Better tchotchkes, better raffle prize</td>
+                </tr>
+                <tr>
+                  <td><strong>Weekly raised &ge; $100</strong></td>
+                  <td>Mondays, week 2–4</td>
+                  <td>Raised at least $100 in the previous week</td>
+                  <td>Best tchotchkes, best raffle prize</td>
+                </tr>
+                <tr style="background: #f0f7ff;">
+                  <td><strong>Weekly Schoolwide Individual</strong></td>
+                  <td>Mondays, week 2–4</td>
+                  <td>Top fundraising student of the week (schoolwide)</td>
+                  <td><strong>🚲 Brand New Bike / Scooter</strong></td>
+                </tr>
+                <tr style="background: #fffdf0;">
+                  <td><strong>Weekly Classroom</strong></td>
+                  <td>Mondays, week 2–4</td>
+                  <td>Top earning classroom of the week</td>
+                  <td><strong>Teacher: $100 Gift Card<br>Students: Ice Cream Social</strong></td>
+                </tr>
+                <tr style="background: #fefce8;">
+                  <td><strong>Classroom Participation</strong></td>
+                  <td>Event Day</td>
+                  <td>Every student receives at least 1 donation (100% participation)</td>
+                  <td><strong>Teacher: $100 Gift Card<br>Students: Pizza Party</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Overall Per Classroom</strong></td>
+                  <td>Event Day</td>
+                  <td>Top fundraising student in each class</td>
+                  <td><strong>🎁 $25 Gift Card</strong></td>
+                </tr>
+                <tr style="background: #f0fdf4;">
+                  <td><strong>Overall Classroom</strong></td>
+                  <td>Event Day</td>
+                  <td>Top fundraising class in the school</td>
+                  <td><strong>🏛️ Class Field Trip: California Academy of Sciences</strong></td>
+                </tr>
+                <tr style="background: #fef2f2;">
+                  <td><strong>Overall Grade Level</strong></td>
+                  <td>Event Day</td>
+                  <td>Top fundraising grade in the school</td>
+                  <td><strong>🎬 Grade-Wide Movie + Pizza + Ice Cream Night in MPR</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>Race Day Top Lap Runners</strong></td>
+                  <td>Event Day</td>
+                  <td>Top 3 lap runners across school</td>
+                  <td>Bay Area Sports Merch (Warriors / Giants / 49ers gear)</td>
+                </tr>
+                <tr style="background: #fff7ed;">
+                  <td><strong>Overall Top School Earners</strong></td>
+                  <td>Event Day</td>
+                  <td>Top 3 individual fundraisers overall (waterfall choice)</td>
+                  <td><strong>🏰 4 Tickets to Disneyland, or Warriors / Giants / 49ers Game</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>All Participants</strong></td>
+                  <td>Event Day</td>
+                  <td>All student runners</td>
+                  <td>Official Jag-a-Thon T-Shirt*</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Individual Cumulative Prize Tiers Table -->

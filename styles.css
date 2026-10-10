@@ -1958,3 +1958,48 @@ input:checked + .slider:before {
   border: 1px solid var(--gray-200);
   white-space: nowrap;
 }
+
+.weekly-spotlights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.weekly-classroom-spotlight {
+  border-color: #fde047;
+  background: linear-gradient(135deg, #ffffff 0%, #fffef2 100%);
+}
+
+.weekly-classroom-spotlight .spotlight-trophy {
+  border: 1px solid #fef08a;
+  background: #fefce8;
+}
+
+.weekly-classroom-spotlight .spotlight-meta-label {
+  color: #b45309;
+}
+
+.weekly-classroom-spotlight .spotlight-amount {
+  color: #b45309;
+}
+
+.podium-card.podium-placeholder {
+  border: 2px dashed var(--gray-300);
+  background: #f8fafc;
+  opacity: 0.9;
+}
+
+.podium-card.podium-placeholder .podium-badge {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.podium-card.podium-placeholder .podium-name {
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+.podium-card.podium-placeholder .podium-amount {
+  color: var(--gray-400);
+}
