@@ -1,42 +1,70 @@
 /**
- * JFS PTA JOG-A-THON LEADERBOARD WEB APPLICATION
+ * JFS PTA JAG-A-THON LEADERBOARD WEB APPLICATION
  * James Franklin Smith Elementary PTA
  */
 
 // ==========================================================
-// DEFAULT STARTER DATASET (Realistic JFS Elementary Classes)
+// OFFICIAL JFS ROSTER CLASSROOMS (24 Classes, 584 Students)
+// ==========================================================
+const JFS_ROSTER_CLASSES = [
+  { teacher: "MCMINN", room: "K-A1", enrolled: 20, grade: "TK" },
+  { teacher: "TALAGTAG", room: "A-4", enrolled: 20, grade: "TK" },
+  { teacher: "ANGUIANO", room: "K-3", enrolled: 24, grade: "K" },
+  { teacher: "BEIER", room: "K-1", enrolled: 24, grade: "K" },
+  { teacher: "KHATUN", room: "K-2", enrolled: 24, grade: "K" },
+  { teacher: "AVUNOORI - SDC", room: "B-15", enrolled: 10, grade: "Lower SDC" },
+  { teacher: "CACCIARONI", room: "B-7", enrolled: 24, grade: "1" },
+  { teacher: "MATHARU", room: "B-8", enrolled: 24, grade: "1" },
+  { teacher: "QUIJANO", room: "B-9", enrolled: 23, grade: "1" },
+  { teacher: "JONES", room: "B-5", enrolled: 23, grade: "2" },
+  { teacher: "LUZOD", room: "B-11", enrolled: 23, grade: "2" },
+  { teacher: "SWENOR", room: "B-6", enrolled: 24, grade: "2" },
+  { teacher: "ALEXANDER", room: "A-5", enrolled: 23, grade: "3" },
+  { teacher: "CICCARELLO", room: "A-3", enrolled: 24, grade: "3" },
+  { teacher: "HART", room: "A-2", enrolled: 24, grade: "3" },
+  { teacher: "HEAP - SDC", room: "B-13", enrolled: 11, grade: "Upper SDC" },
+  { teacher: "FECI", room: "C-1", enrolled: 30, grade: "4" },
+  { teacher: "NOYES", room: "C-2", enrolled: 27, grade: "4" },
+  { teacher: "HOSLER", room: "C-4", enrolled: 30, grade: "4" },
+  { teacher: "NUNES", room: "C-7", enrolled: 30, grade: "5" },
+  { teacher: "ORLOFF", room: "C-5", enrolled: 30, grade: "5" },
+  { teacher: "SCIBA", room: "A-8", enrolled: 31, grade: "5/6" },
+  { teacher: "GASPAR", room: "A-9", enrolled: 31, grade: "6" },
+  { teacher: "MUNOZ", room: "A-10", enrolled: 30, grade: "6" }
+];
+
+// Total student count across the 24 classrooms = 584
+const TOTAL_ROSTER_STUDENTS = JFS_ROSTER_CLASSES.reduce((sum, c) => sum + c.enrolled, 0);
+
+// ==========================================================
+// DEFAULT STARTER DATASET (Grounded in Real JFS Classes)
 // ==========================================================
 const DEFAULT_STUDENTS = [
-  { name: "Maya Sidhu", grade: "3", teacher: "Mr. Davis", week1: 150, week2: 120, week3: 160, laps: 36 },
-  { name: "Aarav Patel", grade: "4", teacher: "Mrs. Anderson", week1: 130, week2: 140, week3: 125, laps: 34 },
-  { name: "Olivia Martinez", grade: "5", teacher: "Ms. Chang", week1: 140, week2: 160, week3: 130, laps: 38 },
-  { name: "Daniel Young", grade: "3", teacher: "Mr. Davis", week1: 130, week2: 140, week3: 110, laps: 35 },
-  { name: "Zoe Carter", grade: "4", teacher: "Mrs. Anderson", week1: 125, week2: 135, week3: 140, laps: 36 },
-  { name: "Charlotte King", grade: "5", teacher: "Ms. Chang", week1: 115, week2: 125, week3: 130, laps: 37 },
-  { name: "Emma Johnson", grade: "2", teacher: "Mrs. Miller", week1: 110, week2: 95, week3: 120, laps: 30 },
-  { name: "Jack Green", grade: "3", teacher: "Mr. Davis", week1: 110, week2: 90, week3: 105, laps: 33 },
-  { name: "Lucas Nguyen", grade: "5", teacher: "Ms. Chang", week1: 90, week2: 130, week3: 80, laps: 30 },
-  { name: "James Lewis", grade: "K", teacher: "Mrs. Lee", week1: 90, week2: 105, week3: 115, laps: 33 },
-  { name: "Sophia Garcia", grade: "4", teacher: "Mrs. Anderson", week1: 80, week2: 90, week3: 110, laps: 34 },
-  { name: "Chloe White", grade: "4", teacher: "Mrs. Anderson", week1: 105, week2: 90, week3: 85, laps: 31 },
-  { name: "Evelyn Hall", grade: "4", teacher: "Mrs. Anderson", week1: 95, week2: 115, week3: 100, laps: 32 },
-  { name: "Ella Adams", grade: "5", teacher: "Ms. Chang", week1: 95, week2: 110, week3: 120, laps: 34 },
-  { name: "Scarlett Gonzalez", grade: "2", teacher: "Mrs. Miller", week1: 90, week2: 95, week3: 100, laps: 30 },
-  { name: "Amelia Lopez", grade: "2", teacher: "Mrs. Miller", week1: 85, week2: 90, week3: 105, laps: 29 },
-  { name: "Jackson Lee", grade: "1", teacher: "Ms. Taylor", week1: 85, week2: 60, week3: 95, laps: 30 },
-  { name: "Alexander Walker", grade: "1", teacher: "Ms. Taylor", week1: 80, week2: 95, week3: 65, laps: 28 },
-  { name: "Owen Baker", grade: "K", teacher: "Mrs. Lee", week1: 80, week2: 85, week3: 90, laps: 26 },
-  { name: "Ethan Brown", grade: "3", teacher: "Mr. Davis", week1: 95, week2: 60, week3: 85, laps: 29 },
-  { name: "Benjamin Harris", grade: "3", teacher: "Mr. Davis", week1: 70, week2: 85, week3: 90, laps: 27 },
-  { name: "Ava Thomas", grade: "2", teacher: "Mrs. Miller", week1: 75, week2: 80, week3: 70, laps: 25 },
-  { name: "Harper Scott", grade: "4", teacher: "Mrs. Anderson", week1: 75, week2: 85, week3: 95, laps: 31 },
-  { name: "Henry Wright", grade: "K", teacher: "Mrs. Lee", week1: 70, week2: 60, week3: 75, laps: 22 },
-  { name: "Leo Nelson", grade: "1", teacher: "Ms. Taylor", week1: 70, week2: 80, week3: 85, laps: 28 },
-  { name: "Liam Smith", grade: "1", teacher: "Ms. Taylor", week1: 65, week2: 70, week3: 90, laps: 26 },
-  { name: "Harper Robinson", grade: "2", teacher: "Mrs. Miller", week1: 65, week2: 70, week3: 80, laps: 25 },
-  { name: "Sebastian Hill", grade: "1", teacher: "Ms. Taylor", week1: 60, week2: 75, week3: 80, laps: 27 },
-  { name: "Mia Clark", grade: "5", teacher: "Ms. Chang", week1: 60, week2: 75, week3: 80, laps: 26 },
-  { name: "Noah Wilson", grade: "K", teacher: "Mrs. Lee", week1: 50, week2: 65, week3: 80, laps: 24 }
+  { name: "Maya Sidhu", grade: "3", teacher: "ALEXANDER", week1: 150, week2: 120, week3: 160, week4: 180, laps: 36 },
+  { name: "Aarav Patel", grade: "4", teacher: "FECI", week1: 130, week2: 140, week3: 125, week4: 150, laps: 34 },
+  { name: "Olivia Martinez", grade: "5", teacher: "NUNES", week1: 140, week2: 160, week3: 130, week4: 170, laps: 38 },
+  { name: "Daniel Young", grade: "3", teacher: "HART", week1: 130, week2: 140, week3: 110, week4: 120, laps: 35 },
+  { name: "Zoe Carter", grade: "4", teacher: "HOSLER", week1: 125, week2: 135, week3: 140, week4: 130, laps: 36 },
+  { name: "Charlotte King", grade: "5", teacher: "ORLOFF", week1: 115, week2: 125, week3: 130, week4: 145, laps: 37 },
+  { name: "Emma Johnson", grade: "2", teacher: "JONES", week1: 110, week2: 95, week3: 120, week4: 110, laps: 30 },
+  { name: "Jack Green", grade: "3", teacher: "CICCARELLO", week1: 110, week2: 90, week3: 105, week4: 130, laps: 33 },
+  { name: "Lucas Nguyen", grade: "6", teacher: "GASPAR", week1: 90, week2: 130, week3: 80, week4: 120, laps: 30 },
+  { name: "James Lewis", grade: "K", teacher: "ANGUIANO", week1: 90, week2: 105, week3: 115, week4: 110, laps: 33 },
+  { name: "Sophia Garcia", grade: "4", teacher: "NOYES", week1: 80, week2: 90, week3: 110, week4: 105, laps: 34 },
+  { name: "Chloe White", grade: "4", teacher: "FECI", week1: 105, week2: 90, week3: 85, week4: 95, laps: 31 },
+  { name: "Evelyn Hall", grade: "6", teacher: "MUNOZ", week1: 95, week2: 115, week3: 100, week4: 90, laps: 32 },
+  { name: "Ella Adams", grade: "5/6", teacher: "SCIBA", week1: 95, week2: 110, week3: 120, week4: 115, laps: 34 },
+  { name: "Scarlett Gonzalez", grade: "2", teacher: "LUZOD", week1: 90, week2: 95, week3: 100, week4: 85, laps: 30 },
+  { name: "Amelia Lopez", grade: "2", teacher: "SWENOR", week1: 85, week2: 90, week3: 105, week4: 90, laps: 29 },
+  { name: "Jackson Lee", grade: "1", teacher: "CACCIARONI", week1: 85, week2: 60, week3: 95, week4: 80, laps: 30 },
+  { name: "Alexander Walker", grade: "1", teacher: "MATHARU", week1: 80, week2: 95, week3: 65, week4: 75, laps: 28 },
+  { name: "Owen Baker", grade: "K", teacher: "BEIER", week1: 80, week2: 85, week3: 90, week4: 85, laps: 26 },
+  { name: "Ethan Brown", grade: "TK", teacher: "MCMINN", week1: 95, week2: 60, week3: 85, week4: 70, laps: 29 },
+  { name: "Benjamin Harris", grade: "TK", teacher: "TALAGTAG", week1: 70, week2: 85, week3: 90, week4: 65, laps: 27 },
+  { name: "Ava Thomas", grade: "1", teacher: "QUIJANO", week1: 75, week2: 80, week3: 70, week4: 85, laps: 25 },
+  { name: "Harper Scott", grade: "Lower SDC", teacher: "AVUNOORI - SDC", week1: 75, week2: 85, week3: 95, week4: 80, laps: 31 },
+  { name: "Henry Wright", grade: "Upper SDC", teacher: "HEAP - SDC", week1: 70, week2: 60, week3: 75, week4: 70, laps: 22 },
+  { name: "Leo Nelson", grade: "K", teacher: "KHATUN", week1: 70, week2: 80, week3: 85, week4: 75, laps: 28 }
 ];
 
 const DEFAULT_CONFIG = {
@@ -75,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
   calculateAndRender();
   setupCountdown();
 
-  // If a Google Sheet live sync URL is configured, auto-refresh live data silently!
+  // Silently auto-refresh live data if Google Sheet CSV URL configured
   if (state.config.googleSheetUrl) {
     autoSyncFromGoogleSheets();
   }
@@ -91,14 +119,13 @@ function loadStoredData() {
     const savedStudents = localStorage.getItem('jfs_jogathon_data_v1');
     if (savedStudents) {
       const parsed = JSON.parse(savedStudents);
-      // Clean up corrupt HTML data if it was accidentally saved
       const isCorrupted = parsed.some(s => s.name && (s.name.includes('<') || s.name.includes('function') || s.total > 10000000));
       if (isCorrupted) {
         console.warn("Corrupted HTML cache detected. Resetting to default sample data.");
         state.students = normalizeStudentList(DEFAULT_STUDENTS);
         saveStudentsToStorage();
       } else {
-        state.students = parsed;
+        state.students = normalizeStudentList(parsed);
       }
     } else {
       state.students = normalizeStudentList(DEFAULT_STUDENTS);
@@ -133,7 +160,8 @@ function normalizeStudentList(rawList) {
     const w1 = Number(s.week1) || 0;
     const w2 = Number(s.week2) || 0;
     const w3 = Number(s.week3) || 0;
-    const total = s.total !== undefined ? Number(s.total) : (w1 + w2 + w3);
+    const w4 = Number(s.week4) || 0;
+    const total = s.total !== undefined ? Number(s.total) : (w1 + w2 + w3 + w4);
     const laps = Number(s.laps) || 0;
     return {
       name: String(s.name || '').trim(),
@@ -142,6 +170,7 @@ function normalizeStudentList(rawList) {
       week1: w1,
       week2: w2,
       week3: w3,
+      week4: w4,
       total: total,
       laps: laps
     };
@@ -229,6 +258,31 @@ function initDonationIframe() {
 }
 
 // ==========================================================
+// ROSTER MATCHING HELPER
+// ==========================================================
+function findCanonicalRosterClass(teacherStr) {
+  if (!teacherStr) return null;
+  const clean = teacherStr.trim().toUpperCase();
+
+  // Exact match on canonical teacher name, room, or combined
+  for (const rc of JFS_ROSTER_CLASSES) {
+    if (clean === rc.teacher || clean === `${rc.teacher} (${rc.room})` || clean === rc.room) {
+      return rc;
+    }
+  }
+
+  // Substring match on base name (e.g. "McMinn" in "Mrs. McMinn", "Avunoori" in "Avunoori - SDC")
+  for (const rc of JFS_ROSTER_CLASSES) {
+    const baseName = rc.teacher.replace(/ - SDC/i, '').trim();
+    if (clean.includes(baseName)) {
+      return rc;
+    }
+  }
+
+  return null;
+}
+
+// ==========================================================
 // MAIN CALCULATION & RENDERING
 // ==========================================================
 function calculateAndRender() {
@@ -291,7 +345,7 @@ function renderHeaderStats() {
     leadingClassSub.textContent = `${formatCurrency(maxClassTotal)} each (${topClasses.length} classes tied)`;
   } else if (topClasses.length === 1) {
     leadingClassText.textContent = topClasses[0].teacher;
-    leadingClassSub.textContent = `${formatCurrency(topClasses[0].total)} (${topClasses[0].count} students)`;
+    leadingClassSub.textContent = `${formatCurrency(topClasses[0].total)} (${topClasses[0].participating}/${topClasses[0].enrolled} participating)`;
   } else {
     leadingClassText.textContent = '-';
     leadingClassSub.textContent = 'Awaiting donations';
@@ -300,27 +354,69 @@ function renderHeaderStats() {
 
 function aggregateClasses() {
   const map = {};
+
+  // 1. Initialize all 24 official JFS classrooms
+  JFS_ROSTER_CLASSES.forEach(rc => {
+    map[rc.teacher] = {
+      teacher: rc.teacher,
+      room: rc.room,
+      grade: rc.grade,
+      enrolled: rc.enrolled,
+      participating: 0,
+      total: 0,
+      week1: 0,
+      week2: 0,
+      week3: 0,
+      week4: 0,
+      students: [],
+      topStudent: null
+    };
+  });
+
+  // 2. Aggregate students into classrooms
   state.students.forEach(s => {
-    if (!map[s.teacher]) {
-      map[s.teacher] = {
-        teacher: s.teacher,
-        grade: s.grade,
+    const rc = findCanonicalRosterClass(s.teacher);
+    const key = rc ? rc.teacher : (s.teacher || 'General');
+
+    if (!map[key]) {
+      map[key] = {
+        teacher: key,
+        room: '',
+        grade: s.grade || 'K',
+        enrolled: 0,
+        participating: 0,
         total: 0,
         week1: 0,
         week2: 0,
         week3: 0,
-        count: 0
+        week4: 0,
+        students: [],
+        topStudent: null
       };
     }
-    map[s.teacher].total += s.total;
-    map[s.teacher].week1 += s.week1;
-    map[s.teacher].week2 += s.week2;
-    map[s.teacher].week3 += s.week3;
-    map[s.teacher].count += 1;
+
+    const cls = map[key];
+    cls.total += s.total;
+    cls.week1 += s.week1;
+    cls.week2 += s.week2;
+    cls.week3 += s.week3;
+    cls.week4 += (s.week4 || 0);
+    cls.students.push(s);
+
+    if (s.total > 0) {
+      cls.participating += 1;
+    }
+
+    if (s.total > 0 && (!cls.topStudent || s.total > cls.topStudent.total)) {
+      cls.topStudent = s;
+    }
   });
 
+  // 3. Compute participation percentage and average per student
   Object.values(map).forEach(c => {
-    c.average = c.count > 0 ? Math.round(c.total / c.count) : 0;
+    const denom = c.enrolled > 0 ? c.enrolled : (c.participating > 0 ? c.participating : 1);
+    c.participationPct = c.enrolled > 0 ? Math.min(100, Math.round((c.participating / c.enrolled) * 100)) : (c.participating > 0 ? 100 : 0);
+    c.average = Math.round(c.total / denom);
   });
 
   return map;
@@ -360,7 +456,7 @@ function renderOverallTab() {
           </div>
         `).join('');
 
-        // If there's a 3rd distinct runner-up, show them
+        // If there's a runner-up tier, show it
         if (distinctAmounts.length > 1 && firstTier.length === 2) {
           const secondTier = positiveStudents.filter(s => s.total === distinctAmounts[1]);
           if (secondTier.length > 0) {
@@ -450,6 +546,7 @@ function filterStudents() {
       case 'week1_desc': return b.week1 - a.week1;
       case 'week2_desc': return b.week2 - a.week2;
       case 'week3_desc': return b.week3 - a.week3;
+      case 'week4_desc': return (b.week4 || 0) - (a.week4 || 0);
       case 'name_asc': return a.name.localeCompare(b.name);
       default: return b.total - a.total;
     }
@@ -464,7 +561,7 @@ function filterStudents() {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 40px; color: var(--gray-500);">
+        <td colspan="9" style="text-align: center; padding: 40px; color: var(--gray-500);">
           No students found matching your search or filters.
         </td>
       </tr>
@@ -503,6 +600,7 @@ function filterStudents() {
         <td class="num-col">${formatCurrency(student.week1)}</td>
         <td class="num-col">${formatCurrency(student.week2)}</td>
         <td class="num-col">${formatCurrency(student.week3)}</td>
+        <td class="num-col">${formatCurrency(student.week4 || 0)}</td>
         <td class="num-col total-cell">${formatCurrency(student.total)}</td>
       </tr>
     `;
@@ -510,35 +608,58 @@ function filterStudents() {
 }
 
 function populateFilterOptions() {
-  // 1. Grade Select (Strictly unique grades in active roster)
+  // 1. Grade Select (Strictly unique grades from roster & students)
   const gradeSelect = document.getElementById('gradeFilterSelect');
   if (gradeSelect) {
     const currentGrade = gradeSelect.value;
-    const grades = Array.from(new Set(state.students.map(s => s.grade))).filter(Boolean).sort();
-    gradeSelect.innerHTML = `<option value="ALL">All Grades (${grades.length})</option>` +
-      grades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g.toLowerCase().startsWith('grade') ? g : 'Grade ' + g}</option>`).join('');
+    const rosterGrades = JFS_ROSTER_CLASSES.map(c => c.grade);
+    const studentGrades = state.students.map(s => s.grade);
+    const allGrades = Array.from(new Set([...rosterGrades, ...studentGrades])).filter(Boolean);
+
+    // Natural pedagogical order: TK, K, Lower SDC, 1, 2, 3, Upper SDC, 4, 5, 5/6, 6
+    const gradeOrder = ['TK', 'K', 'Lower SDC', '1', '2', '3', 'Upper SDC', '4', '5', '5/6', '6'];
+    allGrades.sort((a, b) => {
+      const idxA = gradeOrder.indexOf(a);
+      const idxB = gradeOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    gradeSelect.innerHTML = `<option value="ALL">All Grades (${allGrades.length})</option>` +
+      allGrades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g.toLowerCase().includes('sdc') || g.toLowerCase().startsWith('grade') ? g : 'Grade ' + g}</option>`).join('');
   }
 
-  // 2. Teacher Select (Strictly unique teachers in active roster)
+  // 2. Teacher Select (Strictly unique teachers from roster & students)
   const teacherSelect = document.getElementById('teacherFilterSelect');
   if (teacherSelect) {
     const currentTeacher = teacherSelect.value;
-    const teachers = Array.from(new Set(state.students.map(s => s.teacher))).filter(Boolean).sort();
+    const rosterTeachers = JFS_ROSTER_CLASSES.map(c => c.teacher);
+    const studentTeachers = state.students.map(s => s.teacher);
+    const teachers = Array.from(new Set([...rosterTeachers, ...studentTeachers])).filter(Boolean).sort();
     teacherSelect.innerHTML = `<option value="ALL">All Teachers (${teachers.length})</option>` +
       teachers.map(t => `<option value="${t}" ${t === currentTeacher ? 'selected' : ''}>${t}</option>`).join('');
   }
 }
 
 // ==========================================================
-// WEEKLY LEADERS TAB (With Tie Handling)
+// WEEKLY LEADERS TAB (4 Weeks, Date Ranges & Tie Handling)
 // ==========================================================
 function renderWeeklyTab() {
   const weekNum = state.activeWeek;
   const weekKey = `week${weekNum}`;
-  const weekLabel = `Week ${weekNum}`;
 
-  const sortedWeekly = [...state.students].sort((a, b) => b[weekKey] - a[weekKey]);
-  const weeklyTotal = state.students.reduce((acc, s) => acc + s[weekKey], 0);
+  const weekLabels = {
+    1: "Week 1: Oct 19 - 23",
+    2: "Week 2: Oct 24 - 30",
+    3: "Week 3: Oct 31 - Nov 6",
+    4: "Week 4: Nov 7 - 13"
+  };
+  const weekLabel = weekLabels[weekNum] || `Week ${weekNum}`;
+
+  const sortedWeekly = [...state.students].sort((a, b) => (b[weekKey] || 0) - (a[weekKey] || 0));
+  const weeklyTotal = state.students.reduce((acc, s) => acc + (s[weekKey] || 0), 0);
 
   // Active Week Spotlight (With tie handling)
   const maxWeekly = sortedWeekly[0]?.[weekKey] || 0;
@@ -553,7 +674,7 @@ function renderWeeklyTab() {
           <div>
             <div class="spotlight-meta-label">${weekLabel} Leaderboard</div>
             <div class="spotlight-leader-name">Awaiting ${weekLabel} donations</div>
-            <div class="spotlight-meta-sub">Donations recorded for this week will show up here!</div>
+            <div class="spotlight-meta-sub">Donations recorded for this sprint will appear here!</div>
           </div>
         </div>
       `;
@@ -587,7 +708,7 @@ function renderWeeklyTab() {
         <div class="spotlight-stats">
           <div class="spotlight-meta-label">${weekLabel} Raised</div>
           <div class="spotlight-amount">${formatCurrency(topWeekly[weekKey])}</div>
-          <div class="spotlight-sub">Total across all weeks: ${formatCurrency(topWeekly.total)}</div>
+          <div class="spotlight-sub">Cumulative total across all weeks: ${formatCurrency(topWeekly.total)}</div>
         </div>
       `;
     }
@@ -598,7 +719,7 @@ function renderWeeklyTab() {
   const badgeRaised = document.getElementById('weeklyTotalRaisedBadge');
   const colHead = document.getElementById('weeklyColHead');
 
-  if (tableTitle) tableTitle.textContent = `Top Performers for ${weekLabel}`;
+  if (tableTitle) tableTitle.textContent = `Top Fundraisers for ${weekLabel}`;
   if (badgeRaised) badgeRaised.textContent = `${formatCurrency(weeklyTotal)} Raised in ${weekLabel}`;
   if (colHead) colHead.textContent = `${weekLabel} Amount`;
 
@@ -609,14 +730,14 @@ function renderWeeklyTab() {
   const top15 = sortedWeekly.slice(0, 15);
   let currentRank = 1;
   tbody.innerHTML = top15.map((student, idx) => {
-    if (idx > 0 && student[weekKey] < top15[idx - 1][weekKey]) {
+    if (idx > 0 && (student[weekKey] || 0) < (top15[idx - 1][weekKey] || 0)) {
       currentRank = idx + 1;
     }
     const rank = currentRank;
     let badgeClass = 'normal';
-    if (rank === 1 && student[weekKey] > 0) badgeClass = 'top-1';
-    else if (rank === 2 && student[weekKey] > 0) badgeClass = 'top-2';
-    else if (rank === 3 && student[weekKey] > 0) badgeClass = 'top-3';
+    if (rank === 1 && (student[weekKey] || 0) > 0) badgeClass = 'top-1';
+    else if (rank === 2 && (student[weekKey] || 0) > 0) badgeClass = 'top-2';
+    else if (rank === 3 && (student[weekKey] || 0) > 0) badgeClass = 'top-3';
 
     return `
       <tr>
@@ -626,7 +747,7 @@ function renderWeeklyTab() {
         <td class="student-name-cell">${formatStudentName(student.name)}</td>
         <td>Grade ${student.grade}</td>
         <td>${student.teacher}</td>
-        <td class="num-col total-cell">${formatCurrency(student[weekKey])}</td>
+        <td class="num-col total-cell">${formatCurrency(student[weekKey] || 0)}</td>
         <td class="num-col">${formatCurrency(student.total)}</td>
       </tr>
     `;
@@ -634,7 +755,7 @@ function renderWeeklyTab() {
 }
 
 // ==========================================================
-// CLASSES & TEACHERS TAB (With Tied Class Handling & Dynamic Grades)
+// CLASSES & TEACHERS TAB (24 Hardcoded Classes, Pizza Party & Prizes)
 // ==========================================================
 function renderClassesTab() {
   const classMap = aggregateClasses();
@@ -652,31 +773,71 @@ function renderClassesTab() {
         currentRank = idx + 1;
       }
       const isTop = cls.total === maxClassTotal && cls.total > 0;
+      const roomBadge = cls.room ? `<span class="class-grade-tag" style="margin-left: 6px; background: #e2e8f0; color: #475569; padding: 2px 7px; border-radius: 4px; font-size: 0.75rem;">Room ${cls.room}</span>` : '';
+
       return `
         <div class="class-card ${isTop ? 'top-class' : ''}">
           <div>
             <div class="class-card-header">
               <div>
                 <h4 class="class-teacher-name">${cls.teacher}</h4>
-                <span class="class-grade-tag">Grade ${cls.grade}</span>
+                <div style="display: flex; align-items: center; margin-top: 4px;">
+                  <span class="class-grade-tag">${cls.grade.toLowerCase().includes('sdc') ? cls.grade : 'Grade ' + cls.grade}</span>
+                  ${roomBadge}
+                </div>
               </div>
               ${isTop ? `<span class="class-trophy-tag">🏆 ${isTied ? 'Tied for #1 Class' : '#1 Class'}</span>` : `<span class="rank-badge normal">#${currentRank}</span>`}
             </div>
 
+            ${isTop ? `
+              <div style="margin: 6px 0 10px;">
+                <span class="badge badge-light" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.76rem; padding: 4px 10px; border-radius: 9999px; display: inline-flex; align-items: center; gap: 4px;">
+                  🚌 Leading Contender: Cal Academy Field Trip!
+                </span>
+              </div>
+            ` : ''}
+
             <div class="class-raised-amount">${formatCurrency(cls.total)}</div>
-            <p class="class-metric-sub">Average per student: <strong>${formatCurrency(cls.average)}</strong></p>
+            <p class="class-metric-sub">Average per enrolled student: <strong>${formatCurrency(cls.average)}</strong></p>
+
+            <!-- Pizza Party 100% Participation Tracker -->
+            <div class="pizza-party-tracker">
+              <div class="pizza-party-header">
+                <span>🍕 Pizza Party Participation</span>
+                <span>${cls.participationPct}%</span>
+              </div>
+              <div class="pizza-progress-track">
+                <div class="pizza-progress-fill" style="width: ${cls.participationPct}%;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.75rem; color: #854d0e;">
+                <span>${cls.participating} of ${cls.enrolled || cls.participating} students</span>
+                ${cls.participationPct >= 100 
+                  ? `<span class="badge-pizza-unlocked">🎉 Unlocked! +$100 Card</span>` 
+                  : `<span>${(cls.enrolled || 0) - cls.participating > 0 ? `${cls.enrolled - cls.participating} more needed` : ''}</span>`
+                }
+              </div>
+            </div>
+
+            <!-- Top Student in Class -->
+            <div class="class-top-student-row">
+              <span>⭐ Class Top Student:</span>
+              ${cls.topStudent 
+                ? `<strong>${formatStudentName(cls.topStudent.name)} (${formatCurrency(cls.topStudent.total)})</strong>` 
+                : `<span class="text-gray-500">Awaiting donations</span>`
+              }
+            </div>
           </div>
 
           <div class="class-metrics-row">
-            <span><strong>${cls.count}</strong> Participating Students</span>
-            <span>Week 1: <strong>${formatCurrency(cls.week1)}</strong></span>
+            <span><strong>${cls.participating}</strong> Active / <strong>${cls.enrolled || cls.participating}</strong> Enrolled</span>
+            <span>W1-4: <strong>${formatCurrency(cls.total)}</strong></span>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  // Grade Breakdown summary (Strictly dynamically from roster!)
+  // Grade Breakdown summary (With Movie + Pizza Night MPR callout)
   const gradeMap = {};
   state.students.forEach(s => {
     gradeMap[s.grade] = (gradeMap[s.grade] || 0) + s.total;
@@ -684,16 +845,34 @@ function renderClassesTab() {
 
   const gradeGrid = document.getElementById('gradeBarsGrid');
   if (gradeGrid) {
-    const uniqueGrades = Array.from(new Set(state.students.map(s => s.grade))).filter(Boolean).sort();
+    const rosterGrades = JFS_ROSTER_CLASSES.map(c => c.grade);
+    const studentGrades = state.students.map(s => s.grade);
+    const uniqueGrades = Array.from(new Set([...rosterGrades, ...studentGrades])).filter(Boolean);
+
+    const gradeOrder = ['TK', 'K', 'Lower SDC', '1', '2', '3', 'Upper SDC', '4', '5', '5/6', '6'];
+    uniqueGrades.sort((a, b) => {
+      const idxA = gradeOrder.indexOf(a);
+      const idxB = gradeOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
     const maxGradeAmount = Math.max(...Object.values(gradeMap), 1);
 
     if (uniqueGrades.length === 0) {
       gradeGrid.innerHTML = `<p style="color:var(--gray-500); padding: 12px;">No grades loaded in roster.</p>`;
     } else {
-      gradeGrid.innerHTML = uniqueGrades.map(grade => {
+      gradeGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 0.86rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.2rem;">🎬</span>
+          <div><strong>Grade-Wide Contest:</strong> The grade level with the highest total funds raised wins an exclusive <strong>Movie + Pizza Night in the MPR</strong>!</div>
+        </div>
+      ` + uniqueGrades.map(grade => {
         const amount = gradeMap[grade] || 0;
         const pct = Math.round((amount / maxGradeAmount) * 100);
-        const label = grade.toLowerCase().startsWith('grade') ? grade : `Grade ${grade}`;
+        const label = grade.toLowerCase().includes('sdc') || grade.toLowerCase().startsWith('grade') ? grade : `Grade ${grade}`;
 
         return `
           <div class="grade-bar-item">
@@ -834,7 +1013,7 @@ function parseCsvText(text) {
   const isTransactionLog = dateIdx !== -1 && amountIdx !== -1 && nameIdx !== -1;
 
   if (isTransactionLog) {
-    // Aggregation mode: Group donation transactions by student!
+    // Group donation transactions by student!
     const studentMap = new Map();
 
     for (let i = 1; i < lines.length; i++) {
@@ -860,6 +1039,7 @@ function parseCsvText(text) {
           week1: 0,
           week2: 0,
           week3: 0,
+          week4: 0,
           total: 0,
           laps: 0
         });
@@ -871,7 +1051,8 @@ function parseCsvText(text) {
 
       if (weekNum === 1) s.week1 += amt;
       else if (weekNum === 2) s.week2 += amt;
-      else s.week3 += amt;
+      else if (weekNum === 3) s.week3 += amt;
+      else s.week4 += amt;
 
       s.total += amt;
     }
@@ -879,10 +1060,11 @@ function parseCsvText(text) {
     return Array.from(studentMap.values());
   }
 
-  // ROSTER FORMAT (Columns: Student Name, Grade, Teacher, Week 1, Week 2, Week 3, Laps)
+  // ROSTER FORMAT (Columns: Student Name, Grade, Teacher, Week 1, Week 2, Week 3, Week 4, Laps)
   const w1Idx = headers.findIndex(h => h.includes('week 1') || h.includes('week1') || h.includes('w1'));
   const w2Idx = headers.findIndex(h => h.includes('week 2') || h.includes('week2') || h.includes('w2'));
   const w3Idx = headers.findIndex(h => h.includes('week 3') || h.includes('week3') || h.includes('w3'));
+  const w4Idx = headers.findIndex(h => h.includes('week 4') || h.includes('week4') || h.includes('w4'));
   const lapsIdx = headers.findIndex(h => h.includes('lap'));
   const totalIdx = headers.findIndex(h => h.includes('total'));
 
@@ -900,11 +1082,12 @@ function parseCsvText(text) {
     const week1 = w1Idx !== -1 ? cleanNumber(row[w1Idx]) : 0;
     const week2 = w2Idx !== -1 ? cleanNumber(row[w2Idx]) : 0;
     const week3 = w3Idx !== -1 ? cleanNumber(row[w3Idx]) : 0;
+    const week4 = w4Idx !== -1 ? cleanNumber(row[w4Idx]) : 0;
     const laps = lapsIdx !== -1 ? cleanNumber(row[lapsIdx]) : 0;
 
-    let total = totalIdx !== -1 ? cleanNumber(row[totalIdx]) : (week1 + week2 + week3);
-    if (total === 0 && (week1 > 0 || week2 > 0 || week3 > 0)) {
-      total = week1 + week2 + week3;
+    let total = totalIdx !== -1 ? cleanNumber(row[totalIdx]) : (week1 + week2 + week3 + week4);
+    if (total === 0 && (week1 > 0 || week2 > 0 || week3 > 0 || week4 > 0)) {
+      total = week1 + week2 + week3 + week4;
     }
 
     students.push({
@@ -914,6 +1097,7 @@ function parseCsvText(text) {
       week1,
       week2,
       week3,
+      week4,
       total,
       laps
     });
@@ -926,26 +1110,27 @@ function determineWeekFromDate(dateStr) {
   if (!dateStr) return 1;
   const parsed = new Date(dateStr);
   if (isNaN(parsed.getTime())) {
-    // If not a standard date format, check if string mentions "week 1", "week 2", "week 3"
     const lower = dateStr.toLowerCase();
+    if (lower.includes('4')) return 4;
     if (lower.includes('3')) return 3;
     if (lower.includes('2')) return 2;
     return 1;
   }
 
-  // Culmination is Friday, Nov 13.
-  // 3-Week Schedule:
-  // Week 1: Kickoff to Oct 30
-  // Week 2: Oct 31 to Nov 6
-  // Week 3: Nov 7 to Nov 13
+  // 4-Week Schedule:
+  // Week 1: Oct 19 - Oct 23
+  // Week 2: Oct 24 - Oct 30
+  // Week 3: Oct 31 - Nov 6
+  // Week 4: Nov 7 - Nov 13
   const month = parsed.getMonth(); // 9 = Oct, 10 = Nov
   const day = parsed.getDate();
 
   if (month === 9) { // October
-    return day <= 30 ? 1 : 2;
+    if (day <= 23) return 1;
+    return 2; // Oct 24 - Oct 31
   } else if (month === 10) { // November
-    if (day <= 6) return 2;
-    return 3;
+    if (day <= 6) return 3; // Nov 1 - Nov 6
+    return 4; // Nov 7 - Nov 13+
   }
   return 1;
 }
@@ -977,29 +1162,30 @@ function cleanNumber(val) {
 }
 
 function downloadCsvTemplate() {
-  const headers = "Student Name,Grade,Teacher,Week 1,Week 2,Week 3,Laps Run\n";
-  const sample = "Aarav Patel,4,Mrs. Anderson,120,85,95,32\nMaya Sidhu,3,Mr. Davis,150,110,140,36\n";
+  const headers = "Student Name,Grade,Teacher,Week 1,Week 2,Week 3,Week 4,Laps Run\n";
+  const sample = "Aarav Patel,4,FECI,120,85,95,110,32\nMaya Sidhu,3,ALEXANDER,150,110,140,160,36\n";
   const blob = new Blob([headers + sample], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'jfs_jogathon_template.csv';
+  a.download = 'jfs_jagathon_template.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
 
 function exportCurrentDataCsv() {
-  const headers = ["Student Name", "Grade", "Teacher", "Week 1", "Week 2", "Week 3", "Total", "Laps Run"].join(",");
+  const headers = ["Student Name", "Grade", "Teacher", "Week 1", "Week 2", "Week 3", "Week 4", "Total", "Laps Run"].join(",");
   const rows = state.students.map(s => {
     return [
       `"${s.name.replace(/"/g, '""')}"`,
       `"${s.grade}"`,
       `"${s.teacher.replace(/"/g, '""')}"`,
-      s.week1,
-      s.week2,
-      s.week3,
+      s.week1 || 0,
+      s.week2 || 0,
+      s.week3 || 0,
+      s.week4 || 0,
       s.total,
-      s.laps
+      s.laps || 0
     ].join(",");
   });
 
@@ -1008,7 +1194,7 @@ function exportCurrentDataCsv() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `jfs_jogathon_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `jfs_jagathon_export_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
   showToast("📥 Exported current leaderboard data!");
