@@ -1946,3 +1946,15 @@ input:checked + .slider:before {
 .class-top-student-row strong {
   color: var(--primary);
 }
+
+.room-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  padding: 1px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
