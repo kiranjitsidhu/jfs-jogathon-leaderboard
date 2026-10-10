@@ -125,7 +125,19 @@ function loadStoredData() {
         state.students = normalizeStudentList(DEFAULT_STUDENTS);
         saveStudentsToStorage();
       } else {
+        // Heal any entries where teacher was temporarily stored as a room number (e.g. "B-11")
+        parsed.forEach(s => {
+          if (s.teacher && (s.teacher.match(/^[A-K]-[0-9]+$/i) || s.teacher === 'B-11')) {
+            const rc = JFS_ROSTER_CLASSES.find(c => c.room.toUpperCase() === s.teacher.toUpperCase());
+            if (rc) {
+              s.room = rc.room;
+              s.teacher = rc.teacher;
+              s.grade = rc.grade;
+            }
+          }
+        });
         state.students = normalizeStudentList(parsed);
+        saveStudentsToStorage();
       }
     } else {
       state.students = normalizeStudentList(DEFAULT_STUDENTS);
@@ -164,11 +176,25 @@ function normalizeStudentList(rawList) {
     const total = s.total !== undefined ? Number(s.total) : (w1 + w2 + w3 + w4);
     const laps = Number(s.laps) || 0;
 
+    let teacher = String(s.teacher || 'General').trim();
+    let room = String(s.room || '').trim();
+    let grade = String(s.grade || 'K').trim();
+
+    // If teacher looks like a room code (e.g. "B-11", "K-3"), swap/fix it
+    if (teacher.match(/^[A-K]-[0-9]+$/i) || teacher === 'B-11') {
+      const rc = JFS_ROSTER_CLASSES.find(c => c.room.toUpperCase() === teacher.toUpperCase());
+      if (rc) {
+        room = rc.room;
+        teacher = rc.teacher;
+        grade = rc.grade;
+      }
+    }
+
     // Use canonical roster matching to sync room & teacher
-    const rc = findCanonicalRosterClass(s.teacher, s.room);
-    const canonicalTeacher = rc ? rc.teacher : String(s.teacher || 'General').trim();
-    const canonicalRoom = rc ? rc.room : String(s.room || '').trim();
-    const canonicalGrade = rc ? rc.grade : String(s.grade || 'K').trim();
+    const rc = findCanonicalRosterClass(teacher, room);
+    const canonicalTeacher = rc ? rc.teacher : teacher;
+    const canonicalRoom = rc ? rc.room : room;
+    const canonicalGrade = rc ? rc.grade : grade;
 
     return {
       name: String(s.name || '').trim(),
@@ -535,11 +561,13 @@ function renderOverallTab() {
 function filterStudents() {
   const searchInput = document.getElementById('studentSearchInput');
   const gradeSelect = document.getElementById('gradeFilterSelect');
+  const roomSelect = document.getElementById('roomFilterSelect');
   const teacherSelect = document.getElementById('teacherFilterSelect');
   const sortSelect = document.getElementById('sortOrderSelect');
 
   const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const selectedGrade = gradeSelect ? gradeSelect.value : 'ALL';
+  const selectedRoom = roomSelect ? roomSelect.value : 'ALL';
   const selectedTeacher = teacherSelect ? teacherSelect.value : 'ALL';
   const sortOrder = sortSelect ? sortSelect.value : 'total_desc';
 
@@ -551,9 +579,10 @@ function filterStudents() {
       String(s.grade).toLowerCase().includes(query);
 
     const matchesGrade = selectedGrade === 'ALL' || String(s.grade).toUpperCase() === selectedGrade.toUpperCase();
+    const matchesRoom = selectedRoom === 'ALL' || String(s.room || '').toUpperCase() === selectedRoom.toUpperCase();
     const matchesTeacher = selectedTeacher === 'ALL' || s.teacher === selectedTeacher;
 
-    return matchesSearch && matchesGrade && matchesTeacher;
+    return matchesSearch && matchesGrade && matchesRoom && matchesTeacher;
   });
 
   // Sorting
@@ -578,7 +607,7 @@ function filterStudents() {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" style="text-align: center; padding: 40px; color: var(--gray-500);">
+        <td colspan="10" style="text-align: center; padding: 40px; color: var(--gray-500);">
           No students found matching your search or filters.
         </td>
       </tr>
@@ -604,8 +633,6 @@ function filterStudents() {
     else if (rank === 2 && student.total > 0) rankBadgeClass = 'top-2';
     else if (rank === 3 && student.total > 0) rankBadgeClass = 'top-3';
 
-    const roomBadge = student.room ? `<span class="room-pill">Rm ${student.room}</span>` : '';
-
     return `
       <tr>
         <td>
@@ -615,12 +642,8 @@ function filterStudents() {
           ${formatStudentName(student.name)}
         </td>
         <td>Grade ${student.grade}</td>
-        <td>
-          <div style="display:inline-flex; align-items:center; gap:6px;">
-            <span>${student.teacher}</span>
-            ${roomBadge}
-          </div>
-        </td>
+        <td>${student.room ? `<span class="room-pill">Rm ${student.room}</span>` : '-'}</td>
+        <td>${student.teacher}</td>
         <td class="num-col">${formatCurrency(student.week1)}</td>
         <td class="num-col">${formatCurrency(student.week2)}</td>
         <td class="num-col">${formatCurrency(student.week3)}</td>
@@ -655,12 +678,23 @@ function populateFilterOptions() {
       allGrades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g.toLowerCase().includes('sdc') || g.toLowerCase().startsWith('grade') ? g : 'Grade ' + g}</option>`).join('');
   }
 
-  // 2. Teacher Select (Strictly unique teachers from roster & students)
+  // 2. Room Select (Strictly unique rooms from roster & students)
+  const roomSelect = document.getElementById('roomFilterSelect');
+  if (roomSelect) {
+    const currentRoom = roomSelect.value;
+    const rosterRooms = JFS_ROSTER_CLASSES.map(c => c.room);
+    const studentRooms = state.students.map(s => s.room).filter(Boolean);
+    const allRooms = Array.from(new Set([...rosterRooms, ...studentRooms])).sort();
+    roomSelect.innerHTML = `<option value="ALL">All Rooms (${allRooms.length})</option>` +
+      allRooms.map(r => `<option value="${r}" ${r === currentRoom ? 'selected' : ''}>Room ${r}</option>`).join('');
+  }
+
+  // 3. Teacher Select (Strictly unique teachers from roster & students, excluding room codes)
   const teacherSelect = document.getElementById('teacherFilterSelect');
   if (teacherSelect) {
     const currentTeacher = teacherSelect.value;
     const rosterTeachers = JFS_ROSTER_CLASSES.map(c => c.teacher);
-    const studentTeachers = state.students.map(s => s.teacher);
+    const studentTeachers = state.students.map(s => s.teacher).filter(t => !t.match(/^[A-K]-[0-9]+$/i) && t !== 'B-11');
     const teachers = Array.from(new Set([...rosterTeachers, ...studentTeachers])).filter(Boolean).sort();
     teacherSelect.innerHTML = `<option value="ALL">All Teachers (${teachers.length})</option>` +
       teachers.map(t => `<option value="${t}" ${t === currentTeacher ? 'selected' : ''}>${t}</option>`).join('');
@@ -756,7 +790,7 @@ function renderWeeklyTab() {
   if (sortedWeekly.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 40px; color: var(--gray-500);">
+        <td colspan="7" style="text-align: center; padding: 40px; color: var(--gray-500);">
           No donations recorded yet for ${weekLabel}.
         </td>
       </tr>
@@ -776,8 +810,6 @@ function renderWeeklyTab() {
     else if (rank === 2) badgeClass = 'top-2';
     else if (rank === 3) badgeClass = 'top-3';
 
-    const roomBadge = student.room ? `<span class="room-pill">Rm ${student.room}</span>` : '';
-
     return `
       <tr>
         <td>
@@ -785,12 +817,8 @@ function renderWeeklyTab() {
         </td>
         <td class="student-name-cell">${formatStudentName(student.name)}</td>
         <td>Grade ${student.grade}</td>
-        <td>
-          <div style="display:inline-flex; align-items:center; gap:6px;">
-            <span>${student.teacher}</span>
-            ${roomBadge}
-          </div>
-        </td>
+        <td>${student.room ? `<span class="room-pill">Rm ${student.room}</span>` : '-'}</td>
+        <td>${student.teacher}</td>
         <td class="num-col total-cell">${formatCurrency(student[weekKey] || 0)}</td>
         <td class="num-col">${formatCurrency(student.total)}</td>
       </tr>

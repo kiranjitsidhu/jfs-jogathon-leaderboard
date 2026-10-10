@@ -154,6 +154,11 @@
             <option value="ALL">All Grades</option>
           </select>
 
+          <label for="roomFilterSelect" class="sr-only">Filter by Room</label>
+          <select id="roomFilterSelect" onchange="filterStudents()">
+            <option value="ALL">All Rooms</option>
+          </select>
+
           <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
           <select id="teacherFilterSelect" onchange="filterStudents()">
             <option value="ALL">All Teachers</option>
@@ -177,9 +182,10 @@
           <table class="data-table" id="studentsTable">
             <thead>
               <tr>
-                <th style="width: 80px;">Rank</th>
+                <th style="width: 70px;">Rank</th>
                 <th>Student</th>
                 <th>Grade</th>
+                <th>Room</th>
                 <th>Teacher</th>
                 <th class="num-col">W1 (Oct 19-23)</th>
                 <th class="num-col">W2 (Oct 24-30)</th>
@@ -232,9 +238,10 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width: 80px;">Rank</th>
+                <th style="width: 70px;">Rank</th>
                 <th>Student</th>
                 <th>Grade</th>
+                <th>Room</th>
                 <th>Teacher</th>
                 <th class="num-col highlight-head" id="weeklyColHead">Week 1 Amount</th>
                 <th class="num-col">Overall Total</th>
