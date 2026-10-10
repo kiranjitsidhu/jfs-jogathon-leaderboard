@@ -1176,30 +1176,73 @@ function renderClassesTab() {
       return a.localeCompare(b);
     });
 
-    const maxGradeAmount = Math.max(...Object.values(gradeMap), 1);
+    const maxGradeAmount = Math.max(...Object.values(gradeMap), 0);
+    const hasDonations = maxGradeAmount > 0;
+    const leadingGrades = hasDonations 
+      ? uniqueGrades.filter(g => (gradeMap[g] || 0) === maxGradeAmount)
+      : [];
+    const isTied = leadingGrades.length > 1;
 
     if (uniqueGrades.length === 0) {
       gradeGrid.innerHTML = `<p style="color:var(--gray-500); padding: 12px;">No grades loaded in roster.</p>`;
     } else {
-      gradeGrid.innerHTML = `
-        <div style="grid-column: 1 / -1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 0.86rem; color: #166534; display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.2rem;">🎬</span>
-          <div><strong>Grade-Wide Contest:</strong> The grade level with the highest total funds raised wins an exclusive <strong>Movie + Pizza Night in the MPR</strong>!</div>
+      const bannerHtml = `
+        <div class="grade-contest-banner">
+          <div class="contest-icon">🎬</div>
+          <div class="contest-info">
+            <div class="contest-title">
+              <strong>Grade-Wide Contest:</strong> The grade level with the highest total funds raised wins an exclusive <strong>Movie + Pizza Night in the MPR</strong>!
+            </div>
+            ${leadingGrades.length > 0 ? `
+              <div class="contest-current-leader">
+                <span class="leader-trophy">🏆</span>
+                <span><strong>Current ${isTied ? 'Leaders (Tied)' : 'Leader'}:</strong> <strong>${leadingGrades.map(g => g.toLowerCase().includes('sdc') || g.toLowerCase().startsWith('grade') ? g : `Grade ${g}`).join(' & ')}</strong> with <strong>${formatCurrency(maxGradeAmount)}</strong> raised!</span>
+              </div>
+            ` : `
+              <div class="contest-current-leader awaiting">
+                <span>🏁</span> Contest underway — make a donation to put your student's grade in 1st place!
+              </div>
+            `}
+          </div>
         </div>
-      ` + uniqueGrades.map(grade => {
+      `;
+
+      gradeGrid.innerHTML = bannerHtml + uniqueGrades.map(grade => {
         const amount = gradeMap[grade] || 0;
-        const pct = Math.round((amount / maxGradeAmount) * 100);
+        const pct = maxGradeAmount > 0 ? Math.round((amount / maxGradeAmount) * 100) : 0;
         const label = grade.toLowerCase().includes('sdc') || grade.toLowerCase().startsWith('grade') ? grade : `Grade ${grade}`;
+        const isLeading = leadingGrades.includes(grade);
+
+        if (isLeading) {
+          return `
+            <div class="grade-bar-item leading-grade">
+              <div class="grade-leader-tag">
+                <span class="leader-badge-pill">${isTied ? '🏆 Tied for #1' : '🏆 #1 In The Lead'}</span>
+              </div>
+              <div class="grade-bar-title">
+                <span class="grade-name-label">${label}</span>
+                <span class="grade-amount-label">${formatCurrency(amount)}</span>
+              </div>
+              <div class="grade-bar-track">
+                <div class="grade-bar-fill leading-fill" style="width: ${pct}%;"></div>
+              </div>
+              <div class="grade-leader-status-note">
+                🎬 Current MPR Movie Night Leader!
+              </div>
+            </div>
+          `;
+        }
 
         return `
           <div class="grade-bar-item">
             <div class="grade-bar-title">
-              <span>${label}</span>
-              <span>${formatCurrency(amount)}</span>
+              <span class="grade-name-label">${label}</span>
+              <span class="grade-amount-label">${formatCurrency(amount)}</span>
             </div>
             <div class="grade-bar-track">
               <div class="grade-bar-fill" style="width: ${pct}%;"></div>
             </div>
+            ${amount === 0 ? `<div class="grade-awaiting-note">$0 raised so far</div>` : ''}
           </div>
         `;
       }).join('');
@@ -1208,7 +1251,7 @@ function renderClassesTab() {
 }
 
 // ==========================================================
-// COUNTDOWN TIMER (Culmination: Friday, Nov 13th)
+// COUNTDOWN TIMER (Jag-a-Thon: Friday, Nov 13th)
 // ==========================================================
 function setupCountdown() {
   const countdownEl = document.getElementById('countdownDaysText');
