@@ -321,8 +321,8 @@ function initDonationIframe() {
 
 function initVolunteerIframe() {
   const iframe = document.getElementById('volunteerIframe');
-  const url = "https://forms.gle/8XA8oq5FmHDBwYHFA";
-  if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
+  const url = "https://docs.google.com/forms/d/e/1FAIpQLScKwthYPsAzpuebmTkiN0hehdbyq-8CDHC8Vmb2fpkRikZS8Q/viewform?embedded=true";
+  if (iframe && (!iframe.src || iframe.src === 'about:blank' || iframe.src.includes('forms.gle'))) {
     iframe.src = url;
   }
 }
