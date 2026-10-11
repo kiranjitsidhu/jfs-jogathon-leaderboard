@@ -1214,15 +1214,23 @@ body {
 .class-metrics-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  align-items: center;
+  font-size: 0.88rem;
   color: var(--gray-600);
   border-top: 1px solid var(--gray-100);
-  padding-top: 10px;
-  margin-top: 10px;
+  padding-top: 12px;
+  margin-top: 12px;
 }
 
-.class-metric-sub strong {
+.class-metrics-row strong {
   color: var(--gray-900);
+  font-weight: 700;
+}
+
+.class-metrics-row .metric-raised strong {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 /* ==========================================================

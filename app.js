@@ -1311,43 +1311,11 @@ function renderClassesTab() {
               </div>
             ` : ''}
 
-            <div class="class-raised-amount">${formatCurrency(cls.total)}</div>
-            <p class="class-metric-sub">Average per enrolled student: <strong>${formatCurrency(cls.average)}</strong></p>
-
-            <!-- Pizza Party 100% Participation Tracker (Percentage Only, No Student Counts) -->
-            <div class="pizza-party-tracker">
-              <div class="pizza-party-header">
-                <span>🍕 Participation Progress</span>
-                <span>${cls.participationPct}%</span>
-              </div>
-              <div class="pizza-progress-track">
-                <div class="pizza-progress-fill" style="width: ${cls.participationPct}%;"></div>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.75rem; color: #854d0e;">
-                <span>${cls.participationPct}% Participation</span>
-                ${cls.participationPct >= 100 
-                  ? `<span class="badge-pizza-unlocked">🎉 Unlocked! +$100 Card</span>` 
-                  : `<span>Contending for Pizza Party</span>`
-                }
-              </div>
-            </div>
-
-            <!-- Top Student in Class (First Name + Last Initial, No Rooms) -->
-            <div class="class-top-student-row">
-              <span>⭐ Top Fundraiser ($25 Gift Card):</span>
-              ${cls.topStudents && cls.topStudents.length > 1
-                ? `<strong>Tied (${cls.topStudents.length}): ${cls.topStudents.map(s => formatStudentName(s.name)).join(', ')} (${formatCurrency(cls.topStudents[0].total)} each)</strong>`
-                : (cls.topStudent 
-                    ? `<strong>${formatStudentName(cls.topStudent.name)} (${formatCurrency(cls.topStudent.total)})</strong>` 
-                    : `<span class="text-gray-500">Awaiting donations</span>`
-                  )
-              }
-            </div>
           </div>
 
           <div class="class-metrics-row">
             <span>Participation: <strong>${cls.participationPct}%</strong></span>
-            <span>Total Raised: <strong>${formatCurrency(cls.total)}</strong></span>
+            <span class="metric-raised">Raised So Far: <strong>${formatCurrency(cls.total)}</strong></span>
           </div>
         </div>
       `;
