@@ -12,7 +12,7 @@ const JFS_ROSTER_CLASSES = [
   { teacher: "ANGUIANO", room: "K-3", enrolled: 24, grade: "K" },
   { teacher: "BEIER", room: "K-1", enrolled: 24, grade: "K" },
   { teacher: "KHATUN", room: "K-2", enrolled: 24, grade: "K" },
-  { teacher: "AVUNOORI", room: "B-15", enrolled: 10, grade: "Lower" },
+  { teacher: "AVUNOORI", room: "B-15", enrolled: 10, grade: "Lower SDC" },
   { teacher: "CACCIARONI", room: "B-7", enrolled: 24, grade: "1" },
   { teacher: "MATHARU", room: "B-8", enrolled: 24, grade: "1" },
   { teacher: "QUIJANO", room: "B-9", enrolled: 23, grade: "1" },
@@ -22,7 +22,7 @@ const JFS_ROSTER_CLASSES = [
   { teacher: "ALEXANDER", room: "A-5", enrolled: 23, grade: "3" },
   { teacher: "CICCARELLO", room: "A-3", enrolled: 24, grade: "3" },
   { teacher: "HART", room: "A-2", enrolled: 24, grade: "3" },
-  { teacher: "HEAP", room: "B-13", enrolled: 11, grade: "Upper" },
+  { teacher: "HEAP", room: "B-13", enrolled: 11, grade: "Upper SDC" },
   { teacher: "FECI", room: "C-1", enrolled: 30, grade: "4" },
   { teacher: "NOYES", room: "C-2", enrolled: 27, grade: "4" },
   { teacher: "HOSLER", room: "C-4", enrolled: 30, grade: "4" },
@@ -35,6 +35,20 @@ const JFS_ROSTER_CLASSES = [
 
 // Total student count across the 24 classrooms = 584
 const TOTAL_ROSTER_STUDENTS = JFS_ROSTER_CLASSES.reduce((sum, c) => sum + c.enrolled, 0);
+
+// Pedagogical grade order: TK, K, Lower SDC, 1, 2, 3, Upper SDC, 4, 5, 5/6, 6
+const GRADE_ORDER = ['TK', 'K', 'Lower SDC', '1', '2', '3', 'Upper SDC', '4', '5', '5/6', '6'];
+
+function compareGrades(a, b) {
+  const normA = (/^lower/i.test(a)) ? 'Lower SDC' : (/^upper/i.test(a)) ? 'Upper SDC' : a;
+  const normB = (/^lower/i.test(b)) ? 'Lower SDC' : (/^upper/i.test(b)) ? 'Upper SDC' : b;
+  const idxA = GRADE_ORDER.indexOf(normA);
+  const idxB = GRADE_ORDER.indexOf(normB);
+  if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+  if (idxA !== -1) return -1;
+  if (idxB !== -1) return 1;
+  return String(a).localeCompare(String(b));
+}
 
 // ==========================================================
 // DEFAULT STARTER DATASET (Grounded in Real JFS Classes)
@@ -62,8 +76,8 @@ const DEFAULT_STUDENTS = [
   { name: "Ethan Brown", grade: "TK", room: "K-A1", teacher: "MCMINN", week1: 95, week2: 60, week3: 85, week4: 70, laps: 29 },
   { name: "Benjamin Harris", grade: "TK", room: "A-4", teacher: "TALAGTAG", week1: 70, week2: 85, week3: 90, week4: 65, laps: 27 },
   { name: "Ava Thomas", grade: "1", room: "B-9", teacher: "QUIJANO", week1: 75, week2: 80, week3: 70, week4: 85, laps: 25 },
-  { name: "Harper Scott", grade: "Lower", room: "B-15", teacher: "AVUNOORI", week1: 75, week2: 85, week3: 95, week4: 80, laps: 31 },
-  { name: "Henry Wright", grade: "Upper", room: "B-13", teacher: "HEAP", week1: 70, week2: 60, week3: 75, week4: 70, laps: 22 },
+  { name: "Harper Scott", grade: "Lower SDC", room: "B-15", teacher: "AVUNOORI", week1: 75, week2: 85, week3: 95, week4: 80, laps: 31 },
+  { name: "Henry Wright", grade: "Upper SDC", room: "B-13", teacher: "HEAP", week1: 70, week2: 60, week3: 75, week4: 70, laps: 22 },
   { name: "Leo Nelson", grade: "K", room: "K-2", teacher: "KHATUN", week1: 70, week2: 80, week3: 85, week4: 75, laps: 28 }
 ];
 
@@ -195,7 +209,9 @@ function normalizeStudentList(rawList) {
     const rc = findCanonicalRosterClass(teacher, room);
     const canonicalTeacher = rc ? rc.teacher : teacher;
     const canonicalRoom = rc ? rc.room : room;
-    const canonicalGrade = rc ? rc.grade : grade;
+    let canonicalGrade = rc ? rc.grade : grade;
+    if (/^lower(\s*sdc|\s*grade)?$/i.test(canonicalGrade) || canonicalTeacher === 'AVUNOORI') canonicalGrade = 'Lower SDC';
+    if (/^upper(\s*sdc|\s*grade)?$/i.test(canonicalGrade) || canonicalTeacher === 'HEAP') canonicalGrade = 'Upper SDC';
 
     return {
       name: String(s.name || '').trim(),
@@ -271,6 +287,15 @@ function formatStudentName(fullName) {
   const firstName = parts[0];
   const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
   return `${firstName} ${lastInitial}.`;
+}
+
+function formatGradeLabel(grade) {
+  if (!grade) return '';
+  const g = String(grade).trim();
+  if (/^lower(\s*sdc|\s*grade)?$/i.test(g)) return 'Lower SDC';
+  if (/^upper(\s*sdc|\s*grade)?$/i.test(g)) return 'Upper SDC';
+  if (g.toLowerCase().startsWith('grade')) return g;
+  return `Grade ${g}`;
 }
 
 function updateDonationLinkTargets() {
@@ -512,7 +537,7 @@ function renderOverallTab() {
           <div class="podium-card tied-co-leader">
             <div class="podium-badge" style="background: linear-gradient(135deg, #ffd700 0%, #ffae00 100%);">🥇</div>
             <div class="podium-name">${formatStudentName(s.name)}</div>
-            <div class="podium-meta">${s.grade === 'Lower' || s.grade === 'Upper' ? s.grade + ' Grade' : 'Grade ' + s.grade} &bull; ${s.teacher}</div>
+            <div class="podium-meta">${formatGradeLabel(s.grade)} &bull; ${s.teacher}</div>
             <div class="podium-amount" style="color: #b45309;">${formatCurrency(s.total)}</div>
             <span class="co-leader-pill">🥇 Tied for 1st</span>
           </div>
@@ -526,7 +551,7 @@ function renderOverallTab() {
               <div class="podium-card rank-3">
                 <div class="podium-badge">🥉</div>
                 <div class="podium-name">${formatStudentName(runnerUp.name)}</div>
-                <div class="podium-meta">${runnerUp.grade === 'Lower' || runnerUp.grade === 'Upper' ? runnerUp.grade + ' Grade' : 'Grade ' + runnerUp.grade} &bull; ${runnerUp.teacher}</div>
+                <div class="podium-meta">${formatGradeLabel(runnerUp.grade)} &bull; ${runnerUp.teacher}</div>
                 <div class="podium-amount">${formatCurrency(runnerUp.total)}</div>
                 <span class="co-leader-pill" style="background: #ffedd5; color: #9a3412;">3rd Place</span>
               </div>
@@ -563,7 +588,7 @@ function renderOverallTab() {
           <div class="podium-card rank-2">
             <div class="podium-badge">🥈</div>
             <div class="podium-name">${formatStudentName(second.name)}</div>
-            <div class="podium-meta">${second.grade === 'Lower' || second.grade === 'Upper' ? second.grade + ' Grade' : 'Grade ' + second.grade} &bull; ${second.teacher}</div>
+            <div class="podium-meta">${formatGradeLabel(second.grade)} &bull; ${second.teacher}</div>
             <div class="podium-amount">${formatCurrency(second.total)}</div>
             ${secondTier.length > 1 ? `<span class="co-leader-pill" style="background:#f1f5f9; color:#475569;">🥈 Tied for 2nd</span>` : ''}
           </div>
@@ -581,7 +606,7 @@ function renderOverallTab() {
           <div class="podium-card rank-1">
             <div class="podium-badge">🥇</div>
             <div class="podium-name">${formatStudentName(first.name)}</div>
-            <div class="podium-meta">${first.grade === 'Lower' || first.grade === 'Upper' ? first.grade + ' Grade' : 'Grade ' + first.grade} &bull; ${first.teacher}</div>
+            <div class="podium-meta">${formatGradeLabel(first.grade)} &bull; ${first.teacher}</div>
             <div class="podium-amount">${formatCurrency(first.total)}</div>
           </div>
         `;
@@ -590,7 +615,7 @@ function renderOverallTab() {
           <div class="podium-card rank-3">
             <div class="podium-badge">${thirdIsTiedSecond ? '🥈' : '🥉'}</div>
             <div class="podium-name">${formatStudentName(third.name)}</div>
-            <div class="podium-meta">${third.grade === 'Lower' || third.grade === 'Upper' ? third.grade + ' Grade' : 'Grade ' + third.grade} &bull; ${third.teacher}</div>
+            <div class="podium-meta">${formatGradeLabel(third.grade)} &bull; ${third.teacher}</div>
             <div class="podium-amount">${formatCurrency(third.total)}</div>
             ${thirdIsTiedSecond ? `<span class="co-leader-pill" style="background:#f1f5f9; color:#475569;">🥈 Tied for 2nd</span>` : ''}
           </div>
@@ -633,7 +658,7 @@ function renderOverallTab() {
         else if (rank === 2) badgeClass = 'top-2';
         else if (rank === 3) badgeClass = 'top-3';
 
-        const gradeLabel = student.grade === 'Lower' || student.grade === 'Upper' ? `${student.grade} Grade` : (student.grade.toLowerCase().startsWith('grade') ? student.grade : `Grade ${student.grade}`);
+        const gradeLabel = formatGradeLabel(student.grade);
 
         return `
           <tr>
@@ -666,15 +691,23 @@ function filterClassTopStudents() {
   const classMap = aggregateClasses();
   let list = Object.values(classMap);
 
-  // Filters
+  // Filters: allows teacher or grade search (e.g. "Lower SDC", "SDC", "Grade 2", "Anguiano")
   list = list.filter(cls => {
-    const topStudentName = cls.topStudent ? cls.topStudent.name : '';
-    const matchesSearch = !query ||
-      cls.teacher.toLowerCase().includes(query) ||
-      String(cls.grade).toLowerCase().includes(query) ||
-      topStudentName.toLowerCase().includes(query);
+    const gradeLabel = formatGradeLabel(cls.grade).toLowerCase();
+    const rawGrade = String(cls.grade).toLowerCase();
+    const teacherName = cls.teacher.toLowerCase();
+    const topStudentName = cls.topStudent ? cls.topStudent.name.toLowerCase() : '';
 
-    const matchesGrade = selectedGrade === 'ALL' || String(cls.grade).toUpperCase() === selectedGrade.toUpperCase();
+    const matchesSearch = !query ||
+      teacherName.includes(query) ||
+      rawGrade.includes(query) ||
+      gradeLabel.includes(query) ||
+      topStudentName.includes(query);
+
+    const matchesGrade = selectedGrade === 'ALL' ||
+      String(cls.grade).toUpperCase() === selectedGrade.toUpperCase() ||
+      formatGradeLabel(cls.grade).toUpperCase() === formatGradeLabel(selectedGrade).toUpperCase();
+
     const matchesTeacher = selectedTeacher === 'ALL' || cls.teacher === selectedTeacher;
 
     return matchesSearch && matchesGrade && matchesTeacher;
@@ -689,15 +722,8 @@ function filterClassTopStudents() {
         return bTotal - aTotal;
       case 'teacher_asc':
         return a.teacher.localeCompare(b.teacher);
-      case 'grade_asc': {
-        const gradeOrder = ['TK', 'K', 'Lower', '1', '2', '3', 'Upper', '4', '5', '5/6', '6'];
-        const idxA = gradeOrder.indexOf(a.grade);
-        const idxB = gradeOrder.indexOf(b.grade);
-        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        if (idxA !== -1) return -1;
-        if (idxB !== -1) return 1;
-        return a.grade.localeCompare(b.grade);
-      }
+      case 'grade_asc':
+        return compareGrades(a.grade, b.grade);
       default:
         return bTotal - aTotal;
     }
@@ -721,7 +747,7 @@ function filterClassTopStudents() {
 
   tbody.innerHTML = list.map(cls => {
     const hasTop = cls.topStudent && cls.topStudent.total > 0;
-    const gradeLabel = cls.grade === 'Lower' || cls.grade === 'Upper' ? `${cls.grade} Grade` : (cls.grade.toLowerCase().startsWith('grade') ? cls.grade : `Grade ${cls.grade}`);
+    const gradeLabel = formatGradeLabel(cls.grade);
 
     return `
       <tr>
@@ -758,7 +784,10 @@ function onGradeFilterChange() {
 
   // If grade changed, check if current teacher still belongs to this grade
   if (selectedGrade !== 'ALL') {
-    const validClasses = JFS_ROSTER_CLASSES.filter(c => String(c.grade).toUpperCase() === selectedGrade.toUpperCase());
+    const validClasses = JFS_ROSTER_CLASSES.filter(c => 
+      String(c.grade).toUpperCase() === selectedGrade.toUpperCase() ||
+      formatGradeLabel(c.grade).toUpperCase() === formatGradeLabel(selectedGrade).toUpperCase()
+    );
     const validTeachers = validClasses.map(c => c.teacher.toUpperCase());
 
     if (!validTeachers.includes(state.filters.teacher.toUpperCase())) {
@@ -803,14 +832,17 @@ function updateDependentDropdowns() {
   if (teacherSelect) {
     const relevantClasses = selectedGrade === 'ALL'
       ? JFS_ROSTER_CLASSES
-      : JFS_ROSTER_CLASSES.filter(c => String(c.grade).toUpperCase() === selectedGrade.toUpperCase());
+      : JFS_ROSTER_CLASSES.filter(c => 
+          String(c.grade).toUpperCase() === selectedGrade.toUpperCase() ||
+          formatGradeLabel(c.grade).toUpperCase() === formatGradeLabel(selectedGrade).toUpperCase()
+        );
 
     const rosterTeachers = relevantClasses.map(c => c.teacher);
     const availableTeachers = Array.from(new Set(rosterTeachers)).sort();
 
     const teacherAllLabel = selectedGrade === 'ALL'
       ? `All Teachers (${availableTeachers.length})`
-      : `All Teachers (${selectedGrade})`;
+      : `All Teachers (${formatGradeLabel(selectedGrade)})`;
 
     teacherSelect.innerHTML = `<option value="ALL">${teacherAllLabel}</option>` +
       availableTeachers.map(t => `<option value="${t}" ${t === selectedTeacher ? 'selected' : ''}>${t}</option>`).join('');
@@ -824,19 +856,10 @@ function populateFilterOptions() {
     const rosterGrades = JFS_ROSTER_CLASSES.map(c => c.grade);
     const allGrades = Array.from(new Set(rosterGrades)).filter(Boolean);
 
-    // Natural pedagogical order: TK, K, Lower, 1, 2, 3, Upper, 4, 5, 5/6, 6
-    const gradeOrder = ['TK', 'K', 'Lower', '1', '2', '3', 'Upper', '4', '5', '5/6', '6'];
-    allGrades.sort((a, b) => {
-      const idxA = gradeOrder.indexOf(a);
-      const idxB = gradeOrder.indexOf(b);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.localeCompare(b);
-    });
+    allGrades.sort(compareGrades);
 
     gradeSelect.innerHTML = `<option value="ALL">All Grades (${allGrades.length})</option>` +
-      allGrades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${g === 'Lower' || g === 'Upper' ? g + ' Grade' : (g.toLowerCase().startsWith('grade') ? g : 'Grade ' + g)}</option>`).join('');
+      allGrades.map(g => `<option value="${g}" ${g === currentGrade ? 'selected' : ''}>${formatGradeLabel(g)}</option>`).join('');
   }
 
   updateDependentDropdowns();
@@ -888,7 +911,7 @@ function renderWeeklyTab() {
           <div>
             <div class="spotlight-meta-label">🏆 ${weekLabel} Co-Leaders (Tied)</div>
             <div class="spotlight-leader-name">${topWeeklyStudents.map(s => formatStudentName(s.name)).join(' & ')}</div>
-            <div class="spotlight-meta-sub">${topWeeklyStudents.map(s => `${s.grade === 'Lower' || s.grade === 'Upper' ? s.grade + ' Grade' : 'Grade ' + s.grade} (${s.teacher})`).join(' &bull; ')}</div>
+            <div class="spotlight-meta-sub">${topWeeklyStudents.map(s => `${formatGradeLabel(s.grade)} (${s.teacher})`).join(' &bull; ')}</div>
             <div style="margin-top:6px; color:#b45309; font-weight:700; font-size:0.8rem;">🚲 Sprint Prize: Brand New Bike / Scooter!</div>
           </div>
         </div>
@@ -900,7 +923,7 @@ function renderWeeklyTab() {
       `;
     } else {
       const topWeekly = topWeeklyStudents[0];
-      const gradeLabel = topWeekly.grade === 'Lower' || topWeekly.grade === 'Upper' ? `${topWeekly.grade} Grade` : `Grade ${topWeekly.grade}`;
+      const gradeLabel = formatGradeLabel(topWeekly.grade);
       spotlightEl.innerHTML = `
         <div class="spotlight-left">
           <div class="spotlight-trophy">
@@ -990,7 +1013,7 @@ function renderWeeklyTab() {
       `;
     } else {
       const topCls = topWeeklyClasses[0];
-      const gradeLabel = topCls.grade === 'Lower' || topCls.grade === 'Upper' ? `${topCls.grade} Grade` : `Grade ${topCls.grade}`;
+      const gradeLabel = formatGradeLabel(topCls.grade);
       classSpotlightEl.innerHTML = `
         <div class="spotlight-left">
           <div class="spotlight-trophy">🍦</div>
@@ -1044,7 +1067,7 @@ function renderWeeklyTab() {
     else if (rank === 2) badgeClass = 'top-2';
     else if (rank === 3) badgeClass = 'top-3';
 
-    const gradeLabel = student.grade === 'Lower' || student.grade === 'Upper' ? `${student.grade} Grade` : (student.grade.toLowerCase().startsWith('grade') ? student.grade : `Grade ${student.grade}`);
+    const gradeLabel = formatGradeLabel(student.grade);
 
     return `
       <tr>
@@ -1084,7 +1107,7 @@ function renderClassesTab() {
 
     participationGrid.innerHTML = topContenders.map((cls, idx) => {
       const isComplete = cls.participationPct >= 100;
-      const gradeLabel = cls.grade === 'Lower' || cls.grade === 'Upper' ? `${cls.grade} Grade` : (cls.grade.toLowerCase().startsWith('grade') ? cls.grade : `Grade ${cls.grade}`);
+      const gradeLabel = formatGradeLabel(cls.grade);
       let rankBadgeClass = 'normal';
       if (idx === 0) rankBadgeClass = 'top-1';
       else if (idx === 1) rankBadgeClass = 'top-2';
@@ -1125,15 +1148,7 @@ function renderClassesTab() {
     const studentGrades = state.students.map(s => s.grade);
     const uniqueGrades = Array.from(new Set([...rosterGrades, ...studentGrades])).filter(Boolean);
 
-    const gradeOrder = ['TK', 'K', 'Lower', '1', '2', '3', 'Upper', '4', '5', '5/6', '6'];
-    uniqueGrades.sort((a, b) => {
-      const idxA = gradeOrder.indexOf(a);
-      const idxB = gradeOrder.indexOf(b);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.localeCompare(b);
-    });
+    uniqueGrades.sort(compareGrades);
 
     const maxGradeAmount = Math.max(...Object.values(gradeMap), 0);
     const hasDonations = maxGradeAmount > 0;
@@ -1155,7 +1170,7 @@ function renderClassesTab() {
             ${leadingGrades.length > 0 ? `
               <div class="contest-current-leader">
                 <span class="leader-trophy">🏆</span>
-                <span><strong>Current ${isGradeTied ? 'Leaders (Tied)' : 'Leader'}:</strong> <strong>${leadingGrades.map(g => g === 'Lower' || g === 'Upper' ? g + ' Grade' : (g.toLowerCase().startsWith('grade') ? g : `Grade ${g}`)).join(' & ')}</strong> with <strong>${formatCurrency(maxGradeAmount)}</strong> raised!</span>
+                <span><strong>Current ${isGradeTied ? 'Leaders (Tied)' : 'Leader'}:</strong> <strong>${leadingGrades.map(g => formatGradeLabel(g)).join(' & ')}</strong> with <strong>${formatCurrency(maxGradeAmount)}</strong> raised!</span>
               </div>
             ` : `
               <div class="contest-current-leader awaiting">
@@ -1169,7 +1184,7 @@ function renderClassesTab() {
       gradeGrid.innerHTML = bannerHtml + uniqueGrades.map(grade => {
         const amount = gradeMap[grade] || 0;
         const pct = maxGradeAmount > 0 ? Math.round((amount / maxGradeAmount) * 100) : 0;
-        const label = grade === 'Lower' || grade === 'Upper' ? `${grade} Grade` : (grade.toLowerCase().startsWith('grade') ? grade : `Grade ${grade}`);
+        const label = formatGradeLabel(grade);
         const isLeading = leadingGrades.includes(grade);
 
         if (isLeading) {
@@ -1239,7 +1254,7 @@ function renderClassesTab() {
         currentRank = idx + 1;
       }
       const isTop = cls.total === maxClassTotal && cls.total > 0;
-      const gradeLabel = cls.grade === 'Lower' || cls.grade === 'Upper' ? `${cls.grade} Grade` : (cls.grade.toLowerCase().startsWith('grade') ? cls.grade : `Grade ${cls.grade}`);
+      const gradeLabel = formatGradeLabel(cls.grade);
 
       // Dynamically rank classrooms: keep #1-3 for top 3, remove rest!
       let rankBadgeHtml = '';
