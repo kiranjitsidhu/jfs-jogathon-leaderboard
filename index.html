@@ -60,7 +60,7 @@
           </div>
           <div class="goal-target-wrap">
             <span class="target-label">School Goal:</span>
-            <span class="target-amount" id="schoolGoalText">$45,000</span>
+            <span class="target-amount" id="schoolGoalText">$50,000</span>
           </div>
         </div>
 
@@ -71,8 +71,9 @@
         </div>
         <div class="progress-meta">
           <span id="percentGoalText">0% of target reached</span>
-          <span id="amountRemainingText">$45,000 remaining</span>
+          <span id="amountRemainingText">$50,000 remaining</span>
         </div>
+        <div class="goal-subnote">💡 &lt;$100 per student to achieve this total!</div>
       </div>
 
       <!-- Quick Metrics -->
@@ -117,88 +118,125 @@
         <span class="tab-emoji">📅</span> Weekly Leaders
       </button>
       <button class="tab-btn" id="tabBtn-classes" onclick="switchTab('classes')">
-        <span class="tab-emoji">🏫</span> Classes & Teachers
+        <span class="tab-emoji">🏫</span> 100% Participation, Teacher, &amp; Grade Competitions
+      </button>
+      <button class="tab-btn" id="tabBtn-prizes" onclick="switchTab('prizes')">
+        <span class="tab-emoji">🎁</span> Prizes &amp; Rules
       </button>
       <button class="tab-btn" id="tabBtn-donate" onclick="switchTab('donate')">
         <span class="tab-emoji">💛</span> Donate Page
       </button>
-      <button class="tab-btn" id="tabBtn-prizes" onclick="switchTab('prizes')">
-        <span class="tab-emoji">🎁</span> Prizes & Rules
+      <button class="tab-btn" id="tabBtn-volunteer" onclick="switchTab('volunteer')">
+        <span class="tab-emoji">🤝</span> Volunteer
       </button>
     </nav>
 
     <!-- TAB 1: OVERALL INDIVIDUAL LEADERS -->
     <section id="tabContent-overall" class="tab-panel active">
+      <!-- Grand Prizes Callout Ribbon -->
+      <div class="grand-prizes-ribbon">
+        <div class="grand-prizes-icon">🎟️</div>
+        <div class="grand-prizes-copy">
+          <div class="grand-prizes-title">Grand Prizes for Top Overall Fundraisers:</div>
+          <div class="grand-prizes-list">
+            <span class="prize-pill">🏰 4 Disneyland Tickets</span>
+            <span class="prize-pill">🏀 4 Warriors Game Tickets</span>
+            <span class="prize-pill">🏈 4 49ers Game Tickets</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Podium for Top 3 -->
       <div class="podium-section">
         <h2 class="section-title">Top Individual Fundraisers</h2>
-        <p class="section-subtitle">A huge jaguar shout-out to all our amazing students running and raising funds!</p>
+        <p class="section-subtitle">A huge jaguar roar to all our amazing students running and raising funds!</p>
         
         <div class="podium-wrapper" id="individualPodium">
           <!-- Dynamically populated 2nd, 1st, 3rd -->
         </div>
       </div>
 
-      <!-- Controls: Search, Filters, Privacy Mode -->
-      <div class="controls-toolbar">
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="studentSearchInput" placeholder="Search student name, teacher, or grade..." oninput="filterStudents()">
+      <!-- Top 10 Overall Students Table -->
+      <div class="table-card mb-8">
+        <div class="card-heading-row">
+          <h3 class="card-inner-title">🌟 Top 10 Individual Students Schoolwide</h3>
+          <span class="badge badge-gold">Grand Prize Contenders</span>
         </div>
-
-        <div class="filter-group">
-          <label for="gradeFilterSelect" class="sr-only">Filter by Grade</label>
-          <select id="gradeFilterSelect" onchange="onGradeFilterChange()">
-            <option value="ALL">All Grades</option>
-          </select>
-
-          <label for="roomFilterSelect" class="sr-only">Filter by Room</label>
-          <select id="roomFilterSelect" onchange="onRoomFilterChange()">
-            <option value="ALL">All Rooms</option>
-          </select>
-
-          <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
-          <select id="teacherFilterSelect" onchange="onTeacherFilterChange()">
-            <option value="ALL">All Teachers</option>
-          </select>
-
-          <label for="sortOrderSelect" class="sr-only">Sort by</label>
-          <select id="sortOrderSelect" onchange="filterStudents()">
-            <option value="total_desc">Highest Total ($)</option>
-            <option value="name_asc">Student Name (A-Z)</option>
-            <option value="week4_desc">Week 4 (Nov 7 - 13)</option>
-            <option value="week3_desc">Week 3 (Oct 31 - Nov 6)</option>
-            <option value="week2_desc">Week 2 (Oct 24 - 30)</option>
-            <option value="week1_desc">Week 1 (Oct 19 - 23)</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Table View -->
-      <div class="table-card">
         <div class="table-responsive">
-          <table class="data-table" id="studentsTable">
+          <table class="data-table" id="top10Table">
             <thead>
               <tr>
                 <th style="width: 70px;">Rank</th>
                 <th>Student</th>
                 <th>Grade</th>
-                <th>Room</th>
                 <th>Teacher</th>
-                <th class="num-col">W1 (Oct 19-23)</th>
-                <th class="num-col">W2 (Oct 24-30)</th>
-                <th class="num-col">W3 (Oct 31-Nov 6)</th>
-                <th class="num-col">W4 (Nov 7-13)</th>
                 <th class="num-col highlight-head">Total Raised</th>
               </tr>
             </thead>
-            <tbody id="studentsTableBody">
-              <!-- Dynamically Populated -->
+            <tbody id="top10TableBody">
+              <!-- Dynamically populated Top 10 -->
             </tbody>
           </table>
         </div>
-        <div class="table-footer" id="studentsTableFooter">
-          Showing <span id="visibleStudentCount">0</span> students
+      </div>
+
+      <!-- Top Student Per Classroom Section (Replacing Full Records) -->
+      <div class="classroom-top-students-section">
+        <div class="classes-header-wrap">
+          <div>
+            <h3 class="section-title">Top Student per Classroom</h3>
+            <p class="section-subtitle">Celebrating the #1 leading student fundraiser across each of our 24 classrooms!</p>
+          </div>
+        </div>
+
+        <!-- Controls: Search & Grade/Teacher Filters -->
+        <div class="controls-toolbar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="classTopSearchInput" placeholder="Search teacher, grade, or student..." oninput="filterClassTopStudents()">
+          </div>
+
+          <div class="filter-group">
+            <label for="gradeFilterSelect" class="sr-only">Filter by Grade</label>
+            <select id="gradeFilterSelect" onchange="onGradeFilterChange()">
+              <option value="ALL">All Grades</option>
+            </select>
+
+            <label for="teacherFilterSelect" class="sr-only">Filter by Teacher</label>
+            <select id="teacherFilterSelect" onchange="onTeacherFilterChange()">
+              <option value="ALL">All Teachers</option>
+            </select>
+
+            <label for="sortOrderSelect" class="sr-only">Sort by</label>
+            <select id="sortOrderSelect" onchange="filterClassTopStudents()">
+              <option value="total_desc">Highest Raised ($)</option>
+              <option value="teacher_asc">Teacher Name (A-Z)</option>
+              <option value="grade_asc">Grade Order</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table View: Top Student per Classroom -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table" id="classTopTable">
+              <thead>
+                <tr>
+                  <th>Classroom / Teacher</th>
+                  <th>Grade</th>
+                  <th>Top Student</th>
+                  <th class="num-col highlight-head">Total Raised</th>
+                  <th>Class Award</th>
+                </tr>
+              </thead>
+              <tbody id="classTopTableBody">
+                <!-- Dynamically Populated with 24 Class Top Students -->
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="classTopTableFooter">
+            Showing <span id="visibleClassTopCount">24</span> classrooms
+          </div>
         </div>
       </div>
     </section>
@@ -231,7 +269,7 @@
         </div>
       </div>
 
-      <!-- Top 10 Weekly Table -->
+      <!-- Top Weekly Table -->
       <div class="table-card mt-6">
         <div class="card-heading-row">
           <h3 class="card-inner-title" id="weeklyTableTitle">Top Fundraisers for Week 1</h3>
@@ -244,10 +282,8 @@
                 <th style="width: 70px;">Rank</th>
                 <th>Student</th>
                 <th>Grade</th>
-                <th>Room</th>
                 <th>Teacher</th>
                 <th class="num-col highlight-head" id="weeklyColHead">Week 1 Amount</th>
-                <th class="num-col">Overall Total</th>
               </tr>
             </thead>
             <tbody id="weeklyTableBody">
@@ -259,39 +295,195 @@
     </section>
 
 
-    <!-- TAB 3: CLASSES & TEACHERS -->
+    <!-- TAB 3: 100% PARTICIPATION, TEACHER, & GRADE COMPETITIONS -->
     <section id="tabContent-classes" class="tab-panel">
       <div class="classes-header-wrap">
         <div>
-          <h2 class="section-title">Classroom & Teacher Competition</h2>
-          <p class="section-subtitle">Classes are competing for the Grand Jaguar Spirit Trophy and classroom celebration party!</p>
+          <h2 class="section-title">100% Participation, Teacher, &amp; Grade Competitions</h2>
+          <p class="section-subtitle">Classroom and grade level contests!</p>
         </div>
       </div>
 
-      <!-- Grade Breakdown Summary Bars -->
+      <!-- SECTION 1: 100% PARTICIPATION LEADERBOARD -->
+      <div class="participation-breakdown-card">
+        <div class="participation-contest-banner">
+          <div class="contest-icon">🍕</div>
+          <div class="contest-info">
+            <div class="contest-title">
+              <strong>100% Participation Contest:</strong> The first classroom to reach 100% participation wins a <strong>Class Pizza Party + $100 Teacher Gift Card</strong>!
+            </div>
+            <div class="contest-subtext">Every student who receives at least 1 donation counts toward class participation!</div>
+          </div>
+        </div>
+
+        <h3 class="card-inner-title mt-4">Top Classrooms Contending for 100% Participation</h3>
+        <div class="participation-grid" id="participationLeaderboardGrid">
+          <!-- Dynamically populated top 3-5 contending classrooms -->
+        </div>
+      </div>
+
+      <!-- SECTION 2: GRADE LEVEL LEADERBOARD -->
       <div class="grade-breakdown-card">
-        <h3 class="card-inner-title">Donations by Grade Level</h3>
+        <h3 class="card-inner-title">Grade Level Leaderboard</h3>
         <div class="grade-bars-grid" id="gradeBarsGrid">
           <!-- Dynamically populated -->
         </div>
       </div>
 
-      <!-- Class Cards Grid -->
-      <h3 class="section-divider-title">Class Leaderboard</h3>
-      <div class="classes-grid" id="classesGrid">
-        <!-- Dynamically populated -->
+      <!-- SECTION 3: CLASSROOM LEADERBOARD -->
+      <div class="classroom-leaderboard-section">
+        <h3 class="section-divider-title">Classroom Leaderboard</h3>
+        <div class="classroom-contest-banner" id="classroomContestBanner">
+          <!-- Dynamically populated with Cal Academy field trip callout and leader -->
+        </div>
+
+        <!-- Class Cards Grid (Dynamically ranked, top 3 numbered) -->
+        <div class="classes-grid" id="classesGrid">
+          <!-- Dynamically populated -->
+        </div>
       </div>
     </section>
 
 
-    <!-- TAB 4: DONATE PAGE -->
+    <!-- TAB 4: PRIZES & GUIDELINES -->
+    <section id="tabContent-prizes" class="tab-panel">
+      <div class="prizes-page-container">
+        
+        <!-- Grand Highlights Banner -->
+        <div class="prizes-hero-banner">
+          <div class="prizes-hero-copy">
+            <h2>Jag-a-Thon Prizes</h2>
+            <p>Every dollar raised supports student STEM, arts, library books, and campus enhancement. Check out the incredible rewards our Jaguars are running for!</p>
+          </div>
+          <div class="prizes-hero-badge">
+            <span class="big-prize-emoji">🎁</span>
+          </div>
+        </div>
+
+        <!-- Grand Event Rewards Grid -->
+        <h3 class="section-divider-title">🌟 Grand Event Rewards</h3>
+        <div class="grand-prizes-grid">
+          
+          <div class="prize-card feature-prize">
+            <div class="prize-card-badge">🎢 Top 3 Fundraisers Overall</div>
+            <div class="prize-icon">🏰</div>
+            <h4>Disneyland or Pro Sports Tickets</h4>
+            <p>Top 3 individual fundraisers school-wide get a waterfall choice: 4 Tickets to Disneyland, Golden State Warriors game tickets, or SF 49ers game tickets!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">🔬 #1 Class in School</div>
+            <div class="prize-icon">🏛️</div>
+            <h4>Cal Academy of Sciences Field Trip</h4>
+            <p>The top fundraising classroom in the entire school earns a class field trip to the <strong>California Academy of Sciences</strong>!</p>
+          </div>
+
+          <div class="prize-card highlight-card">
+            <div class="prize-card-badge">🍕 First to 100% Participation</div>
+            <div class="prize-icon">🍕</div>
+            <h4>Class Pizza Party + $100 Teacher Card</h4>
+            <p>The first classroom to get to 100% participation wins a Class Pizza Party and the teacher gets a $100 gift card!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">🎬 #1 Grade Level</div>
+            <div class="prize-icon">🍿</div>
+            <h4>Pizza + Ice Cream Movie Night in the MPR!</h4>
+            <p>The top fundraising grade level in the school earns an evening Pizza + Ice Cream Movie Night in the MPR!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">🚲 Weekly Top Individual</div>
+            <div class="prize-icon">🚲</div>
+            <h4>Brand New Bike or Scooter</h4>
+            <p>Awarded on Mondays to the top individual fundraiser of last week!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">🍦 Weekly Top Classroom</div>
+            <div class="prize-icon">🍨</div>
+            <h4>Class Ice Cream Social + $100 Teacher Card</h4>
+            <p>Awarded on Mondays to the top earning classroom of last week!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">🎽 Top 3 Lap Runners</div>
+            <div class="prize-icon">🎽</div>
+            <h4>Bay Area Sports Merch</h4>
+            <p>Top 3 lap runners on event day win their choice of Golden State Warriors or SF 49ers team gear!</p>
+          </div>
+
+          <div class="prize-card">
+            <div class="prize-card-badge">👕 Every Participant</div>
+            <div class="prize-icon">👕</div>
+            <h4>Official Jag-a-Thon T-Shirt</h4>
+            <p>All participating students and runners receive an official school Jag-a-Thon t-shirt!</p>
+            <p class="text-xs text-gray-500 mt-2"><em>*Subject to final PTA budget review prior to kickoff.</em></p>
+          </div>
+
+        </div>
+
+        <!-- Guidelines & Rules -->
+        <h3 class="section-divider-title">📋 Campaign Guidelines &amp; Important Deadlines</h3>
+        <div class="guidelines-card-grid">
+
+          <div class="guideline-card">
+            <div class="guideline-icon">⏰</div>
+            <div class="guideline-content">
+              <h4>Weekly Challenge Cutoff &amp; Reset</h4>
+              <p>Weekly sprint challenges cut off at <strong>3:00 PM each week</strong> on Friday. Leaderboard tallies and weekly sprint counts reset by <strong>Friday at 4:00 PM</strong>.</p>
+            </div>
+          </div>
+
+          <div class="guideline-card">
+            <div class="guideline-icon">💵</div>
+            <div class="guideline-content">
+              <h4>Cash &amp; Check Donations</h4>
+              <p>Physical cash and check donations must be submitted to the school office by <strong>Friday at 2:00 PM</strong> to count towards the current week’s tally.</p>
+            </div>
+          </div>
+
+          <div class="guideline-card highlight-match">
+            <div class="guideline-icon">🏢</div>
+            <div class="guideline-content">
+              <h4>Corporate Matching (100% Counted!)</h4>
+              <p>Corporate employer matches (Apple, Google, Cisco, Intel, Adobe, etc.) <strong>are included in student and class totals!</strong></p>
+              <p class="mt-2">1. Submit your match to <strong>JFS PTA</strong>.</p>
+              <p>2. Email your match contribution receipt to <strong>Mugdha</strong> at <a href="mailto:muggikale@gmail.com" class="text-link">muggikale@gmail.com</a>.</p>
+              <p class="mt-2 text-sm text-gray-500"><em>Emails must be received by 9:00 AM on Friday to count in that week's total. Final deadline for all corporate matches is Friday, Nov 13th at 9:00 AM.</em></p>
+            </div>
+          </div>
+
+          <div class="guideline-card">
+            <div class="guideline-icon">📦</div>
+            <div class="guideline-content">
+              <h4>Prize Distribution Timeline</h4>
+              <p>Small individual weekly prizes (tchotchkes) will be distributed weekly in classrooms. Grand prizes (weekly and overall) will be awarded at the end of the jag-a-thon. All class- and grade-wide experiences will be scheduled with teachers and administrators after the jag-a-thon concludes (we appreciate your patience as parent volunteers catch their breaths!).</p>
+            </div>
+          </div>
+
+          <div class="guideline-card highlight-sponsor">
+            <div class="guideline-icon">🤝</div>
+            <div class="guideline-content">
+              <h4>Questions &amp; Prize Sponsorship</h4>
+              <p>We are looking for parents and volunteers to sponsor our incredible prizes this year! For all inquiries (attributing donations, prize tracking, or sponsorship) please contact <strong>Poonam</strong> (<a href="mailto:poonam.jolly@gmail.com" class="text-link">poonam.jolly@gmail.com</a>).</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- TAB 5: DONATE PAGE -->
     <section id="tabContent-donate" class="tab-panel">
       <div class="donate-container">
         <div class="donate-header-card">
           <div class="donate-copy">
-            <span class="badge badge-gold">🐾 100% Goes To Our Students & School</span>
+            <span class="badge badge-gold">🐾 100% Goes To Our Students &amp; School</span>
             <h2>Support the JFS PTA Jag-a-Thon</h2>
-            <p>Your generous contributions fund STEM programs, art instruction, classroom materials, campus technology, library books, and student enrichment events throughout the academic year.</p>
+            <p>Your generous contribution funds STEM and Arts programs, student enrichment, classroom materials, teacher support, campus enhancement, and more throughout the academic year.</p>
             
             <div class="donate-quick-actions">
               <a id="externalDonationBtn" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
@@ -301,7 +493,7 @@
                 <span>📋</span> Copy Donation Link
               </button>
             </div>
-            <p class="small-hint">💡 Pro-tip: Many employers (Apple, Google, Cisco, Intel, Adobe, etc.) provide 100% corporate matching for JFS PTA donations through platforms like Benevity!</p>
+            <p class="small-hint">💡 Pro-tip: Many employers (Apple, Google, Cisco, Intel, Adobe, etc.) provide 100% corporate matching for JFS PTA donations through platforms like Benevity! Submit your match request today and share with <strong>Mugdha (<a href="mailto:muggikale@gmail.com" style="color:inherit; text-decoration:underline;">muggikale@gmail.com</a>)</strong> to count towards your student’s total.</p>
           </div>
 
           <div class="donate-qr-box">
@@ -342,274 +534,76 @@
     </section>
 
 
-    <!-- TAB 5: PRIZES & GUIDELINES -->
-    <section id="tabContent-prizes" class="tab-panel">
-      <div class="prizes-page-container">
-        
-        <!-- Grand Highlights Banner -->
-        <div class="prizes-hero-banner">
-          <div class="prizes-hero-copy">
-            <h2>Jag-a-Thon Prizes</h2>
-            <p>Every dollar raised supports student STEM, arts, library books, and campus technology. Check out the rewards our Jaguars are running for!</p>
-          </div>
-          <div class="prizes-hero-badge">
-            <span class="big-prize-emoji">🎁</span>
-          </div>
-        </div>
-
-        <!-- Grand Event Rewards Grid -->
-        <h3 class="section-divider-title">🌟 Grand Event Rewards</h3>
-        <div class="grand-prizes-grid">
-          
-          <div class="prize-card feature-prize">
-            <div class="prize-card-badge">🎢 Top 3 Fundraisers Overall</div>
-            <div class="prize-icon">🏰</div>
-            <h4>Disneyland or Pro Sports Tickets</h4>
-            <p>Top 3 individual fundraisers school-wide get a waterfall choice: <strong>4 Tickets to Disneyland</strong>, Golden State Warriors game, SF Giants game, or SF 49ers game!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">🔬 #1 Class in School</div>
-            <div class="prize-icon">🏛️</div>
-            <h4>Cal Academy of Sciences Field Trip</h4>
-            <p>The top fundraising classroom in the entire school earns an all-inclusive class field trip to the <strong>California Academy of Sciences</strong>!</p>
-          </div>
-
-          <div class="prize-card highlight-card">
-            <div class="prize-card-badge">🍕 Classroom Participation</div>
-            <div class="prize-icon">🍕</div>
-            <h4>Class Pizza Party + $100 Teacher Card</h4>
-            <p>When <strong>every student in the classroom receives at least 1 donation</strong> (100% participation), the class earns a Pizza Party and the teacher gets a $100 gift card!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">🎬 #1 Grade Level</div>
-            <div class="prize-icon">🍿</div>
-            <h4>Grade-Wide MPR Movie & Pizza Night</h4>
-            <p>Top fundraising grade level in the school earns an evening Movie + Pizza + Ice Cream party in the MPR!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">🚲 Weekly Top Individual</div>
-            <div class="prize-icon">🚲</div>
-            <h4>Brand New Bike or Scooter</h4>
-            <p>Awarded on Mondays to the top individual student fundraiser of that week's challenge sprint!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">🍦 Weekly Top Classroom</div>
-            <div class="prize-icon">🍨</div>
-            <h4>Class Ice Cream Social + $100 Teacher Card</h4>
-            <p>Awarded on Mondays to the top earning classroom of the week!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">🏃 Top 3 Lap Runners</div>
-            <div class="prize-icon">👟</div>
-            <h4>Bay Area Sports Merch</h4>
-            <p>Top 3 lap runners on event day win their choice of Golden State Warriors, SF Giants, or SF 49ers team gear!</p>
-          </div>
-
-          <div class="prize-card">
-            <div class="prize-card-badge">👕 Every Participant</div>
-            <div class="prize-icon">👕</div>
-            <h4>Official Jag-a-Thon T-Shirt</h4>
-            <p>All participating students and runners receive an official school Jag-a-Thon t-shirt!</p>
-          </div>
-
-        </div>
-
-        <!-- Master Incentive Matrix Table -->
-        <h3 class="section-divider-title">📜 Master Incentive Matrix</h3>
-        <p class="section-subtitle">Official distribution timeline and reward qualifications across all schoolwide Jag-a-Thon milestones.</p>
-        
-        <div class="table-card mt-6 mb-8">
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Level</th>
-                  <th>Distro On</th>
-                  <th>Qualification Criterion</th>
-                  <th>Reward / Prize</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>Weekly raised &ge; $1</strong></td>
-                  <td>Mondays, week 2–4</td>
-                  <td>Collected at least 1 donation the previous week</td>
-                  <td>Tchotchkes, raffle prize</td>
-                </tr>
-                <tr>
-                  <td><strong>Weekly raised &ge; $25</strong></td>
-                  <td>Mondays, week 2–4</td>
-                  <td>Raised at least $25 in the previous week</td>
-                  <td>Better tchotchkes, better raffle prize</td>
-                </tr>
-                <tr>
-                  <td><strong>Weekly raised &ge; $100</strong></td>
-                  <td>Mondays, week 2–4</td>
-                  <td>Raised at least $100 in the previous week</td>
-                  <td>Best tchotchkes, best raffle prize</td>
-                </tr>
-                <tr style="background: #f0f7ff;">
-                  <td><strong>Weekly Schoolwide Individual</strong></td>
-                  <td>Mondays, week 2–4</td>
-                  <td>Top fundraising student of the week (schoolwide)</td>
-                  <td><strong>🚲 Brand New Bike / Scooter</strong></td>
-                </tr>
-                <tr style="background: #fffdf0;">
-                  <td><strong>Weekly Classroom</strong></td>
-                  <td>Mondays, week 2–4</td>
-                  <td>Top earning classroom of the week</td>
-                  <td><strong>Teacher: $100 Gift Card<br>Students: Ice Cream Social</strong></td>
-                </tr>
-                <tr style="background: #fefce8;">
-                  <td><strong>Classroom Participation</strong></td>
-                  <td>Event Day</td>
-                  <td>Every student receives at least 1 donation (100% participation)</td>
-                  <td><strong>Teacher: $100 Gift Card<br>Students: Pizza Party</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>Overall Per Classroom</strong></td>
-                  <td>Event Day</td>
-                  <td>Top fundraising student in each class</td>
-                  <td><strong>🎁 $25 Gift Card</strong></td>
-                </tr>
-                <tr style="background: #f0fdf4;">
-                  <td><strong>Overall Classroom</strong></td>
-                  <td>Event Day</td>
-                  <td>Top fundraising class in the school</td>
-                  <td><strong>🏛️ Class Field Trip: California Academy of Sciences</strong></td>
-                </tr>
-                <tr style="background: #fef2f2;">
-                  <td><strong>Overall Grade Level</strong></td>
-                  <td>Event Day</td>
-                  <td>Top fundraising grade in the school</td>
-                  <td><strong>🎬 Grade-Wide Movie + Pizza + Ice Cream Night in MPR</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>Race Day Top Lap Runners</strong></td>
-                  <td>Event Day</td>
-                  <td>Top 3 lap runners across school</td>
-                  <td>Bay Area Sports Merch (Warriors / Giants / 49ers gear)</td>
-                </tr>
-                <tr style="background: #fff7ed;">
-                  <td><strong>Overall Top School Earners</strong></td>
-                  <td>Event Day</td>
-                  <td>Top 3 individual fundraisers overall (waterfall choice)</td>
-                  <td><strong>🏰 4 Tickets to Disneyland, or Warriors / Giants / 49ers Game</strong></td>
-                </tr>
-                <tr>
-                  <td><strong>All Participants</strong></td>
-                  <td>Event Day</td>
-                  <td>All student runners</td>
-                  <td>Official Jag-a-Thon T-Shirt*</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Individual Cumulative Prize Tiers Table -->
-        <h3 class="section-divider-title">⭐ Individual Cumulative Prize Tiers</h3>
-        <p class="section-subtitle">Prizes are cumulative—students earn all rewards up to their highest achieved dollar milestone! Distributed in classrooms following event day.</p>
-        
-        <div class="table-card mt-6">
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Tier</th>
-                  <th>Benchmark</th>
-                  <th>Individual Reward Item</th>
-                  <th>Special Recognition</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><span class="tier-pill bronze-tier">🥉 Bronze</span></td>
-                  <td class="num-col font-bold">$25</td>
-                  <td>JFS mini swag (eraser, pencil, etc.)</td>
-                  <td>Bronze Certificate</td>
-                </tr>
-                <tr>
-                  <td><span class="tier-pill silver-tier">🥈 Silver</span></td>
-                  <td class="num-col font-bold">$50</td>
-                  <td>JFS mid swag (mini swag + notebook)</td>
-                  <td>Silver Certificate</td>
-                </tr>
-                <tr>
-                  <td><span class="tier-pill gold-tier">🥇 Gold</span></td>
-                  <td class="num-col font-bold">$100</td>
-                  <td>JFS big swag (above + custom mug)</td>
-                  <td>Gold Certificate</td>
-                </tr>
-                <tr>
-                  <td><span class="tier-pill platinum-tier">💎 Platinum</span></td>
-                  <td class="num-col font-bold">$250</td>
-                  <td>JFS Swag Basket (above + Jag-a-Thon t-shirt)</td>
-                  <td>Platinum Certificate</td>
-                </tr>
-                <tr>
-                  <td><span class="tier-pill diamond-tier">💠 Diamond</span></td>
-                  <td class="num-col font-bold">$500+</td>
-                  <td>JFS Deluxe Swag Basket (above + sweatshirt) + Gift Card</td>
-                  <td>Diamond Certificate</td>
-                </tr>
-                <tr>
-                  <td><span class="tier-pill titanium-tier">👑 Titanium</span></td>
-                  <td class="num-col font-bold">$1,000+</td>
-                  <td>All Above + <strong>Custom Letterman Jacket</strong></td>
-                  <td>School Announcements + Name in Lights on School Marquee</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Guidelines & Corporate Matching -->
-        <h3 class="section-divider-title">📋 Campaign Guidelines & Important Deadlines</h3>
-        <div class="guidelines-card-grid">
-
-          <div class="guideline-card">
-            <div class="guideline-icon">⏰</div>
-            <div class="guideline-content">
-              <h4>Weekly Challenge Reset Times</h4>
-              <p>Weekly sprint challenges reset every <strong>Friday at 3:00 PM</strong> across all four weeks (Oct 19 &ndash; Nov 13).</p>
+    <!-- TAB 6: VOLUNTEER TAB -->
+    <section id="tabContent-volunteer" class="tab-panel">
+      <div class="volunteer-container">
+        <div class="volunteer-hero-banner">
+          <div class="volunteer-hero-copy">
+            <span class="badge badge-gold">🐾 Volunteer With Us</span>
+            <h2>Join the JFS Jag-a-Thon Volunteer Team!</h2>
+            <p>It takes a wonderful community of parent and guardian volunteers to make Jag-a-Thon a safe, high-energy, and memorable day for all 580+ students. Join us on <strong>Friday, Nov 13th</strong>!</p>
+            <div class="volunteer-hero-actions">
+              <a href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+                <span>📝</span> Open Volunteer Sign-Up Form &rarr;
+              </a>
             </div>
           </div>
-
-          <div class="guideline-card">
-            <div class="guideline-icon">💵</div>
-            <div class="guideline-content">
-              <h4>Cash & Check Donation Cutoff</h4>
-              <p>Physical cash and check donations must be submitted to the school office by <strong>Friday at 2:00 PM</strong> to count toward the following Monday's weekly drawing and raffle prizes.</p>
-            </div>
+          <div class="volunteer-hero-badge">
+            <span class="big-prize-emoji">🤝</span>
           </div>
-
-          <div class="guideline-card highlight-match">
-            <div class="guideline-icon">🏢</div>
-            <div class="guideline-content">
-              <h4>Corporate Matching (100% Included!)</h4>
-              <p>Corporate employer matches (Apple, Google, Cisco, Intel, Adobe, etc.) <strong>are included in student and class totals!</strong></p>
-              <p class="mt-2">1. Submit your match to <strong>JFS PTA</strong>.</p>
-              <p>2. Email your match contribution receipt to <strong>Poonam Sidhu</strong> at <a href="mailto:poonam.jolly@gmail.com" class="text-link">poonam.jolly@gmail.com</a>.</p>
-              <p class="mt-2 text-sm text-gray-500"><em>Emails must be received by 9:00 AM on Friday to count in that week's total. Final deadline for all corporate matches is Friday, Nov 13th at 9:00 AM.</em></p>
-            </div>
-          </div>
-
-          <div class="guideline-card">
-            <div class="guideline-icon">📦</div>
-            <div class="guideline-content">
-              <h4>Prize Distribution</h4>
-              <p>Weekly small items (stickers, bracelets, tchotchkes) will be distributed Mondays via teachers. Grand prizes and experience events will be fulfilled the week following campaign completion.</p>
-              <p class="mt-2">Questions? Contact Fundraising Chair: <strong>Poonam Sidhu</strong> (<a href="mailto:poonam.jolly@gmail.com" class="text-link">poonam.jolly@gmail.com</a>).</p>
-            </div>
-          </div>
-
         </div>
+
+        <!-- Volunteer Roles Grid -->
+        <h3 class="section-divider-title">🏃 How You Can Help On Event Day (Nov 13)</h3>
+        <div class="volunteer-roles-grid">
+          <div class="volunteer-role-card">
+            <div class="role-icon">🏃</div>
+            <h4>Lap Counters &amp; Track Marshals</h4>
+            <p>Mark student bibs/wristbands as they complete laps around the track and cheer them on as they sprint!</p>
+          </div>
+          <div class="volunteer-role-card">
+            <div class="role-icon">📣</div>
+            <h4>Spirit Cheer Squad</h4>
+            <p>Pump up the energy at the cheer tunnel with noisemakers, high-fives, and jaguar chants for each grade running!</p>
+          </div>
+          <div class="volunteer-role-card">
+            <div class="role-icon">🍎</div>
+            <h4>Hydration &amp; Snack Station</h4>
+            <p>Hand out fresh fruit slices, cold water cups, and post-run refreshments to keep our runners fueled and happy!</p>
+          </div>
+          <div class="volunteer-role-card">
+            <div class="role-icon">⏱️</div>
+            <h4>Setup &amp; Teardown Crew</h4>
+            <p>Help lay out cones, set up sound systems and shade canopies in the morning, or pack up equipment after the race.</p>
+          </div>
+        </div>
+
+        <!-- Volunteer Form Iframe -->
+        <div class="iframe-container-card mt-6">
+          <div class="iframe-top-bar">
+            <div class="browser-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="browser-address">https://forms.gle/8XA8oq5FmHDBwYHFA</div>
+            <a href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="popout-link" title="Open in new window">
+              Open Form in New Tab ↗
+            </a>
+          </div>
+
+          <div class="iframe-wrapper">
+            <iframe id="volunteerIframe" src="https://forms.gle/8XA8oq5FmHDBwYHFA" title="JFS PTA Volunteer Sign-Up Form" loading="lazy"></iframe>
+            <div class="iframe-notice">
+              <p>If the Google Form above does not load in your browser, please click below to submit your volunteer interest directly:</p>
+              <a href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                Open Volunteer Form in New Window &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
       </div>
     </section>
