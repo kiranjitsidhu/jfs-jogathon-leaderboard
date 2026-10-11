@@ -1095,7 +1095,7 @@ function renderClassesTab() {
   const topClasses = sortedClasses.filter(c => c.total === maxClassTotal && c.total > 0);
   const isTied = topClasses.length > 1;
 
-  // 1. 100% Participation Leaderboard (Top 3-5 Contending Classrooms)
+  // 1. 100% Participation Leaderboard (Active Contenders, auto-capped to top 5)
   const participationGrid = document.getElementById('participationLeaderboardGrid');
   if (participationGrid) {
     const sortedByParticipation = [...sortedClasses].sort((a, b) => {
@@ -1103,37 +1103,61 @@ function renderClassesTab() {
       return b.total - a.total;
     });
 
-    const topContenders = sortedByParticipation.slice(0, 5);
+    // Only consider classes that have active participation (>0%) so 0% classes aren't arbitrarily ranked #2, #3, etc.
+    const activeContenders = sortedByParticipation.filter(c => c.participationPct > 0 || c.total > 0);
 
-    participationGrid.innerHTML = topContenders.map((cls, idx) => {
-      const isComplete = cls.participationPct >= 100;
-      const gradeLabel = formatGradeLabel(cls.grade);
-      let rankBadgeClass = 'normal';
-      if (idx === 0) rankBadgeClass = 'top-1';
-      else if (idx === 1) rankBadgeClass = 'top-2';
-      else if (idx === 2) rankBadgeClass = 'top-3';
+    // If active contenders exist, auto-select up to top 5 (or just the active ones if fewer than 5)
+    const topContenders = activeContenders.slice(0, 5);
 
-      return `
-        <div class="participation-card ${isComplete ? 'participation-winner' : ''}">
-          <div class="participation-card-header">
-            <span class="rank-badge ${rankBadgeClass}">#${idx + 1}</span>
-            <div class="participation-class-info">
-              <h4 class="class-teacher-name">${cls.teacher}</h4>
-              <span class="class-grade-tag">${gradeLabel}</span>
-            </div>
-            <div class="participation-pct-pill ${isComplete ? 'pct-100' : ''}">
-              ${cls.participationPct}%
-            </div>
-          </div>
-          <div class="participation-progress-track">
-            <div class="participation-progress-fill" style="width: ${cls.participationPct}%;"></div>
-          </div>
-          <div class="participation-card-footer">
-            <span>${isComplete ? '🎉 100% Participation Reached!' : '🍕 Contending for 1st to 100%'}</span>
-          </div>
+    if (topContenders.length === 0) {
+      participationGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 24px 20px; background: white; border-radius: var(--radius-md); border: 1px dashed var(--gray-300); color: var(--gray-600);">
+          <div style="font-size: 1.5rem; margin-bottom: 6px;">🍕</div>
+          <div style="font-weight: 700; color: var(--navy); font-size: 0.95rem;">Contest underway! All 24 classrooms are contending for 1st to 100%.</div>
+          <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--gray-500);">Every student who receives at least 1 donation counts toward their classroom total. Leaders will appear here as donations arrive!</p>
         </div>
       `;
-    }).join('');
+    } else {
+      let currentRank = 1;
+      participationGrid.innerHTML = topContenders.map((cls, idx) => {
+        if (idx > 0 && cls.participationPct < topContenders[idx - 1].participationPct) {
+          currentRank = idx + 1;
+        }
+
+        const isTied = (idx > 0 && cls.participationPct === topContenders[idx - 1].participationPct) ||
+                       (idx < topContenders.length - 1 && cls.participationPct === topContenders[idx + 1].participationPct);
+
+        const rankLabel = isTied ? `Tied #${currentRank}` : `#${currentRank}`;
+        const isComplete = cls.participationPct >= 100;
+        const gradeLabel = formatGradeLabel(cls.grade);
+
+        let rankBadgeClass = 'normal';
+        if (currentRank === 1) rankBadgeClass = 'top-1';
+        else if (currentRank === 2) rankBadgeClass = 'top-2';
+        else if (currentRank === 3) rankBadgeClass = 'top-3';
+
+        return `
+          <div class="participation-card ${isComplete ? 'participation-winner' : ''}">
+            <div class="participation-card-header">
+              <span class="rank-badge ${rankBadgeClass}">${rankLabel}</span>
+              <div class="participation-class-info">
+                <h4 class="class-teacher-name">${cls.teacher}</h4>
+                <span class="class-grade-tag">${gradeLabel}</span>
+              </div>
+              <div class="participation-pct-pill ${isComplete ? 'pct-100' : ''}">
+                ${cls.participationPct}%
+              </div>
+            </div>
+            <div class="participation-progress-track">
+              <div class="participation-progress-fill" style="width: ${cls.participationPct}%;"></div>
+            </div>
+            <div class="participation-card-footer">
+              <span>${isComplete ? '🎉 100% Participation Reached!' : '🍕 Contending for 1st to 100%'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
   }
 
   // 2. Grade Level Leaderboard
