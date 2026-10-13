@@ -81,9 +81,11 @@ const DEFAULT_STUDENTS = [
   { name: "Leo Nelson", grade: "K", room: "K-2", teacher: "KHATUN", week1: 70, week2: 80, week3: 85, week4: 75, laps: 28 }
 ];
 
+const CANONICAL_DONATION_URL = "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser";
+
 const DEFAULT_CONFIG = {
   schoolGoal: 50000,
-  donationUrl: "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser",
+  donationUrl: CANONICAL_DONATION_URL,
   googleSheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=99878568&single=true&output=csv",
   privacyMode: true,
   targetDate: "2026-11-13T09:00:00",
@@ -126,10 +128,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadStoredData() {
   try {
-    const savedConfig = localStorage.getItem('jfs_jogathon_config_v1');
+    let savedConfig = localStorage.getItem('jfs_jogathon_config_v2');
+    if (!savedConfig) {
+      savedConfig = localStorage.getItem('jfs_jogathon_config_v1');
+    }
     if (savedConfig) {
       state.config = { ...DEFAULT_CONFIG, ...JSON.parse(savedConfig) };
     }
+    // Strictly heal stale or truncated donation URLs from previous browser sessions
+    if (!state.config.donationUrl || 
+        !state.config.donationUrl.includes('jfs-pta-jag-a-thon-fundraiser') || 
+        !state.config.donationUrl.includes('/en-US/')) {
+      state.config.donationUrl = CANONICAL_DONATION_URL;
+    }
+    saveConfigToStorage();
 
     const savedStudents = localStorage.getItem('jfs_jogathon_data_v1');
     if (savedStudents) {
@@ -233,7 +245,8 @@ function saveStudentsToStorage() {
 }
 
 function saveConfigToStorage() {
-  localStorage.setItem('jfs_jogathon_config_v1', JSON.stringify(state.config));
+  localStorage.setItem('jfs_jogathon_config_v2', JSON.stringify(state.config));
+  localStorage.removeItem('jfs_jogathon_config_v1');
 }
 
 // ==========================================================
@@ -298,8 +311,17 @@ function formatGradeLabel(grade) {
   return `Grade ${g}`;
 }
 
+function getEffectiveDonationUrl() {
+  if (state.config.donationUrl && 
+      state.config.donationUrl.includes('jfs-pta-jag-a-thon-fundraiser') && 
+      state.config.donationUrl.includes('/en-US/')) {
+    return state.config.donationUrl;
+  }
+  return CANONICAL_DONATION_URL;
+}
+
 function updateDonationLinkTargets() {
-  const url = state.config.donationUrl || "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser";
+  const url = getEffectiveDonationUrl();
   const extBtn = document.getElementById('externalDonationBtn');
   const iframePopout = document.getElementById('iframePopoutBtn');
   const iframeFallback = document.getElementById('iframeFallbackLink');
@@ -313,7 +335,7 @@ function updateDonationLinkTargets() {
 
 function initDonationIframe() {
   const iframe = document.getElementById('donationIframe');
-  const url = state.config.donationUrl || "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser";
+  const url = getEffectiveDonationUrl();
   if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
     iframe.src = url;
   }
@@ -1824,7 +1846,7 @@ function resetToDefaultData() {
 }
 
 function copyDonationLink() {
-  const url = state.config.donationUrl || "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser";
+  const url = getEffectiveDonationUrl();
   navigator.clipboard.writeText(url).then(() => {
     showToast("📋 Donation link copied to clipboard!");
   }).catch(() => {
