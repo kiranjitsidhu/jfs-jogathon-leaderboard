@@ -19,7 +19,7 @@
     <div class="container bar-content">
       <span class="badge pulse-badge">🐾 GO JAGUARS!</span>
       <span><strong>JFS Jag-a-Thon on Friday, Nov 13th!</strong></span>
-      <a href="#donate" class="bar-link" onclick="switchTab('donate')">Donate Now &rarr;</a>
+      <a href="#prizes" class="bar-link" onclick="switchTab('prizes')">Prizes &amp; Rules &rarr;</a>
     </div>
   </aside>
 
@@ -38,11 +38,11 @@
       </div>
 
       <div class="hero-actions">
-        <button class="btn btn-primary" onclick="switchTab('donate')">
-          <span class="btn-icon">💛</span> Donate Now
+        <button class="btn btn-primary" onclick="switchTab('prizes')">
+          <span class="btn-icon">🎁</span> Prizes &amp; Rules
         </button>
-        <button class="btn btn-secondary" onclick="switchTab('prizes')">
-          <span class="btn-icon">🎁</span> Prizes & Rules
+        <button class="btn btn-secondary" onclick="switchTab('volunteer')">
+          <span class="btn-icon">🤝</span> Volunteer With Us
         </button>
       </div>
     </div>
@@ -123,7 +123,7 @@
       <button class="tab-btn" id="tabBtn-prizes" onclick="switchTab('prizes')">
         <span class="tab-emoji">🎁</span> Prizes &amp; Rules
       </button>
-      <button class="tab-btn" id="tabBtn-donate" onclick="switchTab('donate')">
+      <button class="tab-btn" id="tabBtn-donate" onclick="switchTab('donate')" style="display: none;">
         <span class="tab-emoji">💛</span> Donate Page
       </button>
       <button class="tab-btn" id="tabBtn-volunteer" onclick="switchTab('volunteer')">
@@ -479,56 +479,21 @@
     <!-- TAB 5: DONATE PAGE -->
     <section id="tabContent-donate" class="tab-panel">
       <div class="donate-container">
-        <div class="donate-header-card">
-          <div class="donate-copy">
-            <span class="badge badge-gold">🐾 100% Goes To Our Students &amp; School</span>
-            <h2>Support the JFS PTA Jag-a-Thon</h2>
-            <p>Your generous contribution funds STEM and Arts programs, student enrichment, classroom materials, teacher support, campus enhancement, and more throughout the academic year.</p>
-            
-            <div class="donate-quick-actions">
-              <a id="externalDonationBtn" href="https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
-                <span>💛</span> Open Official Donation Page in New Tab &rarr;
-              </a>
-              <button class="btn btn-secondary" onclick="copyDonationLink()">
-                <span>📋</span> Copy Donation Link
-              </button>
-            </div>
-            <p class="small-hint">💡 Pro-tip: Many employers (Apple, Google, Cisco, Intel, Adobe, etc.) provide 100% corporate matching for JFS PTA donations through platforms like Benevity! Submit your match request today and share with <strong>Mugdha (<a href="mailto:muggikale@gmail.com" style="color:inherit; text-decoration:underline;">muggikale@gmail.com</a>)</strong> to count towards your student’s total.</p>
-          </div>
-
-          <div class="donate-qr-box">
-            <div class="qr-scan-label">📱 Scan to Donate</div>
-            <img src="jfs-zeffy-qr.png" alt="Scan to donate via Zeffy" class="qr-image">
-          </div>
-        </div>
-
-        <!-- Embedded Portal / Zeffy Container -->
-        <div class="iframe-container-card">
-          <div class="iframe-top-bar">
-            <div class="browser-dots">
-              <span class="dot dot-red"></span>
-              <span class="dot dot-yellow"></span>
-              <span class="dot dot-green"></span>
-            </div>
-            <div class="browser-address" id="iframeUrlDisplay">https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser</div>
-            <a id="iframePopoutBtn" href="https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser" target="_blank" rel="noopener noreferrer" class="popout-link" title="Open in new window">
-              Open Outside ↗
-            </a>
-          </div>
-
-          <div class="iframe-wrapper zeffy-embed-wrapper" style="background: #ffffff; min-height: 620px; padding: 10px;">
-            <div>
-              <div data-zeffy-embed data-form-url="/embed/donation-form/jfs-pta-jag-a-thon-fundraiser"></div>
-              <div data-zeffy-embed-fallback style="display:none;">
-                <div style="position:relative;overflow:hidden;height:650px;width:100%;">
-                  <iframe title='Donation form powered by Zeffy' style='position: absolute; border: 0; top:0;left:0;bottom:0;right:0;width:100%;height:100%' data-zeffy-embed-src='https://www.zeffy.com/embed/donation-form/jfs-pta-jag-a-thon-fundraiser' allowpaymentrequest allowTransparency="true"></iframe>
-                </div>
-              </div>
-              <script
-                src="https://www.zeffy.com/embed/v2/zeffy-embed.js"
-                onerror="document.querySelectorAll('[data-zeffy-embed-fallback]').forEach(function(el){el.style.display='block';el.querySelectorAll('iframe[data-zeffy-embed-src]').forEach(function(f){f.src=f.getAttribute('data-zeffy-embed-src');});});">
-              </script>
-            </div>
+        <div class="donate-header-card" style="text-align: center; padding: 48px 24px; max-width: 780px; margin: 0 auto;">
+          <div style="font-size: 3.5rem; margin-bottom: 12px;">🐾</div>
+          <span class="badge badge-gold" style="margin-bottom: 14px;">Online Donations Opening Tonight</span>
+          <h2 style="font-size: 2rem; margin-bottom: 12px; color: var(--navy);">Donation Portal Opening Soon!</h2>
+          <p style="font-size: 1.05rem; color: var(--gray-600); max-width: 600px; margin: 0 auto 24px;">The JFS PTA is finalizing and voting on the donation platform tonight. Check back this evening to make your contribution and support our Jaguars!</p>
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="switchTab('prizes')">
+              <span>🎁</span> View Prizes &amp; Contests
+            </button>
+            <button class="btn btn-secondary" onclick="switchTab('overall')">
+              <span>📊</span> View Leaderboards
+            </button>
+            <button class="btn btn-secondary" onclick="switchTab('volunteer')">
+              <span>🤝</span> Volunteer With Us
+            </button>
           </div>
         </div>
       </div>
