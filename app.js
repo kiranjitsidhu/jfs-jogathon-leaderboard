@@ -83,7 +83,7 @@ const DEFAULT_STUDENTS = [
 
 const DEFAULT_CONFIG = {
   schoolGoal: 50000,
-  donationUrl: "https://forms.gle/8XA8oq5FmHDBwYHFA",
+  donationUrl: "https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser",
   googleSheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=99878568&single=true&output=csv",
   privacyMode: true,
   targetDate: "2026-11-13T09:00:00",
@@ -299,7 +299,7 @@ function formatGradeLabel(grade) {
 }
 
 function updateDonationLinkTargets() {
-  const url = state.config.donationUrl || "https://forms.gle/8XA8oq5FmHDBwYHFA";
+  const url = state.config.donationUrl || "https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser";
   const extBtn = document.getElementById('externalDonationBtn');
   const iframePopout = document.getElementById('iframePopoutBtn');
   const iframeFallback = document.getElementById('iframeFallbackLink');
@@ -313,7 +313,7 @@ function updateDonationLinkTargets() {
 
 function initDonationIframe() {
   const iframe = document.getElementById('donationIframe');
-  const url = state.config.donationUrl || "https://forms.gle/8XA8oq5FmHDBwYHFA";
+  const url = state.config.donationUrl || "https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser";
   if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
     iframe.src = url;
   }
@@ -1824,7 +1824,7 @@ function resetToDefaultData() {
 }
 
 function copyDonationLink() {
-  const url = state.config.donationUrl || "https://forms.gle/8XA8oq5FmHDBwYHFA";
+  const url = state.config.donationUrl || "https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser";
   navigator.clipboard.writeText(url).then(() => {
     showToast("📋 Donation link copied to clipboard!");
   }).catch(() => {

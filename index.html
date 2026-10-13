@@ -486,7 +486,7 @@
             <p>Your generous contribution funds STEM and Arts programs, student enrichment, classroom materials, teacher support, campus enhancement, and more throughout the academic year.</p>
             
             <div class="donate-quick-actions">
-              <a id="externalDonationBtn" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+              <a id="externalDonationBtn" href="https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
                 <span>💛</span> Open Official Donation Page in New Tab &rarr;
               </a>
               <button class="btn btn-secondary" onclick="copyDonationLink()">
@@ -497,15 +497,13 @@
           </div>
 
           <div class="donate-qr-box">
-            <div class="qr-placeholder">
-              <span class="qr-icon">📱</span>
-              <p>Scan with Phone Camera</p>
-              <div class="qr-badge">JFS PTA Jaguar Pride</div>
-            </div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwww.zeffy.com%2Fdonation-form%2Fjfs-pta-jog-a-thon-fundraiser" alt="Scan to donate via Zeffy" style="width: 140px; height: 140px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background:#fff; padding:6px; display:block; margin: 0 auto 10px;">
+            <p style="font-size:0.85rem; font-weight:700; color:var(--primary); margin:0;">Scan to Donate on Mobile</p>
+            <div class="qr-badge">Powered by Zeffy (100% Free)</div>
           </div>
         </div>
 
-        <!-- Embedded Portal / Iframe Preview Container -->
+        <!-- Embedded Portal / Zeffy Container -->
         <div class="iframe-container-card">
           <div class="iframe-top-bar">
             <div class="browser-dots">
@@ -513,20 +511,24 @@
               <span class="dot dot-yellow"></span>
               <span class="dot dot-green"></span>
             </div>
-            <div class="browser-address" id="iframeUrlDisplay">https://forms.gle/8XA8oq5FmHDBwYHFA</div>
-            <a id="iframePopoutBtn" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="popout-link" title="Open in new window">
+            <div class="browser-address" id="iframeUrlDisplay">https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser</div>
+            <a id="iframePopoutBtn" href="https://www.zeffy.com/donation-form/jfs-pta-jog-a-thon-fundraiser" target="_blank" rel="noopener noreferrer" class="popout-link" title="Open in new window">
               Open Outside ↗
             </a>
           </div>
 
-          <div class="iframe-wrapper">
-            <iframe id="donationIframe" src="about:blank" title="Official Donation Portal" loading="lazy"></iframe>
-            <div class="iframe-notice" id="iframeNotice">
-              <p>⚠️ <strong>Note:</strong> Some donation security providers or payment gateways prevent embedding inside other websites.</p>
-              <p>If the preview is blocked or blank, please click the button below to complete your donation directly:</p>
-              <a id="iframeFallbackLink" href="https://forms.gle/8XA8oq5FmHDBwYHFA" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                Open Donation Portal in New Window &rarr;
-              </a>
+          <div class="iframe-wrapper zeffy-embed-wrapper" style="background: #ffffff; min-height: 620px; padding: 10px;">
+            <div>
+              <div data-zeffy-embed data-form-url="/embed/donation-form/jfs-pta-jog-a-thon-fundraiser"></div>
+              <div data-zeffy-embed-fallback style="display:none;">
+                <div style="position:relative;overflow:hidden;height:650px;width:100%;">
+                  <iframe title='Donation form powered by Zeffy' style='position: absolute; border: 0; top:0;left:0;bottom:0;right:0;width:100%;height:100%' data-zeffy-embed-src='https://www.zeffy.com/embed/donation-form/jfs-pta-jog-a-thon-fundraiser' allowpaymentrequest allowTransparency="true"></iframe>
+                </div>
+              </div>
+              <script
+                src="https://www.zeffy.com/embed/v2/zeffy-embed.js"
+                onerror="document.querySelectorAll('[data-zeffy-embed-fallback]').forEach(function(el){el.style.display='block';el.querySelectorAll('iframe[data-zeffy-embed-src]').forEach(function(f){f.src=f.getAttribute('data-zeffy-embed-src');});});">
+              </script>
             </div>
           </div>
         </div>
