@@ -1911,34 +1911,33 @@ function initShareKitForm() {
 
 function onShareTeacherChange() {
   const teacherSelect = document.getElementById('shareTeacherSelect');
-  const gradeSelect = document.getElementById('shareGradeSelect');
-  if (!teacherSelect || !gradeSelect) return;
+  const gradeDisplay = document.getElementById('shareGradeDisplay');
+  const gradeVal = document.getElementById('shareGradeVal');
+  if (!teacherSelect) return;
   const t = teacherSelect.value;
   const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === t);
   if (cls) {
     const g = formatGradeLabel(cls.grade);
-    for (let i = 0; i < gradeSelect.options.length; i++) {
-      const optText = gradeSelect.options[i].text.toLowerCase();
-      const optVal = gradeSelect.options[i].value.toLowerCase();
-      if (optText.includes(g.toLowerCase()) || optVal === cls.grade.toLowerCase()) {
-        gradeSelect.selectedIndex = i;
-        break;
-      }
-    }
+    if (gradeDisplay) gradeDisplay.value = g;
+    if (gradeVal) gradeVal.value = g;
+  } else {
+    if (gradeDisplay) gradeDisplay.value = '';
+    if (gradeVal) gradeVal.value = '';
   }
 }
 
 function generateShareKit() {
   const studentNameInput = document.getElementById('shareStudentName');
   const teacherSelect = document.getElementById('shareTeacherSelect');
-  const gradeSelect = document.getElementById('shareGradeSelect');
+  const gradeVal = document.getElementById('shareGradeVal');
 
   const studentName = (studentNameInput.value || '').trim();
   const teacher = teacherSelect.value;
-  const gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
+  const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === teacher);
+  const gradeText = cls ? formatGradeLabel(cls.grade) : (gradeVal?.value || '');
 
-  if (!studentName || !teacher || !gradeSelect.value) {
-    showToast('⚠️ Please enter student name, teacher, and grade.');
+  if (!studentName || !teacher) {
+    showToast('⚠️ Please enter student name and choose a teacher.');
     return;
   }
 

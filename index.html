@@ -517,19 +517,9 @@
                 </div>
 
                 <div class="form-group col-half">
-                  <label for="shareGradeSelect" class="form-label">Grade *</label>
-                  <select id="shareGradeSelect" class="form-select" required>
-                    <option value="">Select Grade...</option>
-                    <option value="TK">TK</option>
-                    <option value="Kindergarten">Kindergarten</option>
-                    <option value="1st Grade">1st Grade</option>
-                    <option value="2nd Grade">2nd Grade</option>
-                    <option value="3rd Grade">3rd Grade</option>
-                    <option value="4th Grade">4th Grade</option>
-                    <option value="5th Grade">5th Grade</option>
-                    <option value="6th Grade">6th Grade</option>
-                    <option value="SDC">SDC</option>
-                  </select>
+                  <label for="shareGradeDisplay" class="form-label">Grade</label>
+                  <input type="text" id="shareGradeDisplay" class="form-input" placeholder="Auto-populated from Teacher" readonly style="background-color: var(--bg-body); cursor: default; font-weight: 600; color: var(--text-dark);">
+                  <input type="hidden" id="shareGradeVal" value="">
                 </div>
               </div>
 
@@ -551,17 +541,13 @@
                   <h3 class="card-inner-title">📱 Your Custom Jag-a-Thon Card</h3>
                   <p class="text-sm text-gray-500">Includes student details, JFS artwork, website URL, and a scannable QR code linking straight to Zeffy!</p>
                 </div>
-                <span class="badge badge-gold">Ready to Download</span>
+                <button type="button" class="btn download-btn-sm" onclick="downloadPledgeCard()">
+                  📥 Download Card (.PNG)
+                </button>
               </div>
 
               <div class="canvas-preview-wrapper mt-4">
                 <canvas id="pledgeCardCanvas" class="pledge-card-canvas"></canvas>
-              </div>
-
-              <div class="canvas-actions">
-                <button type="button" class="btn download-card-btn" onclick="downloadPledgeCard()">
-                  📥 Download High-Res Card (.PNG)
-                </button>
               </div>
             </div>
 
