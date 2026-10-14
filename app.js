@@ -86,7 +86,7 @@ const CANONICAL_DONATION_URL = "https://www.zeffy.com/en-US/donation-form/jfs-pt
 const DEFAULT_CONFIG = {
   schoolGoal: 50000,
   donationUrl: CANONICAL_DONATION_URL,
-  googleSheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=99878568&single=true&output=csv",
+  googleSheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=0&single=true&output=csv",
   privacyMode: true,
   targetDate: "2026-11-13T09:00:00",
   adminPin: "1113"
@@ -140,6 +140,10 @@ function loadStoredData() {
         !state.config.donationUrl.includes('jfs-pta-jag-a-thon-fundraiser') || 
         !state.config.donationUrl.includes('/en-US/')) {
       state.config.donationUrl = CANONICAL_DONATION_URL;
+    }
+    // Strictly heal stale Google Sheet URL from previous deleted tab
+    if (!state.config.googleSheetUrl || state.config.googleSheetUrl.includes('gid=99878568')) {
+      state.config.googleSheetUrl = DEFAULT_CONFIG.googleSheetUrl;
     }
     saveConfigToStorage();
 
