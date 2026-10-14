@@ -106,25 +106,41 @@
     </div>
   </section>
 
+  <!-- Dynamic Sponsor Welcome Banner (shown when arriving via student link) -->
+  <div id="sponsorWelcomeBar" class="sponsor-welcome-bar" style="display: none;">
+    <div class="container sponsor-bar-inner">
+      <div class="sponsor-bar-text">
+        💛 You are sponsoring <strong id="sponsorBarStudentName">—</strong> (<span id="sponsorBarGradeTeacher">—</span>) in the 2026 JFS Jag-a-Thon!
+      </div>
+      <div class="sponsor-bar-actions">
+        <button type="button" class="btn btn-sm btn-gold" onclick="switchTab('donate')">💛 Donate For This Student</button>
+        <button type="button" class="sponsor-bar-close" onclick="closeSponsorBar()" title="Dismiss">&times;</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Application Wrapper -->
   <main class="container main-content">
 
     <!-- Navigation Tabs -->
     <nav class="tabs-nav" aria-label="Leaderboard views">
       <button class="tab-btn active" id="tabBtn-overall" onclick="switchTab('overall')">
-        <span class="tab-emoji">🏆</span> Overall Students
+        <span class="tab-emoji">🏆</span> Overall
       </button>
       <button class="tab-btn" id="tabBtn-weekly" onclick="switchTab('weekly')">
-        <span class="tab-emoji">📅</span> Weekly Leaders
+        <span class="tab-emoji">📅</span> Weekly
       </button>
       <button class="tab-btn" id="tabBtn-classes" onclick="switchTab('classes')">
-        <span class="tab-emoji">🏫</span> Participation, Teacher &amp; Grade Leaders
+        <span class="tab-emoji">🏫</span> Classes
       </button>
       <button class="tab-btn" id="tabBtn-prizes" onclick="switchTab('prizes')">
-        <span class="tab-emoji">🎁</span> Prizes &amp; Rules
+        <span class="tab-emoji">🎁</span> Prizes
+      </button>
+      <button class="tab-btn" id="tabBtn-share" onclick="switchTab('share')">
+        <span class="tab-emoji">⭐</span> Share Kit
       </button>
       <button class="tab-btn" id="tabBtn-donate" onclick="switchTab('donate')">
-        <span class="tab-emoji">💛</span> Donate Page
+        <span class="tab-emoji">💛</span> Donate
       </button>
       <button class="tab-btn" id="tabBtn-volunteer" onclick="switchTab('volunteer')">
         <span class="tab-emoji">🤝</span> Volunteer
@@ -473,12 +489,171 @@
         </div>
 
       </div>
+    <!-- TAB 5: SHARE & FUNDRAISE (STUDENT PLEDGE KIT) -->
+    <section id="tabContent-share" class="tab-panel">
+      <div class="share-kit-container">
+        
+        <!-- Hero Banner -->
+        <div class="prizes-hero-banner">
+          <div class="prizes-hero-copy">
+            <h2>⭐ Student Pledge Kit &amp; Social Card</h2>
+            <p>Generate your child’s personalized fundraising link and a downloadable Instagram / Facebook card with their name, grade, and teacher!</p>
+          </div>
+          <div class="prizes-hero-badge">
+            <span class="big-prize-emoji">📲</span>
+          </div>
+        </div>
+
+        <div class="share-kit-grid">
+          <!-- Generator Form Card -->
+          <div class="share-form-card">
+            <div class="card-heading-row">
+              <h3 class="card-inner-title">📝 1. Enter Student Details</h3>
+              <span class="badge badge-gold">Quick 30-Sec Setup</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Enter your student's name and choose their teacher. No room number needed!</p>
+
+            <form id="shareKitForm" onsubmit="event.preventDefault(); generateShareKit();">
+              <div class="form-group mb-4">
+                <label for="shareStudentName" class="form-label">Student First &amp; Last Name *</label>
+                <input type="text" id="shareStudentName" class="form-input" placeholder="e.g. Ajuni Sidhu" required>
+              </div>
+
+              <div class="form-row mb-4">
+                <div class="form-group col-half">
+                  <label for="shareTeacherSelect" class="form-label">Teacher *</label>
+                  <select id="shareTeacherSelect" class="form-select" required onchange="onShareTeacherChange()">
+                    <option value="">Select Teacher...</option>
+                  </select>
+                </div>
+
+                <div class="form-group col-half">
+                  <label for="shareGradeSelect" class="form-label">Grade *</label>
+                  <select id="shareGradeSelect" class="form-select" required>
+                    <option value="">Select Grade...</option>
+                    <option value="TK">TK</option>
+                    <option value="Kindergarten">Kindergarten</option>
+                    <option value="1st Grade">1st Grade</option>
+                    <option value="2nd Grade">2nd Grade</option>
+                    <option value="3rd Grade">3rd Grade</option>
+                    <option value="4th Grade">4th Grade</option>
+                    <option value="5th Grade">5th Grade</option>
+                    <option value="6th Grade">6th Grade</option>
+                    <option value="SDC">SDC</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group mb-5">
+                <label for="shareGoalAmount" class="form-label">Fundraising Goal (Optional)</label>
+                <select id="shareGoalAmount" class="form-select">
+                  <option value="">No goal shown</option>
+                  <option value="50">$50 (Bonus Gift Goal)</option>
+                  <option value="100">$100 (Official T-Shirt Goal)</option>
+                  <option value="250" selected>$250 (Jaguar VIP Champion Goal)</option>
+                  <option value="500">$500 (Superstar Goal)</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg btn-block">
+                ✨ Generate My Fundraising Kit &amp; Card
+              </button>
+            </form>
+          </div>
+
+          <!-- Output Preview & Share Options -->
+          <div id="shareResultsArea" class="share-results-area" style="display: none;">
+            
+            <!-- Quick Links & Social Share Card -->
+            <div class="share-output-card mb-6">
+              <div class="card-heading-row">
+                <h3 class="card-inner-title">🔗 2. Your Personalized Share Link</h3>
+                <span class="badge badge-blue">Ready to Share</span>
+              </div>
+              <p class="text-sm text-gray-500 mb-3">When supporters open this link, the site automatically welcomes them and attributes donations to your child!</p>
+              
+              <div class="share-link-box">
+                <input type="text" id="shareGeneratedUrl" class="share-link-input" readonly>
+                <button type="button" class="btn btn-primary btn-sm" onclick="copyShareUrl()">
+                  📋 Copy Link
+                </button>
+              </div>
+
+              <div class="social-share-buttons-grid mt-4">
+                <a id="shareWaBtn" href="#" target="_blank" class="btn btn-social btn-whatsapp">
+                  <span>💬 Text / WhatsApp</span>
+                </a>
+                <a id="shareFbBtn" href="#" target="_blank" class="btn btn-social btn-facebook">
+                  <span>📘 Share on Facebook</span>
+                </a>
+                <a id="shareEmailBtn" href="#" class="btn btn-social btn-email">
+                  <span>✉️ Email Family</span>
+                </a>
+                <button type="button" class="btn btn-social btn-copy-msg" onclick="copyShareMessage()">
+                  <span>📄 Copy Message</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Digital Card Preview & Download -->
+            <div class="share-card-container">
+              <div class="card-heading-row">
+                <div>
+                  <h3 class="card-inner-title">📱 3. Downloadable Digital Card</h3>
+                  <p class="text-sm text-gray-500">Includes live scannable QR code! Ready for Instagram Stories, Facebook feed, or group texts.</p>
+                </div>
+                <div class="card-format-toggle">
+                  <button type="button" class="format-btn active" id="formatStoryBtn" onclick="setCardFormat('story')">📱 Story (9:16)</button>
+                  <button type="button" class="format-btn" id="formatSquareBtn" onclick="setCardFormat('square')">🖼️ Post (1:1)</button>
+                </div>
+              </div>
+
+              <div class="canvas-preview-wrapper mt-3">
+                <canvas id="pledgeCardCanvas" class="pledge-card-canvas"></canvas>
+              </div>
+
+              <div class="canvas-actions mt-4 text-center">
+                <button type="button" class="btn btn-primary btn-lg" onclick="downloadPledgeCard()">
+                  📥 Download High-Res Card (.PNG)
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
     </section>
 
-
-    <!-- TAB 5: DONATE PAGE -->
+    <!-- TAB 6: DONATE PAGE -->
     <section id="tabContent-donate" class="tab-panel">
       <div class="donate-container">
+        
+        <!-- Dynamic Donor Attribution Helper (shown when arriving via student link) -->
+        <div id="donorAttributionCard" class="donor-attribution-card" style="display: none;">
+          <div class="attribution-card-header">
+            <span class="attribution-badge">🐾 Sponsoring Student Attribution</span>
+            <div class="attribution-subtitle">Please enter these details in the Zeffy form questions below so your student receives full credit:</div>
+          </div>
+          <div class="attribution-pill-grid">
+            <div class="attribution-pill">
+              <span class="pill-label">Student Name</span>
+              <span class="pill-val" id="attribStudentVal">—</span>
+              <button type="button" class="pill-copy-btn" onclick="copyAttrib('attribStudentVal')">📋 Copy</button>
+            </div>
+            <div class="attribution-pill">
+              <span class="pill-label">Teacher</span>
+              <span class="pill-val" id="attribTeacherVal">—</span>
+              <button type="button" class="pill-copy-btn" onclick="copyAttrib('attribTeacherVal')">📋 Copy</button>
+            </div>
+            <div class="attribution-pill">
+              <span class="pill-label">Grade</span>
+              <span class="pill-val" id="attribGradeVal">—</span>
+              <button type="button" class="pill-copy-btn" onclick="copyAttrib('attribGradeVal')">📋 Copy</button>
+            </div>
+          </div>
+        </div>
+
         <div class="donate-header-card">
           <div class="donate-copy">
             <span class="badge badge-gold">🐾 100% Goes To Our Students &amp; School</span>
@@ -714,6 +889,7 @@
     </div>
   </footer>
 
+  <script src="qrcode.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

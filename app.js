@@ -101,6 +101,8 @@ let state = {
   activeWeek: 1,
   activeTab: 'overall',
   isAdminUnlocked: false,
+  sponsoredStudent: null,
+  cardFormat: 'story',
   filters: {
     search: '',
     grade: 'ALL',
@@ -119,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   calculateAndRender();
   setupCountdown();
+  initUrlParamsAndSponsor();
+  initShareKitForm();
 
   // Silently auto-refresh live data if Google Sheet CSV URL configured
   if (state.config.googleSheetUrl) {
@@ -272,8 +276,11 @@ function switchTab(tabId) {
   // Specific tab actions
   if (tabId === 'donate') {
     initDonationIframe();
+    updateDonorAttributionCard();
   } else if (tabId === 'volunteer') {
     initVolunteerIframe();
+  } else if (tabId === 'share') {
+    initShareKitForm();
   }
 }
 
@@ -339,7 +346,18 @@ function updateDonationLinkTargets() {
 
 function initDonationIframe() {
   const iframe = document.getElementById('donationIframe');
-  const url = getEffectiveDonationUrl();
+  let url = getEffectiveDonationUrl();
+  if (state.sponsoredStudent && state.sponsoredStudent.name) {
+    const s = state.sponsoredStudent;
+    const qs = `?student=${encodeURIComponent(s.name)}&teacher=${encodeURIComponent(s.teacher)}&grade=${encodeURIComponent(s.grade)}`;
+    url += qs;
+    const extBtn = document.getElementById('externalDonationBtn');
+    if (extBtn) extBtn.href = url;
+    const popout = document.getElementById('iframePopoutBtn');
+    if (popout) popout.href = url;
+    const addr = document.getElementById('iframeUrlDisplay');
+    if (addr) addr.textContent = url;
+  }
   if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
     iframe.src = url;
   }
@@ -1884,5 +1902,397 @@ function setupEventListeners() {
     if (e.key === 'Escape') {
       closeAdminModal();
     }
+  });
+}
+
+// ==========================================================
+// SPONSORSHIP URL PARAMETERS & ATTRIBUTION HELPERS
+// ==========================================================
+function initUrlParamsAndSponsor() {
+  const params = new URLSearchParams(window.location.search);
+  const student = params.get('student');
+  const teacher = params.get('teacher');
+  const grade = params.get('grade');
+  const donate = params.get('donate');
+
+  if (student) {
+    state.sponsoredStudent = {
+      name: student.trim(),
+      teacher: teacher ? teacher.trim() : '',
+      grade: grade ? grade.trim() : ''
+    };
+
+    // Show top sponsor welcome bar
+    const bar = document.getElementById('sponsorWelcomeBar');
+    const barName = document.getElementById('sponsorBarStudentName');
+    const barSub = document.getElementById('sponsorBarGradeTeacher');
+    if (bar && barName) {
+      barName.textContent = state.sponsoredStudent.name;
+      const details = [];
+      if (state.sponsoredStudent.grade) details.push(state.sponsoredStudent.grade);
+      if (state.sponsoredStudent.teacher) details.push(`Teacher: ${state.sponsoredStudent.teacher}`);
+      if (barSub) barSub.textContent = details.join(' • ');
+      bar.style.display = 'block';
+    }
+
+    // Populate Donor Attribution Card in Donate tab
+    updateDonorAttributionCard();
+
+    // If donate=true or hash is #donate, switch directly to donate tab
+    if (donate === 'true' || window.location.hash === '#donate') {
+      switchTab('donate');
+    }
+  }
+}
+
+function closeSponsorBar() {
+  const bar = document.getElementById('sponsorWelcomeBar');
+  if (bar) bar.style.display = 'none';
+}
+
+function updateDonorAttributionCard() {
+  const card = document.getElementById('donorAttributionCard');
+  if (!card) return;
+  if (!state.sponsoredStudent || !state.sponsoredStudent.name) {
+    card.style.display = 'none';
+    return;
+  }
+  const s = state.sponsoredStudent;
+  const nameEl = document.getElementById('attribStudentVal');
+  const teacherEl = document.getElementById('attribTeacherVal');
+  const gradeEl = document.getElementById('attribGradeVal');
+
+  if (nameEl) nameEl.textContent = s.name;
+  if (teacherEl) teacherEl.textContent = s.teacher || 'Not Specified';
+  if (gradeEl) gradeEl.textContent = s.grade || 'Not Specified';
+  card.style.display = 'block';
+}
+
+function copyAttrib(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const text = el.textContent.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`📋 Copied: "${text}"`);
+  }).catch(() => {
+    showToast(`Value: ${text}`);
+  });
+}
+
+// ==========================================================
+// SHARE KIT (STUDENT PLEDGE CARD & SOCIAL SHARING)
+// ==========================================================
+function initShareKitForm() {
+  const teacherSelect = document.getElementById('shareTeacherSelect');
+  if (teacherSelect && teacherSelect.options.length <= 1) {
+    const teachers = Array.from(new Set(JFS_ROSTER_CLASSES.map(c => c.teacher))).sort();
+    teachers.forEach(t => {
+      const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === t);
+      const gradeLabel = cls ? formatGradeLabel(cls.grade) : '';
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = `${t} (${gradeLabel})`;
+      teacherSelect.appendChild(opt);
+    });
+  }
+}
+
+function onShareTeacherChange() {
+  const teacherSelect = document.getElementById('shareTeacherSelect');
+  const gradeSelect = document.getElementById('shareGradeSelect');
+  if (!teacherSelect || !gradeSelect) return;
+  const t = teacherSelect.value;
+  const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === t);
+  if (cls) {
+    const g = formatGradeLabel(cls.grade);
+    for (let i = 0; i < gradeSelect.options.length; i++) {
+      const optText = gradeSelect.options[i].text.toLowerCase();
+      const optVal = gradeSelect.options[i].value.toLowerCase();
+      if (optText.includes(g.toLowerCase()) || optVal === cls.grade.toLowerCase()) {
+        gradeSelect.selectedIndex = i;
+        break;
+      }
+    }
+  }
+}
+
+function setCardFormat(format) {
+  state.cardFormat = format;
+  const storyBtn = document.getElementById('formatStoryBtn');
+  const squareBtn = document.getElementById('formatSquareBtn');
+  if (storyBtn && squareBtn) {
+    storyBtn.classList.toggle('active', format === 'story');
+    squareBtn.classList.toggle('active', format === 'square');
+  }
+
+  const sName = (document.getElementById('shareStudentName')?.value || '').trim();
+  const teacher = document.getElementById('shareTeacherSelect')?.value || '';
+  const gradeEl = document.getElementById('shareGradeSelect');
+  const grade = gradeEl && gradeEl.selectedIndex >= 0 ? gradeEl.options[gradeEl.selectedIndex].text : '';
+  const goal = document.getElementById('shareGoalAmount')?.value || '';
+
+  if (sName && teacher) {
+    drawPledgeCard(sName, teacher, grade, goal, format);
+  }
+}
+
+function getStudentShareUrl(studentName, teacher, grade) {
+  const origin = window.location.origin;
+  const path = window.location.pathname;
+  return `${origin}${path}?student=${encodeURIComponent(studentName)}&teacher=${encodeURIComponent(teacher)}&grade=${encodeURIComponent(grade)}`;
+}
+
+function generateShareKit() {
+  const studentNameInput = document.getElementById('shareStudentName');
+  const teacherSelect = document.getElementById('shareTeacherSelect');
+  const gradeSelect = document.getElementById('shareGradeSelect');
+  const goalSelect = document.getElementById('shareGoalAmount');
+
+  const studentName = (studentNameInput.value || '').trim();
+  const teacher = teacherSelect.value;
+  const gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
+  const goal = goalSelect.value;
+
+  if (!studentName || !teacher || !gradeSelect.value) {
+    showToast('⚠️ Please enter student name, teacher, and grade.');
+    return;
+  }
+
+  // Generate Personalized URL
+  const shareUrl = getStudentShareUrl(studentName, teacher, gradeText);
+
+  // Update input
+  const urlInput = document.getElementById('shareGeneratedUrl');
+  if (urlInput) urlInput.value = shareUrl;
+
+  // Pre-fill social messages
+  const messageText = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and campus enhancements at James Franklin Smith Elementary! You can donate easily and securely online here: ${shareUrl} Thank you so much for cheering us on! 🐾`;
+
+  const waBtn = document.getElementById('shareWaBtn');
+  if (waBtn) waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
+
+  const fbBtn = document.getElementById('shareFbBtn');
+  if (fbBtn) fbBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+
+  const emailBtn = document.getElementById('shareEmailBtn');
+  if (emailBtn) emailBtn.href = `mailto:?subject=${encodeURIComponent(`Support ${studentName} in the JFS Jag-a-Thon!`)}&body=${encodeURIComponent(messageText)}`;
+
+  // Reveal results area
+  const resultsArea = document.getElementById('shareResultsArea');
+  if (resultsArea) {
+    resultsArea.style.display = 'block';
+    resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Draw Pledge Card Canvas
+  drawPledgeCard(studentName, teacher, gradeText, goal, state.cardFormat || 'story');
+  showToast('✨ Custom pledge kit & card generated!');
+}
+
+function drawPledgeCard(studentName, teacher, grade, goal, format) {
+  const canvas = document.getElementById('pledgeCardCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const isStory = format === 'story';
+  const W = 1080;
+  const H = isStory ? 1920 : 1080;
+  canvas.width = W;
+  canvas.height = H;
+
+  // Background Gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, '#04122d');
+  bgGrad.addColorStop(0.4, '#082559');
+  bgGrad.addColorStop(1, '#0b4ea2');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Decorative Ambient Circles
+  ctx.save();
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+  ctx.beginPath();
+  ctx.arc(W * 0.85, isStory ? H * 0.12 : H * 0.1, 260, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(W * 0.1, isStory ? H * 0.88 : H * 0.9, 280, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const logo = new Image();
+  logo.crossOrigin = 'anonymous';
+  logo.src = 'jfs-logo.png';
+
+  const renderContent = () => {
+    let y = isStory ? 100 : 70;
+
+    // Draw school logo
+    try {
+      ctx.drawImage(logo, (W - 90) / 2, y, 90, 90);
+    } catch (e) {}
+
+    // Sub-caption
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#f59e0b'; // Gold
+    ctx.font = 'bold 26px "Outfit", sans-serif';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('JAMES FRANKLIN SMITH ELEMENTARY PTA', W / 2, y + 135);
+
+    // Event Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 56px "Outfit", sans-serif';
+    ctx.fillText('🐾 2026 JFS JAG-A-THON 🐾', W / 2, y + 205);
+
+    // Feature Card Box
+    const boxY = y + 250;
+    const boxH = isStory ? 480 : 340;
+    const boxW = W - 140;
+    const boxX = 70;
+
+    drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 28, 'rgba(255, 255, 255, 0.08)', 'rgba(245, 158, 11, 0.6)', 3);
+
+    // Callout
+    ctx.fillStyle = '#fde047';
+    ctx.font = 'bold 28px "Outfit", sans-serif';
+    ctx.fillText('⭐ PLEASE SPONSOR MY RUN! ⭐', W / 2, boxY + 65);
+
+    // Student Name
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px "Outfit", sans-serif';
+    ctx.fillText(studentName, W / 2, boxY + 150);
+
+    // Grade & Teacher Badge (No room number as requested)
+    const badgeText = `${grade} • Teacher: ${teacher}`;
+    ctx.font = '600 32px "Plus Jakarta Sans", sans-serif';
+    const textWidth = ctx.measureText(badgeText).width;
+    const badgePad = 32;
+    drawRoundedRect(ctx, (W - textWidth - badgePad * 2) / 2, boxY + 195, textWidth + badgePad * 2, 54, 27, '#1e3a8a', '#3b82f6', 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(badgeText, W / 2, boxY + 234);
+
+    // Optional Goal
+    if (goal) {
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText(`🎯 Fundraising Goal: $${goal}`, W / 2, boxY + (isStory ? 320 : 295));
+    }
+
+    // Impact message
+    const impactY = boxY + boxH + (isStory ? 70 : 45);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '500 26px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('100% of donations power STEM, Arts, Classroom Libraries,', W / 2, impactY);
+    ctx.fillText('& Campus Enhancements for all JFS students!', W / 2, impactY + 38);
+
+    // QR Code Container
+    const qrBoxY = impactY + (isStory ? 80 : 50);
+    const qrSize = isStory ? 320 : 210;
+    const qrBoxW = qrSize + 50;
+    const qrBoxH = qrSize + 80;
+    const qrBoxX = (W - qrBoxW) / 2;
+
+    drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 20, '#ffffff', '#cbd5e1', 2);
+
+    // Generate QR Code
+    const tempDiv = document.createElement('div');
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(tempDiv, {
+        text: getStudentShareUrl(studentName, teacher, grade),
+        width: qrSize,
+        height: qrSize,
+        colorDark: '#071f4a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      setTimeout(() => {
+        const qrEl = tempDiv.querySelector('canvas') || tempDiv.querySelector('img');
+        if (qrEl) {
+          ctx.drawImage(qrEl, (W - qrSize) / 2, qrBoxY + 16, qrSize, qrSize);
+        }
+        ctx.fillStyle = '#071f4a';
+        ctx.font = 'bold 22px "Outfit", sans-serif';
+        ctx.fillText('SCAN TO DONATE ONLINE', W / 2, qrBoxY + qrSize + 52);
+
+        // Footer
+        const footerY = H - (isStory ? 70 : 30);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 20px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('Fast, Secure & 100% Tax-Deductible via Zeffy • JFS PTA', W / 2, footerY);
+      }, 50);
+    } else {
+      ctx.fillStyle = '#071f4a';
+      ctx.font = 'bold 22px "Outfit", sans-serif';
+      ctx.fillText('DONATE VIA ZEFFY', W / 2, qrBoxY + qrSize / 2 + 10);
+    }
+  };
+
+  if (logo.complete) {
+    renderContent();
+  } else {
+    logo.onload = renderContent;
+    logo.onerror = renderContent;
+  }
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius, fill, stroke, strokeWidth) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.lineWidth = strokeWidth || 1;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function downloadPledgeCard() {
+  const canvas = document.getElementById('pledgeCardCanvas');
+  if (!canvas) return;
+  const sName = (document.getElementById('shareStudentName')?.value || 'Student').trim().replace(/\s+/g, '_');
+  const link = document.createElement('a');
+  link.download = `${sName}_JFS_Jagathon_Pledge_Card.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('📥 Downloading high-res pledge card!');
+}
+
+function copyShareUrl() {
+  const input = document.getElementById('shareGeneratedUrl');
+  if (!input || !input.value) return;
+  navigator.clipboard.writeText(input.value).then(() => {
+    showToast('📋 Personal share link copied!');
+  }).catch(() => {
+    showToast('Link: ' + input.value);
+  });
+}
+
+function copyShareMessage() {
+  const studentName = (document.getElementById('shareStudentName')?.value || 'our student').trim();
+  const teacher = document.getElementById('shareTeacherSelect')?.value || '';
+  const gradeEl = document.getElementById('shareGradeSelect');
+  const gradeText = gradeEl && gradeEl.selectedIndex >= 0 ? gradeEl.options[gradeEl.selectedIndex].text : '';
+  const shareUrl = document.getElementById('shareGeneratedUrl')?.value || window.location.href;
+
+  const msg = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and campus enhancements at James Franklin Smith Elementary! You can donate easily and securely online here: ${shareUrl} Thank you so much for cheering us on! 🐾`;
+
+  navigator.clipboard.writeText(msg).then(() => {
+    showToast('📄 Full donation message copied!');
+  }).catch(() => {
+    showToast('Message copied to clipboard');
   });
 }

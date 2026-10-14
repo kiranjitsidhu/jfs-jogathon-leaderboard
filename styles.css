@@ -453,22 +453,28 @@ body {
    ========================================================== */
 .tabs-nav {
   display: flex;
-  gap: 8px;
+  gap: 5px;
   border-bottom: 2px solid var(--gray-200);
-  margin-bottom: 26px;
+  margin-bottom: 22px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   padding-bottom: 2px;
+}
+
+.tabs-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: transparent;
   border: none;
-  padding: 12px 14px;
+  padding: 8px 11px;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.98rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--gray-600);
   cursor: pointer;
@@ -476,6 +482,11 @@ body {
   position: relative;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tab-emoji {
+  font-size: 0.95rem;
 }
 
 .tab-btn:hover {
@@ -2494,3 +2505,348 @@ input:checked + .slider:before {
   line-height: 1.5;
   margin: 0;
 }
+
+/* ==========================================================
+   DYNAMIC SPONSOR WELCOME BAR
+   ========================================================== */
+.sponsor-welcome-bar {
+  background: linear-gradient(135deg, #071f4a 0%, #0b4ea2 100%);
+  color: #ffffff;
+  border-bottom: 3px solid #f59e0b;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+}
+
+.sponsor-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sponsor-bar-text strong {
+  color: #fde047;
+  font-weight: 800;
+}
+
+.sponsor-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-gold {
+  background: #f59e0b;
+  color: #071f4a;
+  font-weight: 800;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-gold:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+}
+
+.sponsor-bar-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.sponsor-bar-close:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================
+   DONOR ATTRIBUTION HELPER CARD (DONATE TAB)
+   ========================================================== */
+.donor-attribution-card {
+  background: #eff6ff;
+  border: 2px dashed #3b82f6;
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn 0.3s ease;
+}
+
+.attribution-card-header {
+  margin-bottom: 12px;
+}
+
+.attribution-badge {
+  display: inline-block;
+  background: #1e40af;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.attribution-subtitle {
+  font-size: 0.88rem;
+  color: #1e3a8a;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.attribution-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.attribution-pill {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pill-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.pill-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.pill-copy-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pill-copy-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==========================================================
+   SHARE & FUNDRAISE TAB (STUDENT PLEDGE KIT)
+   ========================================================== */
+.share-kit-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.share-kit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.share-form-card,
+.share-output-card,
+.share-card-container {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.col-half {
+  flex: 1;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--gray-700);
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--gray-800);
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11, 78, 162, 0.15);
+}
+
+.share-link-box {
+  display: flex;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-md);
+}
+
+.share-link-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 0.88rem;
+  color: #1e293b;
+  outline: none;
+}
+
+.social-share-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.btn-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-whatsapp {
+  background: #25d366;
+  color: #ffffff;
+}
+.btn-whatsapp:hover {
+  background: #1eb956;
+}
+
+.btn-facebook {
+  background: #1877f2;
+  color: #ffffff;
+}
+.btn-facebook:hover {
+  background: #0d65d9;
+}
+
+.btn-email {
+  background: #0284c7;
+  color: #ffffff;
+}
+.btn-email:hover {
+  background: #0369a1;
+}
+
+.btn-copy-msg {
+  background: #475569;
+  color: #ffffff;
+}
+.btn-copy-msg:hover {
+  background: #334155;
+}
+
+/* Card Format Switcher */
+.card-format-toggle {
+  display: flex;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--radius-md);
+}
+
+.format-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.format-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-preview-wrapper {
+  display: flex;
+  justify-content: center;
+  background: #0f172a;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.pledge-card-canvas {
+  max-width: 380px;
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tab-btn {
+    padding: 7px 9px;
+    font-size: 0.80rem;
+    gap: 3px;
+  }
+  .share-form-card,
+  .share-output-card,
+  .share-card-container {
+    padding: 18px 16px;
+  }
+}
+
