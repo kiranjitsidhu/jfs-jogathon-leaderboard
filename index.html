@@ -545,49 +545,22 @@
           <div id="shareResultsArea" class="share-results-area" style="display: none;">
             
             <!-- Digital Card Preview & Download -->
-            <div class="share-card-container mb-6">
+            <div class="share-card-container">
               <div class="card-heading-row">
                 <div>
                   <h3 class="card-inner-title">📱 Your Custom Jag-a-Thon Card</h3>
-                  <p class="text-sm text-gray-500">Includes student details, JFS artwork, and a scannable QR code linking straight to Zeffy!</p>
+                  <p class="text-sm text-gray-500">Includes student details, JFS artwork, website URL, and a scannable QR code linking straight to Zeffy!</p>
                 </div>
-                <div class="card-format-toggle">
-                  <button type="button" class="format-btn active" id="formatStoryBtn" onclick="setCardFormat('story')">📱 Story (9:16)</button>
-                  <button type="button" class="format-btn" id="formatSquareBtn" onclick="setCardFormat('square')">🖼️ Post (1:1)</button>
-                </div>
+                <span class="badge badge-gold">Ready to Download</span>
               </div>
 
-              <div class="canvas-preview-wrapper mt-3">
+              <div class="canvas-preview-wrapper mt-4">
                 <canvas id="pledgeCardCanvas" class="pledge-card-canvas"></canvas>
               </div>
 
-              <div class="canvas-actions mt-4 text-center">
-                <button type="button" class="btn btn-primary btn-lg" onclick="downloadPledgeCard()">
+              <div class="canvas-actions">
+                <button type="button" class="btn download-card-btn" onclick="downloadPledgeCard()">
                   📥 Download High-Res Card (.PNG)
-                </button>
-              </div>
-            </div>
-
-            <!-- Pre-written Text Copy -->
-            <div class="share-output-card">
-              <div class="card-heading-row">
-                <h3 class="card-inner-title">💬 Share with Family &amp; Friends</h3>
-                <span class="badge badge-gold">Ready to Send</span>
-              </div>
-              <p class="text-sm text-gray-500 mb-3">Copy and send this text to grandparents and family along with the downloaded card image:</p>
-
-              <div class="social-share-buttons-grid mt-3">
-                <a id="shareWaBtn" href="#" target="_blank" class="btn btn-social btn-whatsapp">
-                  <span>💬 Text / WhatsApp</span>
-                </a>
-                <a id="shareFbBtn" href="#" target="_blank" class="btn btn-social btn-facebook">
-                  <span>📘 Share on Facebook</span>
-                </a>
-                <a id="shareEmailBtn" href="#" class="btn btn-social btn-email">
-                  <span>✉️ Email Family</span>
-                </a>
-                <button type="button" class="btn btn-social btn-copy-msg" onclick="copyShareMessage()">
-                  <span>📄 Copy Text</span>
                 </button>
               </div>
             </div>
