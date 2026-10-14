@@ -469,12 +469,12 @@ body {
 .tab-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: transparent;
   border: none;
-  padding: 8px 11px;
+  padding: 10px 14px;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.86rem;
+  font-size: 0.93rem;
   font-weight: 700;
   color: var(--gray-600);
   cursor: pointer;
@@ -486,7 +486,7 @@ body {
 }
 
 .tab-emoji {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 .tab-btn:hover {
