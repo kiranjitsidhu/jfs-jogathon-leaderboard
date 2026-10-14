@@ -101,7 +101,6 @@ let state = {
   activeWeek: 1,
   activeTab: 'overall',
   isAdminUnlocked: false,
-  sponsoredStudent: null,
   cardFormat: 'story',
   filters: {
     search: '',
@@ -121,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   calculateAndRender();
   setupCountdown();
-  initUrlParamsAndSponsor();
   initShareKitForm();
 
   // Silently auto-refresh live data if Google Sheet CSV URL configured
@@ -276,7 +274,6 @@ function switchTab(tabId) {
   // Specific tab actions
   if (tabId === 'donate') {
     initDonationIframe();
-    updateDonorAttributionCard();
   } else if (tabId === 'volunteer') {
     initVolunteerIframe();
   } else if (tabId === 'share') {
@@ -346,18 +343,7 @@ function updateDonationLinkTargets() {
 
 function initDonationIframe() {
   const iframe = document.getElementById('donationIframe');
-  let url = getEffectiveDonationUrl();
-  if (state.sponsoredStudent && state.sponsoredStudent.name) {
-    const s = state.sponsoredStudent;
-    const qs = `?student=${encodeURIComponent(s.name)}&teacher=${encodeURIComponent(s.teacher)}&grade=${encodeURIComponent(s.grade)}`;
-    url += qs;
-    const extBtn = document.getElementById('externalDonationBtn');
-    if (extBtn) extBtn.href = url;
-    const popout = document.getElementById('iframePopoutBtn');
-    if (popout) popout.href = url;
-    const addr = document.getElementById('iframeUrlDisplay');
-    if (addr) addr.textContent = url;
-  }
+  const url = getEffectiveDonationUrl();
   if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
     iframe.src = url;
   }
@@ -1906,81 +1892,7 @@ function setupEventListeners() {
 }
 
 // ==========================================================
-// SPONSORSHIP URL PARAMETERS & ATTRIBUTION HELPERS
-// ==========================================================
-function initUrlParamsAndSponsor() {
-  const params = new URLSearchParams(window.location.search);
-  const student = params.get('student');
-  const teacher = params.get('teacher');
-  const grade = params.get('grade');
-  const donate = params.get('donate');
-
-  if (student) {
-    state.sponsoredStudent = {
-      name: student.trim(),
-      teacher: teacher ? teacher.trim() : '',
-      grade: grade ? grade.trim() : ''
-    };
-
-    // Show top sponsor welcome bar
-    const bar = document.getElementById('sponsorWelcomeBar');
-    const barName = document.getElementById('sponsorBarStudentName');
-    const barSub = document.getElementById('sponsorBarGradeTeacher');
-    if (bar && barName) {
-      barName.textContent = state.sponsoredStudent.name;
-      const details = [];
-      if (state.sponsoredStudent.grade) details.push(state.sponsoredStudent.grade);
-      if (state.sponsoredStudent.teacher) details.push(`Teacher: ${state.sponsoredStudent.teacher}`);
-      if (barSub) barSub.textContent = details.join(' • ');
-      bar.style.display = 'block';
-    }
-
-    // Populate Donor Attribution Card in Donate tab
-    updateDonorAttributionCard();
-
-    // If donate=true or hash is #donate, switch directly to donate tab
-    if (donate === 'true' || window.location.hash === '#donate') {
-      switchTab('donate');
-    }
-  }
-}
-
-function closeSponsorBar() {
-  const bar = document.getElementById('sponsorWelcomeBar');
-  if (bar) bar.style.display = 'none';
-}
-
-function updateDonorAttributionCard() {
-  const card = document.getElementById('donorAttributionCard');
-  if (!card) return;
-  if (!state.sponsoredStudent || !state.sponsoredStudent.name) {
-    card.style.display = 'none';
-    return;
-  }
-  const s = state.sponsoredStudent;
-  const nameEl = document.getElementById('attribStudentVal');
-  const teacherEl = document.getElementById('attribTeacherVal');
-  const gradeEl = document.getElementById('attribGradeVal');
-
-  if (nameEl) nameEl.textContent = s.name;
-  if (teacherEl) teacherEl.textContent = s.teacher || 'Not Specified';
-  if (gradeEl) gradeEl.textContent = s.grade || 'Not Specified';
-  card.style.display = 'block';
-}
-
-function copyAttrib(elementId) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const text = el.textContent.trim();
-  navigator.clipboard.writeText(text).then(() => {
-    showToast(`📋 Copied: "${text}"`);
-  }).catch(() => {
-    showToast(`Value: ${text}`);
-  });
-}
-
-// ==========================================================
-// SHARE KIT (STUDENT PLEDGE CARD & SOCIAL SHARING)
+// SHARE KIT (STUDENT DIGITAL CARD & QR CODE GENERATOR)
 // ==========================================================
 function initShareKitForm() {
   const teacherSelect = document.getElementById('shareTeacherSelect');
@@ -2029,50 +1941,34 @@ function setCardFormat(format) {
   const teacher = document.getElementById('shareTeacherSelect')?.value || '';
   const gradeEl = document.getElementById('shareGradeSelect');
   const grade = gradeEl && gradeEl.selectedIndex >= 0 ? gradeEl.options[gradeEl.selectedIndex].text : '';
-  const goal = document.getElementById('shareGoalAmount')?.value || '';
 
   if (sName && teacher) {
-    drawPledgeCard(sName, teacher, grade, goal, format);
+    drawPledgeCard(sName, teacher, grade, format);
   }
-}
-
-function getStudentShareUrl(studentName, teacher, grade) {
-  const origin = window.location.origin;
-  const path = window.location.pathname;
-  return `${origin}${path}?student=${encodeURIComponent(studentName)}&teacher=${encodeURIComponent(teacher)}&grade=${encodeURIComponent(grade)}`;
 }
 
 function generateShareKit() {
   const studentNameInput = document.getElementById('shareStudentName');
   const teacherSelect = document.getElementById('shareTeacherSelect');
   const gradeSelect = document.getElementById('shareGradeSelect');
-  const goalSelect = document.getElementById('shareGoalAmount');
 
   const studentName = (studentNameInput.value || '').trim();
   const teacher = teacherSelect.value;
   const gradeText = gradeSelect.options[gradeSelect.selectedIndex].text;
-  const goal = goalSelect.value;
 
   if (!studentName || !teacher || !gradeSelect.value) {
     showToast('⚠️ Please enter student name, teacher, and grade.');
     return;
   }
 
-  // Generate Personalized URL
-  const shareUrl = getStudentShareUrl(studentName, teacher, gradeText);
-
-  // Update input
-  const urlInput = document.getElementById('shareGeneratedUrl');
-  if (urlInput) urlInput.value = shareUrl;
-
-  // Pre-fill social messages
-  const messageText = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and campus enhancements at James Franklin Smith Elementary! You can donate easily and securely online here: ${shareUrl} Thank you so much for cheering us on! 🐾`;
+  // Pre-fill social messages pointing directly to Zeffy
+  const messageText = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and student enrichment at James Franklin Smith Elementary! You can donate easily and securely online on Zeffy here: ${CANONICAL_DONATION_URL} Thank you so much for cheering us on! 🐾`;
 
   const waBtn = document.getElementById('shareWaBtn');
   if (waBtn) waBtn.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
 
   const fbBtn = document.getElementById('shareFbBtn');
-  if (fbBtn) fbBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  if (fbBtn) fbBtn.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(CANONICAL_DONATION_URL)}`;
 
   const emailBtn = document.getElementById('shareEmailBtn');
   if (emailBtn) emailBtn.href = `mailto:?subject=${encodeURIComponent(`Support ${studentName} in the JFS Jag-a-Thon!`)}&body=${encodeURIComponent(messageText)}`;
@@ -2084,12 +1980,12 @@ function generateShareKit() {
     resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  // Draw Pledge Card Canvas
-  drawPledgeCard(studentName, teacher, gradeText, goal, state.cardFormat || 'story');
-  showToast('✨ Custom pledge kit & card generated!');
+  // Draw Card with Artwork Background & Zeffy QR Code
+  drawPledgeCard(studentName, teacher, gradeText, state.cardFormat || 'story');
+  showToast('✨ Custom Jag-a-Thon card & QR generated!');
 }
 
-function drawPledgeCard(studentName, teacher, grade, goal, format) {
+function drawPledgeCard(studentName, teacher, grade, format) {
   const canvas = document.getElementById('pledgeCardCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -2100,104 +1996,155 @@ function drawPledgeCard(studentName, teacher, grade, goal, format) {
   canvas.width = W;
   canvas.height = H;
 
-  // Background Gradient
-  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-  bgGrad.addColorStop(0, '#04122d');
-  bgGrad.addColorStop(0.4, '#082559');
-  bgGrad.addColorStop(1, '#0b4ea2');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, W, H);
-
-  // Decorative Ambient Circles
-  ctx.save();
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
-  ctx.beginPath();
-  ctx.arc(W * 0.85, isStory ? H * 0.12 : H * 0.1, 260, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(W * 0.1, isStory ? H * 0.88 : H * 0.9, 280, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // Load Background Artwork and Logo
+  const bgImg = new Image();
+  bgImg.crossOrigin = 'anonymous';
+  bgImg.src = 'jfs-card-bg.jpg';
 
   const logo = new Image();
   logo.crossOrigin = 'anonymous';
   logo.src = 'jfs-logo.png';
 
-  const renderContent = () => {
-    let y = isStory ? 100 : 70;
+  let imagesLoaded = 0;
+  const totalImages = 2;
 
-    // Draw school logo
+  const onAssetLoad = () => {
+    imagesLoaded++;
+    if (imagesLoaded >= totalImages) {
+      renderCard();
+    }
+  };
+
+  bgImg.onload = onAssetLoad;
+  bgImg.onerror = onAssetLoad;
+  logo.onload = onAssetLoad;
+  logo.onerror = onAssetLoad;
+
+  // If already cached
+  if (bgImg.complete) imagesLoaded++;
+  if (logo.complete) imagesLoaded++;
+  if (imagesLoaded >= totalImages) {
+    renderCard();
+  }
+
+  function renderCard() {
+    // Base Deep Midnight Navy
+    ctx.fillStyle = '#061738';
+    ctx.fillRect(0, 0, W, H);
+
+    // 1. Draw Background Image
     try {
-      ctx.drawImage(logo, (W - 90) / 2, y, 90, 90);
+      if (bgImg.complete && bgImg.naturalWidth > 0) {
+        if (isStory) {
+          // In Story format, draw artwork across top 820px
+          ctx.drawImage(bgImg, 0, 0, W, 820);
+
+          // Blend artwork down into deep navy
+          const blendGrad = ctx.createLinearGradient(0, 400, 0, 830);
+          blendGrad.addColorStop(0, 'rgba(6, 23, 56, 0)');
+          blendGrad.addColorStop(0.7, 'rgba(6, 23, 56, 0.85)');
+          blendGrad.addColorStop(1, '#061738');
+          ctx.fillStyle = blendGrad;
+          ctx.fillRect(0, 400, W, 430);
+
+          // Subtle overlay on top portion for readability
+          ctx.fillStyle = 'rgba(6, 23, 56, 0.45)';
+          ctx.fillRect(0, 0, W, 500);
+        } else {
+          // In Square format, draw artwork covering entire canvas
+          ctx.drawImage(bgImg, 0, 0, W, H);
+
+          // Full dark rich overlay for crisp text contrast
+          const fullGrad = ctx.createLinearGradient(0, 0, 0, H);
+          fullGrad.addColorStop(0, 'rgba(4, 18, 45, 0.85)');
+          fullGrad.addColorStop(0.5, 'rgba(6, 26, 62, 0.76)');
+          fullGrad.addColorStop(1, 'rgba(4, 18, 45, 0.90)');
+          ctx.fillStyle = fullGrad;
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
     } catch (e) {}
 
-    // Sub-caption
+    // Decorative Ambient Circles
+    ctx.save();
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.07)';
+    ctx.beginPath();
+    ctx.arc(W * 0.85, isStory ? H * 0.12 : H * 0.1, 260, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(W * 0.1, isStory ? H * 0.88 : H * 0.9, 280, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    let y = isStory ? 80 : 60;
+
+    // Draw School Logo
+    try {
+      if (logo.complete && logo.naturalWidth > 0) {
+        ctx.drawImage(logo, (W - 90) / 2, y, 90, 90);
+      }
+    } catch (e) {}
+
+    // Header Sub-caption
     ctx.textAlign = 'center';
     ctx.fillStyle = '#f59e0b'; // Gold
     ctx.font = 'bold 26px "Outfit", sans-serif';
     ctx.letterSpacing = '3px';
-    ctx.fillText('JAMES FRANKLIN SMITH ELEMENTARY PTA', W / 2, y + 135);
+    ctx.fillText('JAMES FRANKLIN SMITH ELEMENTARY PTA', W / 2, y + 130);
 
     // Event Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 56px "Outfit", sans-serif';
-    ctx.fillText('🐾 2026 JFS JAG-A-THON 🐾', W / 2, y + 205);
+    ctx.font = '900 54px "Outfit", sans-serif';
+    ctx.fillText('🐾 2026 JFS JAG-A-THON 🐾', W / 2, y + 195);
 
-    // Feature Card Box
-    const boxY = y + 250;
-    const boxH = isStory ? 480 : 340;
+    // 2. Feature Box: Student Name & Teacher
+    const boxY = y + 235;
+    const boxH = isStory ? 430 : 310;
     const boxW = W - 140;
     const boxX = 70;
 
-    drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 28, 'rgba(255, 255, 255, 0.08)', 'rgba(245, 158, 11, 0.6)', 3);
+    drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 28, 'rgba(255, 255, 255, 0.10)', 'rgba(245, 158, 11, 0.7)', 3);
 
     // Callout
-    ctx.fillStyle = '#fde047';
+    ctx.fillStyle = '#fde047'; // Bright Yellow
     ctx.font = 'bold 28px "Outfit", sans-serif';
-    ctx.fillText('⭐ PLEASE SPONSOR MY RUN! ⭐', W / 2, boxY + 65);
+    ctx.fillText('⭐ PLEASE SPONSOR MY RUN! ⭐', W / 2, boxY + 60);
 
     // Student Name
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 64px "Outfit", sans-serif';
-    ctx.fillText(studentName, W / 2, boxY + 150);
+    ctx.fillText(studentName, W / 2, boxY + 145);
 
-    // Grade & Teacher Badge (No room number as requested)
+    // Grade & Teacher Badge (No room number)
     const badgeText = `${grade} • Teacher: ${teacher}`;
     ctx.font = '600 32px "Plus Jakarta Sans", sans-serif';
     const textWidth = ctx.measureText(badgeText).width;
     const badgePad = 32;
-    drawRoundedRect(ctx, (W - textWidth - badgePad * 2) / 2, boxY + 195, textWidth + badgePad * 2, 54, 27, '#1e3a8a', '#3b82f6', 2);
+    drawRoundedRect(ctx, (W - textWidth - badgePad * 2) / 2, boxY + 190, textWidth + badgePad * 2, 54, 27, '#1e3a8a', '#3b82f6', 2);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(badgeText, W / 2, boxY + 234);
+    ctx.fillText(badgeText, W / 2, boxY + 228);
 
-    // Optional Goal
-    if (goal) {
-      ctx.fillStyle = '#fef08a';
-      ctx.font = 'bold 28px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(`🎯 Fundraising Goal: $${goal}`, W / 2, boxY + (isStory ? 320 : 295));
-    }
-
-    // Impact message
-    const impactY = boxY + boxH + (isStory ? 70 : 45);
+    // Mission callout
+    const missionY = boxY + boxH + (isStory ? 65 : 40);
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 26px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText('100% of donations power STEM, Arts, Classroom Libraries,', W / 2, impactY);
-    ctx.fillText('& Campus Enhancements for all JFS students!', W / 2, impactY + 38);
+    ctx.font = '600 27px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('100% of donations power STEM, Arts, Classroom Libraries,', W / 2, missionY);
+    ctx.fillText('& Student Enrichment at James Franklin Smith Elementary!', W / 2, missionY + 38);
 
-    // QR Code Container
-    const qrBoxY = impactY + (isStory ? 80 : 50);
-    const qrSize = isStory ? 320 : 210;
+    // 3. QR Code Container Box
+    const qrBoxY = missionY + (isStory ? 80 : 50);
+    const qrSize = isStory ? 330 : 210;
     const qrBoxW = qrSize + 50;
-    const qrBoxH = qrSize + 80;
+    const qrBoxH = qrSize + 85;
     const qrBoxX = (W - qrBoxW) / 2;
 
-    drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 20, '#ffffff', '#cbd5e1', 2);
+    drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 22, '#ffffff', '#cbd5e1', 2);
 
-    // Generate QR Code
+    // Generate Zeffy QR Code
     const tempDiv = document.createElement('div');
     if (typeof QRCode !== 'undefined') {
       new QRCode(tempDiv, {
-        text: getStudentShareUrl(studentName, teacher, grade),
+        text: CANONICAL_DONATION_URL,
         width: qrSize,
         height: qrSize,
         colorDark: '#071f4a',
@@ -2212,10 +2159,10 @@ function drawPledgeCard(studentName, teacher, grade, goal, format) {
         }
         ctx.fillStyle = '#071f4a';
         ctx.font = 'bold 22px "Outfit", sans-serif';
-        ctx.fillText('SCAN TO DONATE ONLINE', W / 2, qrBoxY + qrSize + 52);
+        ctx.fillText('SCAN TO DONATE ON ZEFFY', W / 2, qrBoxY + qrSize + 55);
 
         // Footer
-        const footerY = H - (isStory ? 70 : 30);
+        const footerY = H - (isStory ? 60 : 28);
         ctx.fillStyle = '#94a3b8';
         ctx.font = '500 20px "Plus Jakarta Sans", sans-serif';
         ctx.fillText('Fast, Secure & 100% Tax-Deductible via Zeffy • JFS PTA', W / 2, footerY);
@@ -2225,13 +2172,6 @@ function drawPledgeCard(studentName, teacher, grade, goal, format) {
       ctx.font = 'bold 22px "Outfit", sans-serif';
       ctx.fillText('DONATE VIA ZEFFY', W / 2, qrBoxY + qrSize / 2 + 10);
     }
-  };
-
-  if (logo.complete) {
-    renderContent();
-  } else {
-    logo.onload = renderContent;
-    logo.onerror = renderContent;
   }
 }
 
@@ -2265,20 +2205,10 @@ function downloadPledgeCard() {
   if (!canvas) return;
   const sName = (document.getElementById('shareStudentName')?.value || 'Student').trim().replace(/\s+/g, '_');
   const link = document.createElement('a');
-  link.download = `${sName}_JFS_Jagathon_Pledge_Card.png`;
+  link.download = `${sName}_JFS_Jagathon_Card.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  showToast('📥 Downloading high-res pledge card!');
-}
-
-function copyShareUrl() {
-  const input = document.getElementById('shareGeneratedUrl');
-  if (!input || !input.value) return;
-  navigator.clipboard.writeText(input.value).then(() => {
-    showToast('📋 Personal share link copied!');
-  }).catch(() => {
-    showToast('Link: ' + input.value);
-  });
+  showToast('📥 Downloading high-res Jag-a-Thon card!');
 }
 
 function copyShareMessage() {
@@ -2286,9 +2216,8 @@ function copyShareMessage() {
   const teacher = document.getElementById('shareTeacherSelect')?.value || '';
   const gradeEl = document.getElementById('shareGradeSelect');
   const gradeText = gradeEl && gradeEl.selectedIndex >= 0 ? gradeEl.options[gradeEl.selectedIndex].text : '';
-  const shareUrl = document.getElementById('shareGeneratedUrl')?.value || window.location.href;
 
-  const msg = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and campus enhancements at James Franklin Smith Elementary! You can donate easily and securely online here: ${shareUrl} Thank you so much for cheering us on! 🐾`;
+  const msg = `Hi! Please sponsor ${studentName} in the 2026 JFS Jag-a-Thon! ${studentName} is in ${gradeText} with Teacher ${teacher}. 100% of donations power STEM, arts, classroom libraries, and student enrichment at James Franklin Smith Elementary! You can donate easily and securely online on Zeffy here: ${CANONICAL_DONATION_URL} Thank you so much for cheering us on! 🐾`;
 
   navigator.clipboard.writeText(msg).then(() => {
     showToast('📄 Full donation message copied!');
