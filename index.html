@@ -498,7 +498,6 @@
           <div class="share-form-card">
             <div class="card-heading-row">
               <h3 class="card-inner-title">📝 Enter Student Details</h3>
-              <span class="badge badge-gold">Quick 30-Sec Setup</span>
             </div>
             <p class="text-sm text-gray-500 mb-4">Enter your student's name and choose their teacher. No room number needed!</p>
 
@@ -508,19 +507,11 @@
                 <input type="text" id="shareStudentName" class="form-input" placeholder="First &amp; Last Name" required>
               </div>
 
-              <div class="form-row mb-4">
-                <div class="form-group col-half">
-                  <label for="shareTeacherSelect" class="form-label">Teacher *</label>
-                  <select id="shareTeacherSelect" class="form-select" required onchange="onShareTeacherChange()">
-                    <option value="">Select Teacher...</option>
-                  </select>
-                </div>
-
-                <div class="form-group col-half">
-                  <label for="shareGradeDisplay" class="form-label">Grade</label>
-                  <input type="text" id="shareGradeDisplay" class="form-input" placeholder="Auto-populated from Teacher" readonly style="background-color: var(--bg-body); cursor: default; font-weight: 600; color: var(--text-dark);">
-                  <input type="hidden" id="shareGradeVal" value="">
-                </div>
+              <div class="form-group mb-4">
+                <label for="shareTeacherSelect" class="form-label">Teacher *</label>
+                <select id="shareTeacherSelect" class="form-select" required>
+                  <option value="">Select Teacher...</option>
+                </select>
               </div>
 
               <div class="form-actions mt-5 pt-2">

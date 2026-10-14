@@ -1909,32 +1909,14 @@ function initShareKitForm() {
   }
 }
 
-function onShareTeacherChange() {
-  const teacherSelect = document.getElementById('shareTeacherSelect');
-  const gradeDisplay = document.getElementById('shareGradeDisplay');
-  const gradeVal = document.getElementById('shareGradeVal');
-  if (!teacherSelect) return;
-  const t = teacherSelect.value;
-  const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === t);
-  if (cls) {
-    const g = formatGradeLabel(cls.grade);
-    if (gradeDisplay) gradeDisplay.value = g;
-    if (gradeVal) gradeVal.value = g;
-  } else {
-    if (gradeDisplay) gradeDisplay.value = '';
-    if (gradeVal) gradeVal.value = '';
-  }
-}
-
 function generateShareKit() {
   const studentNameInput = document.getElementById('shareStudentName');
   const teacherSelect = document.getElementById('shareTeacherSelect');
-  const gradeVal = document.getElementById('shareGradeVal');
 
   const studentName = (studentNameInput.value || '').trim();
   const teacher = teacherSelect.value;
   const cls = JFS_ROSTER_CLASSES.find(c => c.teacher === teacher);
-  const gradeText = cls ? formatGradeLabel(cls.grade) : (gradeVal?.value || '');
+  const gradeText = cls ? formatGradeLabel(cls.grade) : '';
 
   if (!studentName || !teacher) {
     showToast('⚠️ Please enter student name and choose a teacher.');
