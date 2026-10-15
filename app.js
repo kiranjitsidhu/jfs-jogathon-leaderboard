@@ -51,35 +51,9 @@ function compareGrades(a, b) {
 }
 
 // ==========================================================
-// DEFAULT STARTER DATASET (Grounded in Real JFS Classes)
+// DEFAULT STARTER DATASET (Clean Empty Start - Awaiting Donations)
 // ==========================================================
-const DEFAULT_STUDENTS = [
-  { name: "Maya Sidhu", grade: "3", room: "A-5", teacher: "ALEXANDER", week1: 150, week2: 120, week3: 160, week4: 180, laps: 36 },
-  { name: "Aarav Patel", grade: "4", room: "C-1", teacher: "FECI", week1: 130, week2: 140, week3: 125, week4: 150, laps: 34 },
-  { name: "Olivia Martinez", grade: "5", room: "C-7", teacher: "NUNES", week1: 140, week2: 160, week3: 130, week4: 170, laps: 38 },
-  { name: "Daniel Young", grade: "3", room: "A-2", teacher: "HART", week1: 130, week2: 140, week3: 110, week4: 120, laps: 35 },
-  { name: "Zoe Carter", grade: "4", room: "C-4", teacher: "HOSLER", week1: 125, week2: 135, week3: 140, week4: 130, laps: 36 },
-  { name: "Charlotte King", grade: "5", room: "C-5", teacher: "ORLOFF", week1: 115, week2: 125, week3: 130, week4: 145, laps: 37 },
-  { name: "Emma Johnson", grade: "2", room: "B-5", teacher: "JONES", week1: 110, week2: 95, week3: 120, week4: 110, laps: 30 },
-  { name: "Jack Green", grade: "3", room: "A-3", teacher: "CICCARELLO", week1: 110, week2: 90, week3: 105, week4: 130, laps: 33 },
-  { name: "Lucas Nguyen", grade: "6", room: "A-9", teacher: "GASPAR", week1: 90, week2: 130, week3: 80, week4: 120, laps: 30 },
-  { name: "James Lewis", grade: "K", room: "K-3", teacher: "ANGUIANO", week1: 90, week2: 105, week3: 115, week4: 110, laps: 33 },
-  { name: "Sophia Garcia", grade: "4", room: "C-2", teacher: "NOYES", week1: 80, week2: 90, week3: 110, week4: 105, laps: 34 },
-  { name: "Chloe White", grade: "4", room: "C-1", teacher: "FECI", week1: 105, week2: 90, week3: 85, week4: 95, laps: 31 },
-  { name: "Evelyn Hall", grade: "6", room: "A-10", teacher: "MUNOZ", week1: 95, week2: 115, week3: 100, week4: 90, laps: 32 },
-  { name: "Ella Adams", grade: "5/6", room: "A-8", teacher: "SCIBA", week1: 95, week2: 110, week3: 120, week4: 115, laps: 34 },
-  { name: "Scarlett Gonzalez", grade: "2", room: "B-11", teacher: "LUZOD", week1: 90, week2: 95, week3: 100, week4: 85, laps: 30 },
-  { name: "Amelia Lopez", grade: "2", room: "B-6", teacher: "SWENOR", week1: 85, week2: 90, week3: 105, week4: 90, laps: 29 },
-  { name: "Jackson Lee", grade: "1", room: "B-7", teacher: "CACCIARONI", week1: 85, week2: 60, week3: 95, week4: 80, laps: 30 },
-  { name: "Alexander Walker", grade: "1", room: "B-8", teacher: "MATHARU", week1: 80, week2: 95, week3: 65, week4: 75, laps: 28 },
-  { name: "Owen Baker", grade: "K", room: "K-1", teacher: "BEIER", week1: 80, week2: 85, week3: 90, week4: 85, laps: 26 },
-  { name: "Ethan Brown", grade: "TK", room: "K-A1", teacher: "MCMINN", week1: 95, week2: 60, week3: 85, week4: 70, laps: 29 },
-  { name: "Benjamin Harris", grade: "TK", room: "A-4", teacher: "TALAGTAG", week1: 70, week2: 85, week3: 90, week4: 65, laps: 27 },
-  { name: "Ava Thomas", grade: "1", room: "B-9", teacher: "QUIJANO", week1: 75, week2: 80, week3: 70, week4: 85, laps: 25 },
-  { name: "Harper Scott", grade: "Lower SDC", room: "B-15", teacher: "AVUNOORI", week1: 75, week2: 85, week3: 95, week4: 80, laps: 31 },
-  { name: "Henry Wright", grade: "Upper SDC", room: "B-13", teacher: "HEAP", week1: 70, week2: 60, week3: 75, week4: 70, laps: 22 },
-  { name: "Leo Nelson", grade: "K", room: "K-2", teacher: "KHATUN", week1: 70, week2: 80, week3: 85, week4: 75, laps: 28 }
-];
+const DEFAULT_STUDENTS = [];
 
 const CANONICAL_DONATION_URL = "https://www.zeffy.com/en-US/donation-form/jfs-pta-jag-a-thon-fundraiser";
 
@@ -149,13 +123,14 @@ function loadStoredData() {
     }
     saveConfigToStorage();
 
-    const savedStudents = localStorage.getItem('jfs_jogathon_data_v1');
+    // Purge legacy test session data
+    localStorage.removeItem('jfs_jogathon_data_v1');
+    const savedStudents = localStorage.getItem('jfs_jogathon_data_v2');
     if (savedStudents) {
       const parsed = JSON.parse(savedStudents);
       const isCorrupted = parsed.some(s => s.name && (s.name.includes('<') || s.name.includes('function') || s.total > 10000000));
       if (isCorrupted) {
-        console.warn("Corrupted HTML cache detected. Resetting to default sample data.");
-        state.students = normalizeStudentList(DEFAULT_STUDENTS);
+        state.students = [];
         saveStudentsToStorage();
       } else {
         // Heal any entries where teacher was temporarily stored as a room number (e.g. "B-11")
@@ -173,12 +148,12 @@ function loadStoredData() {
         saveStudentsToStorage();
       }
     } else {
-      state.students = normalizeStudentList(DEFAULT_STUDENTS);
+      state.students = [];
       saveStudentsToStorage();
     }
   } catch (err) {
     console.error("Error loading data from localStorage:", err);
-    state.students = normalizeStudentList(DEFAULT_STUDENTS);
+    state.students = [];
   }
 
   // Check if admin is unlocked in this browser session
@@ -247,7 +222,8 @@ function normalizeStudentList(rawList) {
 }
 
 function saveStudentsToStorage() {
-  localStorage.setItem('jfs_jogathon_data_v1', JSON.stringify(state.students));
+  localStorage.setItem('jfs_jogathon_data_v2', JSON.stringify(state.students));
+  localStorage.removeItem('jfs_jogathon_data_v1');
 }
 
 function saveConfigToStorage() {
@@ -552,10 +528,26 @@ function renderOverallTab() {
   if (podiumEl) {
     if (distinctAmounts.length === 0) {
       podiumEl.innerHTML = `
-        <div class="podium-card" style="flex: 1; max-width: 500px; padding: 28px;">
-          <div class="podium-badge">🐾</div>
-          <div class="podium-name">Fundraising In Progress!</div>
-          <div class="podium-meta">Top student fundraisers will appear here as donations arrive.</div>
+        <div class="podium-card rank-2 podium-placeholder">
+          <div class="podium-badge">🥈</div>
+          <div class="podium-name">Awaiting 2nd Place</div>
+          <div class="podium-meta">James Franklin Smith Jaguars</div>
+          <div class="podium-amount">$0</div>
+          <span class="co-leader-pill" style="background: #f1f5f9; color: #64748b;">🥈 In Contention</span>
+        </div>
+        <div class="podium-card rank-1 podium-placeholder">
+          <div class="podium-badge">🥇</div>
+          <div class="podium-name">Awaiting 1st Place</div>
+          <div class="podium-meta">James Franklin Smith Jaguars</div>
+          <div class="podium-amount">$0</div>
+          <span class="co-leader-pill" style="background: #f1f5f9; color: #64748b;">🥇 In Contention</span>
+        </div>
+        <div class="podium-card rank-3 podium-placeholder">
+          <div class="podium-badge">🥉</div>
+          <div class="podium-name">Awaiting 3rd Place</div>
+          <div class="podium-meta">James Franklin Smith Jaguars</div>
+          <div class="podium-amount">$0</div>
+          <span class="co-leader-pill" style="background: #f1f5f9; color: #64748b;">🥉 In Contention</span>
         </div>
       `;
     } else {
@@ -1739,18 +1731,22 @@ async function syncFromGoogleSheets() {
     const fetchUrl = normalizedUrl.includes('?') ? `${normalizedUrl}${cacheBuster}` : `${normalizedUrl}?${cacheBuster}`;
     const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const csvText = await res.text();
+    const trimmed = csvText.trim();
+    if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.includes('<script')) {
+      showToast("⚠️ Could not parse CSV. Make sure Sheet is published as CSV.");
+      return;
+    }
     const parsed = parseCsvText(csvText);
 
+    state.students = parsed;
+    state.config.googleSheetUrl = normalizedUrl;
+    saveStudentsToStorage();
+    saveConfigToStorage();
+    calculateAndRender();
     if (parsed.length > 0) {
-      state.students = parsed;
-      state.config.googleSheetUrl = normalizedUrl;
-      saveStudentsToStorage();
-      saveConfigToStorage();
-      calculateAndRender();
       showToast(`🎉 Synced ${parsed.length} students live from Google Sheets!`);
     } else {
-      showToast("⚠️ Could not parse CSV rows. Ensure sheet is published as CSV.");
+      showToast("ℹ️ Google Sheet synced: 0 donations logged (awaiting donations).");
     }
   } catch (err) {
     console.error(err);
@@ -1768,13 +1764,16 @@ async function autoSyncFromGoogleSheets() {
     const res = await fetch(fetchUrl);
     if (res.ok) {
       const csvText = await res.text();
-      const parsed = parseCsvText(csvText);
-      if (parsed.length > 0) {
-        state.students = parsed;
-        saveStudentsToStorage();
-        calculateAndRender();
-        console.log(`Auto-synced ${parsed.length} students from Google Sheets`);
+      const trimmed = csvText.trim();
+      if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.includes('<script')) {
+        console.warn("Auto-sync skipped: received HTML rather than CSV");
+        return;
       }
+      const parsed = parseCsvText(csvText);
+      state.students = parsed;
+      saveStudentsToStorage();
+      calculateAndRender();
+      console.log(`Auto-synced ${parsed.length} students from Google Sheets`);
     }
   } catch (e) {
     console.warn("Auto-sync from Google Sheets skipped:", e);
@@ -1841,14 +1840,14 @@ function saveAdminSettings() {
 }
 
 function resetToDefaultData() {
-  if (confirm("Reset all data back to the default JFS Elementary sample dataset?")) {
-    state.students = normalizeStudentList(DEFAULT_STUDENTS);
+  if (confirm("Clear all local data and reset leaderboard to awaiting state?")) {
+    state.students = [];
     state.config = { ...DEFAULT_CONFIG };
     saveStudentsToStorage();
     saveConfigToStorage();
     loadStoredData();
     calculateAndRender();
-    showToast("🔄 Data reset to default sample dataset.");
+    showToast("🔄 Data reset: Awaiting donations.");
     closeAdminModal();
   }
 }
