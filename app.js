@@ -1440,6 +1440,8 @@ function setupAdminAccessTriggers() {
       openAdminModal();
     }
   });
+}
+
 function cleanStudentName(rawName) {
   if (!rawName || typeof rawName !== 'string') return '';
   // Strip nicknames in quotes: "The GOAT", “The GOAT”, or parentheses (The GOAT)
