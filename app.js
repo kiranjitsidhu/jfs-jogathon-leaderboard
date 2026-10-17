@@ -1440,6 +1440,19 @@ function setupAdminAccessTriggers() {
       openAdminModal();
     }
   });
+function cleanStudentName(rawName) {
+  if (!rawName || typeof rawName !== 'string') return '';
+  // Strip nicknames in quotes: "The GOAT", “The GOAT”, or parentheses (The GOAT)
+  let s = rawName.replace(/["“”][^"“”]*["“”]/g, '');
+  s = s.replace(/\([^)]*\)/g, '');
+  // Normalize whitespace
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  // Title Case each word
+  return s.split(' ')
+    .filter(w => w.length > 0)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
 }
 
 function parseCsvText(text) {
@@ -1500,9 +1513,14 @@ function parseCsvText(text) {
       const canonicalRoom = rc ? rc.room : room;
       const canonicalGrade = rc ? rc.grade : grade;
 
-      if (!studentMap.has(rawName)) {
-        studentMap.set(rawName, {
-          name: rawName,
+      const cleanName = cleanStudentName(rawName);
+      if (!cleanName) continue;
+
+      const groupKey = cleanName.toLowerCase();
+
+      if (!studentMap.has(groupKey)) {
+        studentMap.set(groupKey, {
+          name: cleanName,
           grade: canonicalGrade,
           teacher: canonicalTeacher,
           room: canonicalRoom,
@@ -1515,7 +1533,7 @@ function parseCsvText(text) {
         });
       }
 
-      const s = studentMap.get(rawName);
+      const s = studentMap.get(groupKey);
       if (canonicalGrade && canonicalGrade !== 'K') s.grade = canonicalGrade;
       if (canonicalTeacher && canonicalTeacher !== 'General') s.teacher = canonicalTeacher;
       if (canonicalRoom) s.room = canonicalRoom;
