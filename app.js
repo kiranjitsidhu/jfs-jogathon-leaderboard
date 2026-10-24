@@ -1604,33 +1604,77 @@ function parseCsvText(text) {
   return students;
 }
 
+function parsePacificDateTime(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return null;
+  const str = dateStr.trim();
+
+  // Format 1: YYYY-MM-DD HH:mm (or HH:mm:ss, optional AM/PM)
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?/i);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1; // 0-indexed
+    const day = parseInt(isoMatch[3], 10);
+    let hours = isoMatch[4] ? parseInt(isoMatch[4], 10) : 0;
+    const mins = isoMatch[5] ? parseInt(isoMatch[5], 10) : 0;
+    const ampm = isoMatch[7] ? isoMatch[7].toLowerCase() : '';
+
+    if (ampm === 'pm' && hours < 12) hours += 12;
+    if (ampm === 'am' && hours === 12) hours = 0;
+
+    return new Date(year, month, day, hours, mins, 0);
+  }
+
+  // Format 2: MM/DD/YYYY H:mm AM/PM
+  const mdyMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?)?/i);
+  if (mdyMatch) {
+    const month = parseInt(mdyMatch[1], 10) - 1;
+    const day = parseInt(mdyMatch[2], 10);
+    const year = parseInt(mdyMatch[3], 10);
+    let hours = mdyMatch[4] ? parseInt(mdyMatch[4], 10) : 0;
+    const mins = mdyMatch[5] ? parseInt(mdyMatch[5], 10) : 0;
+    const ampm = mdyMatch[7] ? mdyMatch[7].toLowerCase() : '';
+
+    if (ampm === 'pm' && hours < 12) hours += 12;
+    if (ampm === 'am' && hours === 12) hours = 0;
+
+    return new Date(year, month, day, hours, mins, 0);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function determineWeekFromDate(dateStr) {
   if (!dateStr) return 1;
-  const parsed = new Date(dateStr);
-  if (isNaN(parsed.getTime())) {
-    const lower = dateStr.toLowerCase();
+  const parsed = parsePacificDateTime(dateStr);
+  if (!parsed || isNaN(parsed.getTime())) {
+    const lower = String(dateStr).toLowerCase();
     if (lower.includes('4')) return 4;
     if (lower.includes('3')) return 3;
     if (lower.includes('2')) return 2;
     return 1;
   }
 
-  // 4-Week Schedule:
-  // Week 1: Oct 19 - Oct 23
-  // Week 2: Oct 24 - Oct 30
-  // Week 3: Oct 31 - Nov 6
-  // Week 4: Nov 7 - Nov 13
-  const month = parsed.getMonth(); // 9 = Oct, 10 = Nov
-  const day = parsed.getDate();
+  // Official Jag-a-Thon Weekly Cutoffs (Every Friday at 3:00 PM / 15:00):
+  // Week 1 Cutoff: Friday, Oct 23, 2026 at 3:00 PM
+  // Week 2 Cutoff: Friday, Oct 30, 2026 at 3:00 PM
+  // Week 3 Cutoff: Friday, Nov 6, 2026 at 3:00 PM
+  // Week 4 Cutoff: Friday, Nov 13, 2026 at 3:00 PM
+  const y = parsed.getFullYear();
+  const w1Cutoff = new Date(y, 9, 23, 15, 0, 0); // Month 9 = October
+  const w2Cutoff = new Date(y, 9, 30, 15, 0, 0);
+  const w3Cutoff = new Date(y, 10, 6, 15, 0, 0); // Month 10 = November
 
-  if (month === 9) { // October
-    if (day <= 23) return 1;
-    return 2; // Oct 24 - Oct 31
-  } else if (month === 10) { // November
-    if (day <= 6) return 3; // Nov 1 - Nov 6
-    return 4; // Nov 7 - Nov 13+
+  const t = parsed.getTime();
+  if (t < w1Cutoff.getTime()) {
+    return 1;
+  } else if (t < w2Cutoff.getTime()) {
+    return 2;
+  } else if (t < w3Cutoff.getTime()) {
+    return 3;
+  } else {
+    return 4;
   }
-  return 1;
 }
 
 function splitCsvRow(rowStr) {
