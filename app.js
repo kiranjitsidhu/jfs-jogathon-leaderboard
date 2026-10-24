@@ -1795,6 +1795,7 @@ async function syncFromGoogleSheets() {
     const fetchUrl = normalizedUrl.includes('?') ? `${normalizedUrl}${cacheBuster}` : `${normalizedUrl}?${cacheBuster}`;
     const res = await fetch(fetchUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const csvText = await res.text();
     const trimmed = csvText.trim();
     if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.includes('<script')) {
       showToast("⚠️ Could not parse CSV. Make sure Sheet is published as CSV.");
