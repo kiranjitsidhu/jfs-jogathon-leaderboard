@@ -1442,6 +1442,11 @@ function setupAdminAccessTriggers() {
   });
 }
 
+const STUDENT_NAME_ALIASES = {
+  'evanaleah a': 'Evanaleah Alvarez',
+  'evanaleah a.': 'Evanaleah Alvarez'
+};
+
 function cleanStudentName(rawName) {
   if (!rawName || typeof rawName !== 'string') return '';
   // Strip nicknames in quotes: "The GOAT", “The GOAT”, or parentheses (The GOAT)
@@ -1451,10 +1456,16 @@ function cleanStudentName(rawName) {
   s = s.replace(/\s+/g, ' ').trim();
   if (!s) return '';
   // Title Case each word
-  return s.split(' ')
+  const cleaned = s.split(' ')
     .filter(w => w.length > 0)
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
+
+  const key = cleaned.toLowerCase();
+  if (STUDENT_NAME_ALIASES[key]) {
+    return STUDENT_NAME_ALIASES[key];
+  }
+  return cleaned;
 }
 
 function parseCsvText(text) {
