@@ -47,10 +47,10 @@ const JFS_ROSTER = {
   "A-10": { teacher: "MUNOZ", grade: "6" }
 };
 
-// Official Weekly Cutoffs (Week 1 includes until 5:30 PM; Weeks 2-4 sharp at 4:00 PM)
+// Official Weekly Cutoffs (Week 1 includes until 5:30 PM; Week 2 includes until 6:05 PM; Weeks 3-4 sharp at 4:00 PM)
 const SPRINT_SCHEDULE = {
   "1": { name: "Week 1", cutoff: new Date(2026, 9, 23, 17, 30, 0) }, // Oct 23, 5:30 PM
-  "2": { name: "Week 2", cutoff: new Date(2026, 9, 30, 17, 20, 0) },  // Oct 30, 4:00 PM
+  "2": { name: "Week 2", cutoff: new Date(2026, 9, 30, 18, 5, 0) },   // Oct 30, 6:05 PM
   "3": { name: "Week 3", cutoff: new Date(2026, 10, 6, 16, 0, 0) },  // Nov 6, 4:00 PM
   "4": { name: "Week 4", cutoff: new Date(2026, 10, 13, 16, 0, 0) }  // Nov 13, 4:00 PM
 };
