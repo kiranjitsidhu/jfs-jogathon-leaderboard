@@ -8,11 +8,41 @@
  */
 
 const ZEFFY_CONFIG = {
-  SHEET_NAME: 'Donations',         // Name of your main raw data tab
+  SHEET_NAME: 'Donations Log',     // Default tab name (auto-detects 'Donations', 'Donations Log', 'Sheet1', etc.)
   EXPORT_TAB_NAME: 'Export',       // Name of your export tab
   PROCESSED_LABEL: 'Zeffy-Synced',
   GMAIL_SEARCH_QUERY: 'from:zeffy.com -label:Zeffy-Synced'
 };
+
+function getDonationsSheet(ss) {
+  if (ZEFFY_CONFIG.SHEET_NAME) {
+    const s = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME);
+    if (s) return s;
+  }
+  const sheets = ss.getSheets();
+  for (let i = 0; i < sheets.length; i++) {
+    const name = sheets[i].getName().trim().toLowerCase();
+    if (name === 'donations log' || name === 'donations' || name === 'donation log' || name === 'sheet1') {
+      return sheets[i];
+    }
+  }
+  return sheets[0];
+}
+
+function getExportSheet(ss) {
+  if (ZEFFY_CONFIG.EXPORT_TAB_NAME) {
+    const s = ss.getSheetByName(ZEFFY_CONFIG.EXPORT_TAB_NAME);
+    if (s) return s;
+  }
+  const sheets = ss.getSheets();
+  for (let i = 0; i < sheets.length; i++) {
+    const name = sheets[i].getName().trim().toLowerCase();
+    if (name.startsWith('export')) {
+      return sheets[i];
+    }
+  }
+  return null;
+}
 
 const MIN_DONATION_FOR_TCHOTCHKE = 1.00;
 
@@ -76,6 +106,7 @@ function onOpen() {
     .addItem('🔄 Sync Online Donations from Gmail', 'syncZeffyDonations')
     .addItem('📥 Sync from Export Tab', 'importFromZeffyExportTab')
     .addSeparator()
+    .addItem('🔧 Repair Blank Email Rows (Rows 82-85)', 'repairBlankDonationsFromGmail')
     .addItem('🧹 Clean & Normalize Student Names', 'cleanAllStudentNamesInColumnC')
     .addItem('📅 Fix / Standardize All Dates', 'fixAllDatesInColumnA')
     .addSeparator()
@@ -696,7 +727,7 @@ function syncZeffyDonations() {
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
+    let sheet = getDonationsSheet(ss);
 
     ensureHeaders(sheet);
 
@@ -733,7 +764,10 @@ function syncZeffyDonations() {
       for (let m = 0; m < messages.length; m++) {
         const msg = messages[m];
         const parsed = parseZeffyMessage(msg);
-        if (!parsed) continue;
+        // CRITICAL GUARD: Never add donations without a student name or with invalid amount!
+        if (!parsed || !parsed.studentName || !parsed.amount || parsed.amount <= 0) {
+          continue;
+        }
 
         const datePart = parsed.date.slice(0, 10);
         const compKey = `${parsed.studentName.toLowerCase()}|${parsed.amount.toFixed(2)}|${datePart}`;
@@ -794,18 +828,8 @@ function importFromZeffyExportTab() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    let exportSheet = ss.getSheetByName(ZEFFY_CONFIG.EXPORT_TAB_NAME);
-    if (!exportSheet) {
-      const allSheets = ss.getSheets();
-      for (let s of allSheets) {
-        if (s.getName().toLowerCase().startsWith('export')) {
-          exportSheet = s;
-          break;
-        }
-      }
-    }
-
-    const mainSheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
+    const exportSheet = getExportSheet(ss);
+    const mainSheet = getDonationsSheet(ss);
 
     if (!exportSheet) {
       SpreadsheetApp.getUi().alert(`⚠️ Could not find a tab named "Export".\nPlease make sure your export tab is named "Export".`);
@@ -973,7 +997,7 @@ function importFromZeffyExportTab() {
 // ==========================================================
 function cleanAllStudentNamesInColumnC() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
+  const sheet = getDonationsSheet(ss);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
 
@@ -1000,7 +1024,7 @@ function cleanAllStudentNamesInColumnC() {
 
 function fixAllDatesInColumnA() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
+  const sheet = getDonationsSheet(ss);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
 
@@ -1123,16 +1147,29 @@ function ensureHeaders(sheet) {
 }
 
 // ==========================================================
-// 9. EMAIL PARSER & BACKGROUND TRIGGERS
+// 9. EMAIL PARSER, REPAIR TOOL & BACKGROUND TRIGGERS
 // ==========================================================
-function parseZeffyMessage(msg) {
+function parseZeffyMessage(msg, isRepair) {
   const subject = msg.getSubject() || '';
-  const rawBody = msg.getPlainBody() || '';
+  let rawBody = msg.getPlainBody() || '';
+  if (!rawBody || rawBody.length < 10) {
+    rawBody = (msg.getBody() || '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<br\s*[\/]?>/gi, '\n')
+      .replace(/<\/(p|div|tr|h\d)>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ');
+  }
+
   const dateObj = msg.getDate();
   const formattedDate = Utilities.formatDate(dateObj, Session.getScriptTimeZone() || 'America/Los_Angeles', 'yyyy-MM-dd HH:mm');
   const msgId = msg.getId();
 
-  if (rawBody.includes('manage your donations') || !rawBody.includes('CUSTOM QUESTIONS')) {
+  const bodyLower = rawBody.toLowerCase();
+  if (bodyLower.includes('manage your donations')) {
+    return null;
+  }
+  if (!isRepair && !bodyLower.includes('custom question')) {
     return null;
   }
 
@@ -1141,7 +1178,7 @@ function parseZeffyMessage(msg) {
   if (subjectAmountMatch) {
     amount = parseFloat(subjectAmountMatch[1].replace(/,/g, ''));
   } else {
-    const bodyAmountMatch = rawBody.match(/(?:Amount|Total|Donation|New)\s*\$?\s*([0-9,]+(?:\.[0-9]{2})?)/i);
+    const bodyAmountMatch = rawBody.match(/(?:Amount|Total|Donation|New donation of)\s*[:\s]*\$?\s*([0-9,]+(?:\.[0-9]{2})?)/i);
     if (bodyAmountMatch) {
       amount = parseFloat(bodyAmountMatch[1].replace(/,/g, ''));
     }
@@ -1150,35 +1187,73 @@ function parseZeffyMessage(msg) {
   if (!amount || amount <= 0) return null;
 
   let donorName = '';
-  const donorMatch = subject.match(/received from (.+)$/i);
+  const donorMatch = subject.match(/received from (.+)$/i) || subject.match(/from (.+)$/i);
   if (donorMatch) {
     donorName = donorMatch[1].trim();
   }
 
   const cleanBody = rawBody.replace(/[*_#~]/g, '');
-  const lines = cleanBody.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const lines = cleanBody.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+  const KNOWN_HEADERS = [
+    'custom questions', 'custom question', 'student full name', 'student name', 'student',
+    'grade', 'grade level', 'teacher', 'teacher name', 'room', 'room number',
+    'amount', 'total', 'donor', 'buyer', 'billing', 'billing information',
+    'payment details', 'order summary', 'view donation'
+  ];
+
+  function isHeaderLine(str) {
+    let s = str.toLowerCase().trim();
+    if (s.endsWith(':')) s = s.slice(0, -1).trim();
+    return KNOWN_HEADERS.includes(s);
+  }
 
   function getAnswerAfter(pattern) {
     for (let i = 0; i < lines.length; i++) {
       if (pattern.test(lines[i])) {
         const colonIdx = lines[i].indexOf(':');
-        if (colonIdx !== -1 && lines[i].substring(colonIdx + 1).trim() !== '') {
-          return lines[i].substring(colonIdx + 1).trim();
+        if (colonIdx !== -1) {
+          const val = lines[i].substring(colonIdx + 1).trim();
+          if (val) return val;
         }
         if (i + 1 < lines.length) {
-          return lines[i + 1].trim();
+          const next = lines[i + 1].trim();
+          if (!isHeaderLine(next)) {
+            return next;
+          }
         }
       }
     }
     return '';
   }
 
-  const rawStudent = getAnswerAfter(/^Student/i);
-  const studentName = cleanStudentName(rawStudent);
-  const grade = getAnswerAfter(/^Grade/i);
-  const teacher = getAnswerAfter(/^Teacher/i);
+  let rawStudent = getAnswerAfter(/^Student(?:\s*Full)?(?:\s*Name)?/i);
+  if (!rawStudent) {
+    const fb = cleanBody.match(/(?:Student\s*Full\s*Name|Student\s*Name|Student)\s*[:\s]*[\r\n]+\s*([^\r\n]+)/i) ||
+               cleanBody.match(/(?:Student\s*Full\s*Name|Student\s*Name|Student)\s*:\s*([^\r\n]+)/i);
+    if (fb && !isHeaderLine(fb[1])) rawStudent = fb[1].trim();
+  }
 
-  if (!studentName) return null;
+  const studentName = cleanStudentName(rawStudent);
+
+  let grade = getAnswerAfter(/^Grade/i);
+  if (!grade) {
+    const gb = cleanBody.match(/Grade\s*[:\s]*[\r\n]+\s*([^\r\n]+)/i) || cleanBody.match(/Grade\s*:\s*([^\r\n]+)/i);
+    if (gb && !isHeaderLine(gb[1])) grade = gb[1].trim();
+  }
+
+  let teacher = getAnswerAfter(/^Teacher/i);
+  if (!teacher) {
+    const tb = cleanBody.match(/Teacher\s*[:\s]*[\r\n]+\s*([^\r\n]+)/i) || cleanBody.match(/Teacher\s*:\s*([^\r\n]+)/i);
+    if (tb && !isHeaderLine(tb[1])) teacher = tb[1].trim();
+  }
+
+  if (!donorName) {
+    const db = getAnswerAfter(/^(?:Donor|Buyer|Contact)/i);
+    if (db) donorName = db;
+  }
+
+  if (!isRepair && !studentName) return null;
 
   const note = donorName ? `Zeffy - ${donorName}` : 'Zeffy Online';
 
@@ -1194,6 +1269,76 @@ function parseZeffyMessage(msg) {
   };
 }
 
+/**
+ * 1-Click Repair tool: Restores student name, grade, teacher, and donor note
+ * for rows (such as rows 82-85) where Gmail sync added the transaction ID but missed student info.
+ */
+function repairBlankDonationsFromGmail() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = getDonationsSheet(ss);
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('Could not find Donations sheet.');
+    return;
+  }
+
+  ensureHeaders(sheet);
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    SpreadsheetApp.getUi().alert('Sheet has no data rows.');
+    return;
+  }
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  let repairedCount = 0;
+  const logEntries = [];
+
+  for (let r = 0; r < data.length; r++) {
+    const rowNum = r + 2;
+    const studentName = String(data[r][2] || '').trim();
+    const txId = String(data[r][6] || '').trim();
+
+    // Target rows where student is blank and txId is a 16-hex Gmail message ID
+    if (!studentName && /^[0-9a-f]{16}$/i.test(txId)) {
+      try {
+        const msg = GmailApp.getMessageById(txId);
+        if (msg) {
+          const parsed = parseZeffyMessage(msg, true); // true = repair mode
+          if (parsed && (parsed.studentName || parsed.rawStudentName)) {
+            sheet.getRange(rowNum, 3).setValue(parsed.studentName);
+            sheet.getRange(rowNum, 4).setValue(parsed.grade);
+            sheet.getRange(rowNum, 5).setValue(parsed.teacher);
+            sheet.getRange(rowNum, 6).setValue(parsed.note);
+            sheet.getRange(rowNum, 8).setValue(parsed.rawStudentName);
+            repairedCount++;
+            logEntries.push(`Row ${rowNum}: ${parsed.studentName} ($${parsed.amount}) • ${parsed.teacher} • ${parsed.note}`);
+          } else {
+            logEntries.push(`Row ${rowNum} (${txId}): Email found in Gmail, but no student name inside.`);
+          }
+        } else {
+          logEntries.push(`Row ${rowNum} (${txId}): Message ID not found in Gmail.`);
+        }
+      } catch (err) {
+        logEntries.push(`Row ${rowNum} (${txId}): Error - ${err.message}`);
+      }
+    }
+  }
+
+  if (repairedCount > 0) {
+    SpreadsheetApp.getUi().alert(
+      `🎉 Repaired ${repairedCount} Blank Donation(s)!`,
+      `The following rows have been updated directly from Gmail:\n\n` + logEntries.join('\n'),
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  } else {
+    SpreadsheetApp.getUi().alert(
+      'Repair Status',
+      logEntries.length > 0 ? logEntries.join('\n') : 'No blank email rows (with Gmail message IDs) found.',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  }
+}
+
 function testLatestEmailParse() {
   const threads = GmailApp.search('from:zeffy.com "CUSTOM QUESTIONS"', 0, 1);
   if (threads.length === 0) {
@@ -1202,7 +1347,7 @@ function testLatestEmailParse() {
   }
 
   const msg = threads[0].getMessages()[0];
-  const parsed = parseZeffyMessage(msg);
+  const parsed = parseZeffyMessage(msg, true);
 
   const preview = 
     `Subject: ${msg.getSubject()}\n\n` +
