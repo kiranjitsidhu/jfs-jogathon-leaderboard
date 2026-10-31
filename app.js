@@ -1444,7 +1444,8 @@ function setupAdminAccessTriggers() {
 
 const STUDENT_NAME_ALIASES = {
   'evanaleah a': 'Evanaleah Alvarez',
-  'evanaleah a.': 'Evanaleah Alvarez'
+  'evanaleah a.': 'Evanaleah Alvarez',
+  'evannaleah alvarez': 'Evanaleah Alvarez'
 };
 
 function cleanStudentName(rawName) {
@@ -1668,12 +1669,12 @@ function determineWeekFromDate(dateStr) {
 
   // Official Jag-a-Thon Weekly Cutoffs:
   // Week 1 Cutoff: Friday, Oct 23, 2026 at 5:30 PM (17:30) [Includes 5:13 PM donation]
-  // Week 2 Cutoff: Friday, Oct 30, 2026 at 4:00 PM (16:00 sharp)
+  // Week 2 Cutoff: Friday, Oct 30, 2026 at 5:20 PM (17:20) [Includes all Friday offline entries up to 5:12 PM]
   // Week 3 Cutoff: Friday, Nov 6, 2026 at 4:00 PM (16:00 sharp)
   // Week 4 Cutoff: Friday, Nov 13, 2026 at 4:00 PM (16:00 sharp)
   const y = parsed.getFullYear();
   const w1Cutoff = new Date(y, 9, 23, 17, 30, 0); // Oct 23 at 5:30 PM (Month 9 = October)
-  const w2Cutoff = new Date(y, 9, 30, 16, 0, 0);  // Oct 30 at 4:00 PM
+  const w2Cutoff = new Date(y, 9, 30, 17, 20, 0);  // Oct 30 at 5:20 PM
   const w3Cutoff = new Date(y, 10, 6, 16, 0, 0);  // Nov 6 at 4:00 PM
 
   const t = parsed.getTime();
