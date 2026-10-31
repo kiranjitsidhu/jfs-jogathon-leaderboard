@@ -5,6 +5,7 @@
  * 3. Automated Gmail Sync with Exact Timestamps (YYYY-MM-DD HH:mm)
  * 4. Smart Export Tab Sync with Deduplication & Official Tax Receipt Upgrades
  * 5. Data Hygiene Tools: Student Name Cleaner & Date Standardizer
+ * 6. 1-Click Repair Tool for Email Sync Rows
  */
 
 const ZEFFY_CONFIG = {
@@ -13,36 +14,6 @@ const ZEFFY_CONFIG = {
   PROCESSED_LABEL: 'Zeffy-Synced',
   GMAIL_SEARCH_QUERY: 'from:zeffy.com -label:Zeffy-Synced'
 };
-
-function getDonationsSheet(ss) {
-  if (ZEFFY_CONFIG.SHEET_NAME) {
-    const s = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME);
-    if (s) return s;
-  }
-  const sheets = ss.getSheets();
-  for (let i = 0; i < sheets.length; i++) {
-    const name = sheets[i].getName().trim().toLowerCase();
-    if (name === 'donations log' || name === 'donations' || name === 'donation log' || name === 'sheet1') {
-      return sheets[i];
-    }
-  }
-  return sheets[0];
-}
-
-function getExportSheet(ss) {
-  if (ZEFFY_CONFIG.EXPORT_TAB_NAME) {
-    const s = ss.getSheetByName(ZEFFY_CONFIG.EXPORT_TAB_NAME);
-    if (s) return s;
-  }
-  const sheets = ss.getSheets();
-  for (let i = 0; i < sheets.length; i++) {
-    const name = sheets[i].getName().trim().toLowerCase();
-    if (name.startsWith('export')) {
-      return sheets[i];
-    }
-  }
-  return null;
-}
 
 const MIN_DONATION_FOR_TCHOTCHKE = 1.00;
 
@@ -85,58 +56,95 @@ const SPRINT_SCHEDULE = {
   "4": { name: "Week 4", cutoff: new Date(2026, 10, 13, 16, 0, 0) }  // Nov 13, 4:00 PM
 };
 
-// ==========================================================
-// 1. MENU REGISTRATION
-// ==========================================================
+function getDonationsSheet(ss) {
+  let s = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME);
+  if (s) return s;
+  const candidates = ["donations log", "donations", "sheet1", "donation", "raw data", "main"];
+  for (const sheet of ss.getSheets()) {
+    if (candidates.includes(sheet.getName().trim().toLowerCase())) return sheet;
+  }
+  for (const sheet of ss.getSheets()) {
+    if (sheet.getLastRow() >= 1 && sheet.getLastColumn() >= 3) {
+      const topRow = sheet.getRange(1, 1, 1, Math.min(8, sheet.getLastColumn())).getValues()[0].join(" ").toLowerCase();
+      if (topRow.includes("student") && (topRow.includes("amount") || topRow.includes("teacher"))) {
+        return sheet;
+      }
+    }
+  }
+  return ss.getSheets()[0];
+}
+
+function getExportSheet(ss) {
+  let s = ss.getSheetByName(ZEFFY_CONFIG.EXPORT_TAB_NAME);
+  if (s) return s;
+  for (const sheet of ss.getSheets()) {
+    const name = sheet.getName().trim().toLowerCase();
+    if (name === "export" || name.startsWith("export") || name.includes("zeffyexport") || name.includes("zeffy export")) {
+      return sheet;
+    }
+  }
+  return null;
+}
+
+// ==========================================
+// 1. CUSTOM MENU CREATION
+// ==========================================
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🐾 Jag-a-Thon Tools')
-    .addItem('🏃 Generate Week 1 Report', 'runWeek1Report')
-    .addItem('🏃 Generate Week 2 Report', 'runWeek2Report')
-    .addItem('🏃 Generate Week 3 Report', 'runWeek3Report')
-    .addItem('🏃 Generate Week 4 Report', 'runWeek4Report')
-    .addSeparator()
-    .addItem('🎲 Draw Week 1 Raffle Winners', 'drawWeek1RaffleWinners')
-    .addItem('🎲 Draw Week 2 Raffle Winners', 'drawWeek2RaffleWinners')
-    .addItem('🎲 Draw Week 3 Raffle Winners', 'drawWeek3RaffleWinners')
-    .addItem('🎲 Draw Week 4 Raffle Winners', 'drawWeek4RaffleWinners')
-    .addSeparator()
-    .addItem('🏆 Generate All-Time Cumulative Report', 'runAllTimeReport')
-    .addSeparator()
-    .addItem('🔄 Sync Online Donations from Gmail', 'syncZeffyDonations')
+    .addItem('⚡ Sync New Zeffy Emails Now', 'syncZeffyDonations')
     .addItem('📥 Sync from Export Tab', 'importFromZeffyExportTab')
     .addSeparator()
+    .addSubMenu(ui.createMenu('🏃 Generate Weekly Prize Reports')
+      .addItem('Week 1 Report', 'generateWeek1Report')
+      .addItem('Week 2 Report', 'generateWeek2Report')
+      .addItem('Week 3 Report', 'generateWeek3Report')
+      .addItem('Week 4 Report', 'generateWeek4Report')
+      .addItem('🏆 Cumulative Overall Report', 'generateCumulativeReport'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('🎲 Draw Raffle Winners')
+      .addItem('🎲 Draw Week 1 Raffle Winners', 'drawWeek1RaffleWinners')
+      .addItem('🎲 Draw Week 2 Raffle Winners', 'drawWeek2RaffleWinners')
+      .addItem('🎲 Draw Week 3 Raffle Winners', 'drawWeek3RaffleWinners')
+      .addItem('🎲 Draw Week 4 Raffle Winners', 'drawWeek4RaffleWinners'))
+    .addSeparator()
     .addItem('🔧 Repair Blank Email Rows (Rows 82-85)', 'repairBlankDonationsFromGmail')
-    .addItem('🧹 Clean & Normalize Student Names', 'cleanAllStudentNamesInColumnC')
-    .addItem('📅 Fix / Standardize All Dates', 'fixAllDatesInColumnA')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('🧹 Data Hygiene')
+      .addItem('Clean Student Names in Donations Tab', 'cleanAllStudentNamesInColumnC')
+      .addItem('Standardize Dates in Donations Tab', 'fixAllDatesInColumnA'))
     .addSeparator()
     .addItem('🧪 Test Zeffy Email Parse', 'testLatestEmailParse')
     .addItem('⏰ Enable 15-Min Auto-Sync', 'createZeffyAutoTrigger')
     .addToUi();
 }
 
-// ==========================================================
-// 2. REPORT & RAFFLE TRIGGERS
-// ==========================================================
-function runWeek1Report() { generatePrizeReport("Week 1", true); }
-function runWeek2Report() { generatePrizeReport("Week 2", true); }
-function runWeek3Report() { generatePrizeReport("Week 3", true); }
-function runWeek4Report() { generatePrizeReport("Week 4", true); }
-function runAllTimeReport() { generatePrizeReport("All-Time Cumulative", false); }
+function generateWeek1Report() { generatePrizeReport("Week 1"); }
+function generateWeek2Report() { generatePrizeReport("Week 2"); }
+function generateWeek3Report() { generatePrizeReport("Week 3"); }
+function generateWeek4Report() { generatePrizeReport("Week 4"); }
+function generateCumulativeReport() { generatePrizeReport("Cumulative"); }
+
+// Aliases for compatibility
+function runWeek1Report() { generatePrizeReport("Week 1"); }
+function runWeek2Report() { generatePrizeReport("Week 2"); }
+function runWeek3Report() { generatePrizeReport("Week 3"); }
+function runWeek4Report() { generatePrizeReport("Week 4"); }
+function runAllTimeReport() { generatePrizeReport("Cumulative"); }
 
 function drawWeek1RaffleWinners() { drawRaffleWinners("Week 1"); }
 function drawWeek2RaffleWinners() { drawRaffleWinners("Week 2"); }
 function drawWeek3RaffleWinners() { drawRaffleWinners("Week 3"); }
 function drawWeek4RaffleWinners() { drawRaffleWinners("Week 4"); }
 
-// ==========================================================
-// 3. 1-CLICK RAFFLE DRAWING ENGINE
-// ==========================================================
+// ==========================================
+// 2. 1-CLICK RAFFLE DRAW TOOL
+// ==========================================
 function drawRaffleWinners(period) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dataSheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
+  const dataSheet = getDonationsSheet(ss);
   if (!dataSheet) {
-    SpreadsheetApp.getUi().alert("Could not find Donations sheet.");
+    SpreadsheetApp.getUi().alert("Could not find Donations Log sheet.");
     return;
   }
 
@@ -150,574 +158,371 @@ function drawRaffleWinners(period) {
   const dateIdx = headers.findIndex(h => h.includes('date'));
   const nameIdx = headers.findIndex(h => h.includes('student'));
   const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('room'));
-  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('$'));
+  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('total') || h.includes('$'));
 
-  const studentMap = {};
-
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const rawName = nameIdx !== -1 ? String(row[nameIdx] || '').trim() : '';
-    const rawTeacher = teacherIdx !== -1 ? String(row[teacherIdx] || '').trim().toUpperCase() : '';
-    const amt = amountIdx !== -1 ? parseFloat(String(row[amountIdx] || '').replace(/[^0-9.-]+/g, '')) || 0 : 0;
-    const dateVal = dateIdx !== -1 ? row[dateIdx] : '';
-
-    if (!rawName || amt <= 0) continue;
-    if (!isValidForWeek(dateVal, period)) continue;
-
-    let classLabel = rawTeacher;
-    let gradeLabel = '';
-    const matchRoom = Object.keys(JFS_ROSTER).find(k => JFS_ROSTER[k].teacher === rawTeacher || k === rawTeacher);
-    if (matchRoom) {
-      const item = JFS_ROSTER[matchRoom];
-      classLabel = `${item.teacher} (Room ${matchRoom})`;
-      gradeLabel = item.grade;
-    }
-
-    if (!studentMap[rawName]) {
-      studentMap[rawName] = { name: rawName, amount: 0, classroom: classLabel, grade: gradeLabel };
-    }
-    studentMap[rawName].amount += amt;
-  }
-
-  const students = Object.values(studentMap);
-  if (students.length === 0) {
-    SpreadsheetApp.getUi().alert(`No donations found for ${period} yet.`);
+  if (nameIdx === -1 || amountIdx === -1) {
+    SpreadsheetApp.getUi().alert("Required columns (Student Name, Amount) not found.");
     return;
   }
 
-  // Sort descending to find Bike/Scooter winner (excluded from Tier 3 raffle)
-  students.sort((a, b) => b.amount - a.amount);
-  const bikeWinner = students[0];
+  const studentMap = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
 
-  const pool1 = [];
-  const pool2 = [];
-  const pool3 = [];
+    if (period !== "Cumulative" && !isValidForWeek(rawDate, period)) {
+      continue;
+    }
 
-  students.forEach(s => {
-    if (s.amount < 1.00) return;
-    if (s.amount < 25.00) {
-      pool1.push(s);
-    } else if (s.amount < 100.00) {
-      pool2.push(s);
+    const rawName = String(row[nameIdx] || '').trim();
+    const cleanName = cleanStudentName(rawName);
+    if (!cleanName) continue;
+
+    const amt = parseFloat(String(row[amountIdx] || '0').replace(/[^0-9.-]+/g, '')) || 0;
+    const teacherRaw = teacherIdx !== -1 ? String(row[teacherIdx] || '').trim() : 'General';
+    const match = findCanonicalClass(teacherRaw);
+    const teacher = match ? match.teacher : (teacherRaw || 'General');
+    const grade = match ? match.grade : 'General';
+
+    if (!studentMap[cleanName]) {
+      studentMap[cleanName] = { name: cleanName, teacher: teacher, grade: grade, total: 0 };
+    }
+    studentMap[cleanName].total += amt;
+  }
+
+  const allStudents = Object.values(studentMap).sort((a, b) => b.total - a.total);
+  if (allStudents.length === 0) {
+    SpreadsheetApp.getUi().alert(`No eligible donations found for ${period}.`);
+    return;
+  }
+
+  const topFundraiser = allStudents[0];
+
+  const tier1 = []; // $1 - $24.99
+  const tier2 = []; // $25 - $99.99
+  const tier3 = []; // $100+ (excluding top prize winner)
+
+  allStudents.forEach(s => {
+    if (s.total < 1.00) return;
+    if (s.total < 25.00) {
+      tier1.push(s);
+    } else if (s.total < 100.00) {
+      tier2.push(s);
     } else {
-      // Exclude bike winner from Tier 3 raffle draw if there are other $100+ candidates
-      if (bikeWinner && s.name === bikeWinner.name && students.filter(x => x.amount >= 100).length > 1) {
-        // Excluded to allow another student to win
-      } else {
-        pool3.push(s);
+      if (s.name !== topFundraiser.name) {
+        tier3.push(s);
       }
     }
   });
 
   const pickRandom = (arr) => arr.length > 0 ? arr[Math.floor(Math.random() * arr.length)] : null;
 
-  const winner1 = pickRandom(pool1);
-  const winner2 = pickRandom(pool2);
-  const winner3 = pickRandom(pool3);
+  const winner1 = pickRandom(tier1);
+  const winner2 = pickRandom(tier2);
+  const winner3 = pickRandom(tier3);
 
-  let msg = `🎉 OFFICIAL ${period.toUpperCase()} RAFFLE WINNERS DRAW 🎉\n\n`;
+  let logSheet = ss.getSheetByName("Raffle Winners");
+  if (!logSheet) {
+    logSheet = ss.insertSheet("Raffle Winners");
+    logSheet.appendRow(["Timestamp", "Period", "Prize Category", "Winner Name", "Grade", "Teacher", "Amount Raised"]);
+    logSheet.getRange(1, 1, 1, 7).setBackground("#0F2942").setFontColor("#FFFFFF").setFontWeight("bold");
+    logSheet.setFrozenRows(1);
+  }
+
+  const nowStr = Utilities.formatDate(new Date(), "America/Los_Angeles", "yyyy-MM-dd HH:mm:ss");
   
-  msg += `🎁 TIER 1 RAFFLE WINNER ($1.00 – $24.99):\n`;
-  if (winner1) {
-    msg += `• Winner: ${winner1.name}\n• Classroom: ${winner1.classroom} • ${winner1.grade}\n• Raised: $${winner1.amount.toFixed(2)} (Pool: ${pool1.length} students)\n\n`;
-  } else {
-    msg += `• No eligible students in Tier 1.\n\n`;
-  }
+  if (winner1) logSheet.appendRow([nowStr, period, "Tier 1 Raffle ($1–$24)", winner1.name, winner1.grade, winner1.teacher, `$${winner1.total.toFixed(2)}`]);
+  if (winner2) logSheet.appendRow([nowStr, period, "Tier 2 Raffle ($25–$99)", winner2.name, winner2.grade, winner2.teacher, `$${winner2.total.toFixed(2)}`]);
+  if (winner3) logSheet.appendRow([nowStr, period, "Tier 3 Raffle ($100+)", winner3.name, winner3.grade, winner3.teacher, `$${winner3.total.toFixed(2)}`]);
 
-  msg += `🎁 TIER 2 RAFFLE WINNER ($25.00 – $99.99):\n`;
-  if (winner2) {
-    msg += `• Winner: ${winner2.name}\n• Classroom: ${winner2.classroom} • ${winner2.grade}\n• Raised: $${winner2.amount.toFixed(2)} (Pool: ${pool2.length} students)\n\n`;
-  } else {
-    msg += `• No eligible students in Tier 2.\n\n`;
-  }
+  const message = 
+    `🎉 OFFICIAL ${period.toUpperCase()} DRAW RESULTS 🎉\n\n` +
+    `🚲 BIKE / SCOOTER WINNER (Top Fundraiser):\n` +
+    `   ${topFundraiser.name} (${topFundraiser.grade} • ${topFundraiser.teacher}) — $${topFundraiser.total.toFixed(2)}\n\n` +
+    `🎲 TIER 1 RAFFLE WINNER ($1–$24):\n` +
+    `   ${winner1 ? `${winner1.name} (${winner1.grade} • ${winner1.teacher}) — $${winner1.total.toFixed(2)}` : 'No eligible students'}\n\n` +
+    `🎲 TIER 2 RAFFLE WINNER ($25–$99):\n` +
+    `   ${winner2 ? `${winner2.name} (${winner2.grade} • ${winner2.teacher}) — $${winner2.total.toFixed(2)}` : 'No eligible students'}\n\n` +
+    `🎲 TIER 3 RAFFLE WINNER ($100+):\n` +
+    `   ${winner3 ? `${winner3.name} (${winner3.grade} • ${winner3.teacher}) — $${winner3.total.toFixed(2)}` : 'No eligible students'}\n\n` +
+    `Results have been automatically saved to the 'Raffle Winners' tab!`;
 
-  msg += `🎁 TIER 3 RAFFLE WINNER ($100.00+):\n`;
-  if (winner3) {
-    msg += `• Winner: ${winner3.name}\n• Classroom: ${winner3.classroom} • ${winner3.grade}\n• Raised: $${winner3.amount.toFixed(2)} (Pool: ${pool3.length} students)\n`;
-    if (bikeWinner) {
-      msg += `  (Note: Bike Winner ${bikeWinner.name} excluded from raffle draw)\n\n`;
-    }
-  } else {
-    msg += `• No eligible students in Tier 3.\n\n`;
-  }
-
-  // Record in "Raffle Winners" tab
-  let raffleSheet = ss.getSheetByName('Raffle Winners');
-  if (!raffleSheet) {
-    raffleSheet = ss.insertSheet('Raffle Winners');
-    raffleSheet.getRange(1, 1, 1, 7).setValues([['Draw Timestamp', 'Week', 'Raffle Tier', 'Winner Name', 'Classroom', 'Grade', 'Amount Raised']]);
-    raffleSheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#4338ca').setFontColor('#ffffff');
-    raffleSheet.setColumnWidth(1, 170);
-    raffleSheet.setColumnWidth(2, 90);
-    raffleSheet.setColumnWidth(3, 150);
-    raffleSheet.setColumnWidth(4, 200);
-    raffleSheet.setColumnWidth(5, 200);
-    raffleSheet.setColumnWidth(6, 100);
-    raffleSheet.setColumnWidth(7, 120);
-  }
-
-  const nowStr = new Date().toLocaleString();
-  const rowsToAdd = [];
-  if (winner1) rowsToAdd.push([nowStr, period, 'Tier 1 ($1–$24)', winner1.name, winner1.classroom, winner1.grade, winner1.amount]);
-  if (winner2) rowsToAdd.push([nowStr, period, 'Tier 2 ($25–$99)', winner2.name, winner2.classroom, winner2.grade, winner2.amount]);
-  if (winner3) rowsToAdd.push([nowStr, period, 'Tier 3 ($100+)', winner3.name, winner3.classroom, winner3.grade, winner3.amount]);
-
-  if (rowsToAdd.length > 0) {
-    const nextRow = raffleSheet.getLastRow() + 1;
-    raffleSheet.getRange(nextRow, 1, rowsToAdd.length, 7).setValues(rowsToAdd);
-    raffleSheet.getRange(nextRow, 7, rowsToAdd.length, 1).setNumberFormat('$#,##0.00');
-  }
-
-  SpreadsheetApp.getUi().alert(`🎲 ${period} Raffle Winners Selected!`, msg + `✅ Saved permanently to the 'Raffle Winners' tab.`, SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert(`${period} Winners Drawn!`, message, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
-// ==========================================================
-// 4. GRADE & PRIZE HELPERS
-// ==========================================================
-function getGradeOrderIndex(gradeStr) {
-  if (!gradeStr) return 99;
-  const s = String(gradeStr).trim().toUpperCase();
-  if (s.includes('5/6') || s.includes('5-6')) return GRADE_ORDER.indexOf('5/6');
-  if (s.includes('LOWER')) return GRADE_ORDER.indexOf('Lower SDC');
-  if (s.includes('UPPER')) return GRADE_ORDER.indexOf('Upper SDC');
-  if (s.includes('TK')) return GRADE_ORDER.indexOf('TK');
-  if (s === 'K' || s.endsWith(' K')) return GRADE_ORDER.indexOf('K');
-  if (s.includes('1')) return GRADE_ORDER.indexOf('1');
-  if (s.includes('2')) return GRADE_ORDER.indexOf('2');
-  if (s.includes('3')) return GRADE_ORDER.indexOf('3');
-  if (s.includes('4')) return GRADE_ORDER.indexOf('4');
-  if (s.includes('5')) return GRADE_ORDER.indexOf('5');
-  if (s.includes('6')) return GRADE_ORDER.indexOf('6');
-  return 99;
-}
+// ==========================================
+// 3. WEEKLY PRIZE REPORT GENERATOR (OLD ORIGINAL FORMAT)
+// ==========================================
+function generatePrizeReport(period) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = getDonationsSheet(ss);
+  if (!dataSheet) {
+    SpreadsheetApp.getUi().alert("Could not find Donations Log sheet.");
+    return;
+  }
 
-function assignPrize(studentTotal, schoolwideRank, isWeeklyOnly) {
-  if (studentTotal < MIN_DONATION_FOR_TCHOTCHKE) return "Cheer Supporter (Below $1)";
+  const data = dataSheet.getDataRange().getValues();
+  if (data.length < 2) {
+    SpreadsheetApp.getUi().alert("No donation data found in the main tab.");
+    return;
+  }
 
-  if (isWeeklyOnly) {
-    let tierText = "Tier 1 Tchotchke ($1+)";
-    if (studentTotal >= 100) {
-      tierText = "Tier 3 Best Tchotchke ($100+)";
-    } else if (studentTotal >= 25) {
-      tierText = "Tier 2 Better Tchotchke ($25+)";
+  const headers = data[0].map(h => String(h || '').trim().toLowerCase());
+  const dateIdx = headers.findIndex(h => h.includes('date'));
+  const nameIdx = headers.findIndex(h => h.includes('student'));
+  const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('room'));
+  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('total') || h.includes('$'));
+
+  if (nameIdx === -1 || amountIdx === -1) {
+    SpreadsheetApp.getUi().alert("Required columns (Student Name, Amount) not found.");
+    return;
+  }
+
+  const studentMap = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
+
+    if (period !== "Cumulative" && !isValidForWeek(rawDate, period)) {
+      continue;
     }
 
-    if (schoolwideRank === 1) {
-      return "🚲 WEEKLY GRAND PRIZE: Brand New Bike / Scooter + " + tierText;
+    const rawName = String(row[nameIdx] || '').trim();
+    const cleanName = cleanStudentName(rawName);
+    if (!cleanName) continue;
+
+    const amt = parseFloat(String(row[amountIdx] || '0').replace(/[^0-9.-]+/g, '')) || 0;
+    const teacherRaw = teacherIdx !== -1 ? String(row[teacherIdx] || '').trim() : 'General';
+    const match = findCanonicalClass(teacherRaw);
+    const teacher = match ? match.teacher : (teacherRaw || 'General');
+    const grade = match ? match.grade : 'General';
+    const room = match ? match.roomKey : '';
+
+    if (!studentMap[cleanName]) {
+      studentMap[cleanName] = {
+        name: cleanName,
+        teacher: teacher,
+        grade: grade,
+        room: room,
+        total: 0
+      };
     }
-    return tierText;
+    studentMap[cleanName].total += amt;
+  }
+
+  const allEligibleStudents = Object.values(studentMap).filter(s => s.total >= MIN_DONATION_FOR_TCHOTCHKE);
+  const totalPrizeRecipients = allEligibleStudents.length;
+
+  if (totalPrizeRecipients === 0) {
+    SpreadsheetApp.getUi().alert(`No donations found for ${period}.`);
+    return;
+  }
+
+  allEligibleStudents.sort((a, b) => b.total - a.total);
+  const topStudent = allEligibleStudents[0];
+
+  const classroomMap = {};
+  allEligibleStudents.forEach(s => {
+    const key = `${s.grade} — ${s.teacher}`;
+    if (!classroomMap[key]) {
+      classroomMap[key] = { grade: s.grade, teacher: s.teacher, students: [] };
+    }
+    classroomMap[key].students.push(s);
+  });
+
+  const getGradeWeight = (grade) => {
+    const idx = GRADE_ORDER.indexOf(grade);
+    return idx !== -1 ? idx : 999;
+  };
+
+  const sortedClassrooms = Object.values(classroomMap).sort((a, b) => {
+    const gwA = getGradeWeight(a.grade);
+    const gwB = getGradeWeight(b.grade);
+    if (gwA !== gwB) return gwA - gwB;
+    return a.teacher.localeCompare(b.teacher);
+  });
+
+  sortedClassrooms.forEach(c => {
+    c.students.sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  const isLowerGrade = (g) => {
+    const lower = String(g).toLowerCase();
+    return lower.includes('tk') || lower === 'k' || lower === '1' || lower === '2' || lower.includes('lower');
+  };
+
+  let lowerT1 = 0, lowerT2 = 0, lowerT3 = 0;
+  let upperT1 = 0, upperT2 = 0, upperT3 = 0;
+
+  allEligibleStudents.forEach(s => {
+    const amt = s.total;
+    const isLower = isLowerGrade(s.grade);
+    if (amt >= 100) {
+      if (isLower) lowerT3++; else upperT3++;
+    } else if (amt >= 25) {
+      if (isLower) lowerT2++; else upperT2++;
+    } else {
+      if (isLower) lowerT1++; else upperT1++;
+    }
+  });
+
+  const lowerTotal = lowerT1 + lowerT2 + lowerT3;
+  const upperTotal = upperT1 + upperT2 + upperT3;
+  const grandTotal = lowerTotal + upperTotal;
+
+  // Use the exact em-dash tab name format
+  const tabTitle = period === "Cumulative" ? "Report — Cumulative" : `Report — ${period}`;
+  let reportSheet = ss.getSheetByName(tabTitle);
+  if (reportSheet) {
+    reportSheet.clear();
   } else {
-    if (schoolwideRank === 1) {
-      return "🥇 GRAND PRIZE #1: 4 Disneyland Tickets (or Pro Sports) + Official T-Shirt";
-    } else if (schoolwideRank === 2) {
-      return "🥈 GRAND PRIZE #2: 4 Warriors Game Tickets (or choice) + Official T-Shirt";
-    } else if (schoolwideRank === 3) {
-      return "🥉 GRAND PRIZE #3: 4 49ers Game Tickets (or choice) + Official T-Shirt";
-    } else if (schoolwideRank <= 10) {
-      return "🌟 TOP 10 FINALIST: Official Jag-a-Thon T-Shirt + Top 10 Honors";
-    }
-    return "👕 PARTICIPANT REWARD: Official Jag-a-Thon T-Shirt";
+    reportSheet = ss.insertSheet(tabTitle);
   }
+
+  const rows = [];
+  rows.push([`🐾 J.F. SMITH JAG-A-THON — PRIZE DISTRIBUTION REPORT (${period.toUpperCase()})`, "", "", "", ""]);
+  rows.push([`Run Date: ${Utilities.formatDate(new Date(), "America/Los_Angeles", "MMM d, yyyy h:mm a")} | Total Students Earning Prizes: ${totalPrizeRecipients}`, "", "", "", ""]);
+  rows.push(["", "", "", "", ""]);
+
+  if (period !== "Cumulative" && topStudent) {
+    rows.push([`🏆 TOP FUNDRAISER OF THE WEEK (BIKE/SCOOTER WINNER): ${topStudent.name} ($${topStudent.total.toFixed(2)}) — Grade ${topStudent.grade}, Room ${topStudent.room} (${topStudent.teacher})`, "", "", "", ""]);
+    rows.push(["", "", "", "", ""]);
+  }
+
+  rows.push(["🎁 TIER-WISE TCHOTCHKE SUMMARY BREAKDOWN", "", "", "", ""]);
+  rows.push(["Grade Division", "Tier 1 ($1–$24)", "Tier 2 ($25–$99)", "Tier 3 ($100+)", "Total Tchotchkes"]);
+  rows.push(["Lower Grades (TK, K, 1, 2, Lower SDC)", lowerT1, lowerT2, lowerT3, lowerTotal]);
+  rows.push(["Upper Grades (3, 4, 5, 5/6, 6, Upper SDC)", upperT1, upperT2, upperT3, upperTotal]);
+  rows.push(["Schoolwide Grand Total", lowerT1 + upperT1, lowerT2 + upperT2, lowerT3 + upperT3, grandTotal]);
+  rows.push(["", "", "", "", ""]);
+
+  const bannerRowStart = rows.length - 5;
+
+  const classHeaderRowIndices = [];
+  const studentRowIndices = [];
+
+  sortedClassrooms.forEach(c => {
+    classHeaderRowIndices.push(rows.length + 1);
+    rows.push([`🏫 Grade ${c.grade} • Teacher: ${c.teacher} (${c.students.length} student${c.students.length > 1 ? 's' : ''})`, "", "", "", ""]);
+    rows.push(["Delivered?", "Student Name", "Grade", "Amount Raised", "Prize / Tchotchke Tier"]);
+
+    c.students.forEach(s => {
+      studentRowIndices.push(rows.length + 1);
+      const prizeLevel = getPrizeTierDescription(s.total, period === "Cumulative");
+      rows.push([false, s.name, s.grade, `$${s.total.toFixed(2)}`, prizeLevel]);
+    });
+
+    rows.push(["", "", "", "", ""]);
+  });
+
+  reportSheet.getRange(1, 1, rows.length, 5).setValues(rows);
+
+  // Formatting
+  reportSheet.getRange(1, 1, 1, 5).merge().setBackground("#0F2942").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(14).setHorizontalAlignment("center");
+  reportSheet.getRange(2, 1, 1, 5).merge().setBackground("#F0F4F8").setFontColor("#334E68").setFontStyle("italic").setHorizontalAlignment("center");
+
+  if (period !== "Cumulative" && topStudent) {
+    reportSheet.getRange(4, 1, 1, 5).merge().setBackground("#FEFCBF").setFontColor("#744210").setFontWeight("bold").setFontSize(11).setHorizontalAlignment("center");
+  }
+
+  // Format Tchotchke Summary Table
+  reportSheet.getRange(bannerRowStart, 1, 1, 5).merge().setBackground("#0F2942").setFontColor("#FFFFFF").setFontWeight("bold").setHorizontalAlignment("center");
+  reportSheet.getRange(bannerRowStart + 1, 1, 1, 5).setBackground("#E2E8F0").setFontWeight("bold").setHorizontalAlignment("center");
+  reportSheet.getRange(bannerRowStart + 2, 1, 3, 5).setHorizontalAlignment("center");
+  reportSheet.getRange(bannerRowStart + 4, 1, 1, 5).setFontWeight("bold").setBackground("#FEFCBF");
+  reportSheet.getRange(bannerRowStart, 1, 5, 5).setBorder(true, true, true, true, true, true, "#CBD5E0", SpreadsheetApp.BorderStyle.SOLID);
+
+  classHeaderRowIndices.forEach(r => {
+    reportSheet.getRange(r, 1, 1, 5).merge().setBackground("#0F2942").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(11);
+    reportSheet.getRange(r + 1, 1, 1, 5).setBackground("#E2E8F0").setFontWeight("bold").setFontColor("#2D3748");
+  });
+
+  studentRowIndices.forEach(r => {
+    reportSheet.getRange(r, 1).insertCheckboxes();
+    reportSheet.getRange(r, 1).setHorizontalAlignment("center");
+    reportSheet.getRange(r, 4).setHorizontalAlignment("right");
+    reportSheet.getRange(r, 1, 1, 5).setBorder(true, true, true, true, true, true, "#E2E8F0", SpreadsheetApp.BorderStyle.SOLID);
+  });
+
+  reportSheet.setColumnWidth(1, 100);
+  reportSheet.setColumnWidth(2, 220);
+  reportSheet.setColumnWidth(3, 80);
+  reportSheet.setColumnWidth(4, 120);
+  reportSheet.setColumnWidth(5, 260);
+
+  reportSheet.activate();
+  SpreadsheetApp.getUi().alert(`✅ ${tabTitle} generated with sorted rosters, checkboxes, and tier summary!`);
 }
 
-function parseSheetDate(val) {
-  if (!val) return null;
-  if (val instanceof Date) return val;
-  const s = String(val).trim();
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{1,2}):(\d{2}))?/);
-  if (m) {
-    const y = parseInt(m[1], 10);
-    const mo = parseInt(m[2], 10) - 1;
-    const d = parseInt(m[3], 10);
-    const h = m[4] ? parseInt(m[4], 10) : 0;
-    const mi = m[5] ? parseInt(m[5], 10) : 0;
-    return new Date(y, mo, d, h, mi, 0);
+function getPrizeTierDescription(amt, isCumulative) {
+  if (isCumulative) {
+    if (amt >= 250) return "🏆 Jaguar Champion VIP Gift + T-Shirt + Tchotchke";
+    if (amt >= 100) return "👕 Official T-Shirt + Tchotchke";
+    if (amt >= 50) return "✨ Level 2 Enrichment Gift + Tchotchke";
+    return "🎁 Tier 1 Tchotchke";
+  } else {
+    if (amt >= 100) return "Tier 3 Best Tchotchke ($100+)";
+    if (amt >= 25) return "Tier 2 Better Tchotchke ($25+)";
+    return "Tier 1 Tchotchke ($1+)";
   }
-  const d = new Date(val);
-  return isNaN(d.getTime()) ? null : d;
 }
 
 function isValidForWeek(dateVal, period) {
   const d = parseSheetDate(dateVal);
-  if (!d || isNaN(d.getTime())) return true;
+  if (!d || isNaN(d.getTime())) return false;
   const t = d.getTime();
   const w1Cut = SPRINT_SCHEDULE["1"].cutoff.getTime();
   const w2Cut = SPRINT_SCHEDULE["2"].cutoff.getTime();
   const w3Cut = SPRINT_SCHEDULE["3"].cutoff.getTime();
   const w4Cut = SPRINT_SCHEDULE["4"].cutoff.getTime();
 
-  if (period === "Week 1") return t < w1Cut;
-  if (period === "Week 2") return t >= w1Cut && t < w2Cut;
-  if (period === "Week 3") return t >= w2Cut && t < w3Cut;
-  if (period === "Week 4") return t >= w3Cut && t < w4Cut;
+  if (period === "Week 1") return t <= w1Cut;
+  if (period === "Week 2") return t > w1Cut && t <= w2Cut;
+  if (period === "Week 3") return t > w2Cut && t <= w3Cut;
+  if (period === "Week 4") return t > w3Cut && t <= w4Cut;
   return true;
 }
 
-// ==========================================================
-// 5. BEAUTIFUL REPORT BUILDER (Grade-Ordered & A-Z Students)
-// ==========================================================
-function generatePrizeReport(selectedPeriod, isWeeklyOnly) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dataSheet = ss.getSheetByName(ZEFFY_CONFIG.SHEET_NAME) || ss.getSheets()[0];
-
-  if (!dataSheet) {
-    SpreadsheetApp.getUi().alert("❌ Error: Could not find '" + ZEFFY_CONFIG.SHEET_NAME + "' tab!");
-    return;
+function parseSheetDate(dateVal) {
+  if (!dateVal) return null;
+  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+  const str = String(dateVal).trim();
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{1,2}):(\d{2}))?/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const mo = parseInt(isoMatch[2], 10) - 1;
+    const d = parseInt(isoMatch[3], 10);
+    const h = isoMatch[4] ? parseInt(isoMatch[4], 10) : 0;
+    const mi = isoMatch[5] ? parseInt(isoMatch[5], 10) : 0;
+    return new Date(y, mo, d, h, mi, 0);
   }
-
-  const classrooms = {};
-  Object.keys(JFS_ROSTER).forEach(roomCode => {
-    const item = JFS_ROSTER[roomCode];
-    const label = `${item.teacher} (Room ${roomCode} • ${item.grade})`;
-    classrooms[label] = {};
-  });
-
-  const lastRow = dataSheet.getLastRow();
-  let totalDonationsFound = 0;
-
-  if (lastRow > 1) {
-    const dataRange = dataSheet.getRange(1, 1, lastRow, dataSheet.getLastColumn()).getValues();
-    const headers = dataRange[0].map(h => String(h || '').trim().toLowerCase());
-
-    const studentIdx = headers.findIndex(h => h.includes('student'));
-    const amountIdx  = headers.findIndex(h => h.includes('amount') || h.includes('$'));
-    const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('room'));
-    const dateIdx    = headers.findIndex(h => h.includes('date'));
-
-    for (let i = 1; i < dataRange.length; i++) {
-      const row = dataRange[i];
-      const rawName = studentIdx !== -1 ? String(row[studentIdx] || '').trim() : '';
-      const rawRoomTeacher = teacherIdx !== -1 ? String(row[teacherIdx] || '').trim().toUpperCase() : '';
-      const rawAmount = amountIdx !== -1 ? parseFloat(String(row[amountIdx] || '').replace(/[^0-9.-]+/g, '')) || 0 : 0;
-
-      if (!rawName || rawAmount <= 0) continue;
-
-      if (isWeeklyOnly && dateIdx !== -1 && row[dateIdx]) {
-        if (!isValidForWeek(row[dateIdx], selectedPeriod)) continue;
-      }
-
-      let classLabel = rawRoomTeacher;
-      if (JFS_ROSTER[rawRoomTeacher]) {
-        const item = JFS_ROSTER[rawRoomTeacher];
-        classLabel = `${item.teacher} (Room ${rawRoomTeacher} • ${item.grade})`;
-      } else {
-        const matchRoom = Object.keys(JFS_ROSTER).find(k => JFS_ROSTER[k].teacher === rawRoomTeacher);
-        if (matchRoom) {
-          const item = JFS_ROSTER[matchRoom];
-          classLabel = `${rawRoomTeacher} (Room ${matchRoom} • ${item.grade})`;
-        }
-      }
-
-      if (!classrooms[classLabel]) classrooms[classLabel] = {};
-      if (!classrooms[classLabel][rawName]) classrooms[classLabel][rawName] = 0;
-      classrooms[classLabel][rawName] += rawAmount;
-      totalDonationsFound++;
-    }
+  const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[T\s](\d{1,2}):(\d{2}))?/);
+  if (m) {
+    const mo = parseInt(m[1], 10) - 1;
+    const d = parseInt(m[2], 10);
+    const y = parseInt(m[3], 10);
+    const h = m[4] ? parseInt(m[4], 10) : 0;
+    const mi = m[5] ? parseInt(m[5], 10) : 0;
+    return new Date(y, mo, d, h, mi, 0);
   }
-
-  // 1. Schoolwide Individual Rankings
-  const allStudents = [];
-  Object.keys(classrooms).forEach(cLabel => {
-    Object.keys(classrooms[cLabel]).forEach(sName => {
-      allStudents.push({
-        name: sName,
-        classroom: cLabel,
-        amount: classrooms[cLabel][sName]
-      });
-    });
-  });
-  allStudents.sort((a, b) => b.amount - a.amount);
-
-  const schoolRankMap = {};
-  allStudents.forEach((st, idx) => {
-    schoolRankMap[st.name] = idx + 1;
-  });
-
-  // 2. Schoolwide Classroom Rankings
-  const classRanks = Object.keys(classrooms).map(cLabel => {
-    const total = Object.values(classrooms[cLabel]).reduce((sum, v) => sum + v, 0);
-    return { classroom: cLabel, total: total, count: Object.keys(classrooms[cLabel]).length };
-  }).sort((a, b) => b.total - a.total);
-
-  // 3. Tier-Wise Tchotchkes Counts (Lower vs Upper Grades)
-  const lowerTiers = { 1: 0, 2: 0, 3: 0 };
-  const upperTiers = { 1: 0, 2: 0, 3: 0 };
-
-  allStudents.forEach(st => {
-    if (st.amount < MIN_DONATION_FOR_TCHOTCHKE) return;
-    const tier = st.amount < 25 ? 1 : (st.amount < 100 ? 2 : 3);
-    const item = Object.values(JFS_ROSTER).find(r => st.classroom.includes(r.teacher));
-    const grade = item ? item.grade : '';
-    const gradeIdx = getGradeOrderIndex(grade);
-    
-    // Lower Grades: TK, K, Lower SDC, 1, 2 (indices 0 to 4)
-    // Upper Grades: 3, Upper SDC, 4, 5, 5/6, 6 (indices 5 to 10)
-    if (gradeIdx <= 4) {
-      lowerTiers[tier]++;
-    } else {
-      upperTiers[tier]++;
-    }
-  });
-
-  const lowerTotal = lowerTiers[1] + lowerTiers[2] + lowerTiers[3];
-  const upperTotal = upperTiers[1] + upperTiers[2] + upperTiers[3];
-  const grandTotalTchotchkes = lowerTotal + upperTotal;
-
-  // Tab Setup
-  const tabName = `Report — ${selectedPeriod}`;
-  let reportSheet = ss.getSheetByName(tabName);
-  if (reportSheet) {
-    reportSheet.clear();
-  } else {
-    reportSheet = ss.insertSheet(tabName);
-  }
-
-  reportSheet.setHiddenGridlines(false);
-
-  const outputRows = [];
-  const formattingActions = [];
-
-  // Top Header Banners
-  outputRows.push([`🐾 JFS JAG-A-THON — ${selectedPeriod.toUpperCase()} REPORT`, '', '', '']);
-  outputRows.push([`CUTOFF / GENERATED: ${new Date().toLocaleString()}`, '', '', '']);
-
-  // Top Individual Leader
-  if (allStudents.length > 0 && allStudents[0].amount > 0) {
-    const topSt = allStudents[0];
-    if (isWeeklyOnly) {
-      outputRows.push([`🚲 WEEKLY SPRINT LEADER: ${topSt.name} (${topSt.classroom}) — $${topSt.amount.toFixed(2)} (Earns Brand New Bike or Scooter!)`, '', '', '']);
-    } else {
-      outputRows.push([`🏰 OVERALL #1 GRAND PRIZE LEADER: ${topSt.name} (${topSt.classroom}) — $${topSt.amount.toFixed(2)} (Earns 4 Disneyland Tickets!)`, '', '', '']);
-    }
-  } else {
-    outputRows.push([`STATUS: ${totalDonationsFound} Total Donations Logged Across School`, '', '', '']);
-  }
-
-  // Top Classroom Leader
-  if (classRanks.length > 0 && classRanks[0].total > 0) {
-    const topCl = classRanks[0];
-    if (isWeeklyOnly) {
-      outputRows.push([`🍨 LEADING CLASSROOM: ${topCl.classroom} with $${topCl.total.toFixed(2)} (Leading for Class Ice Cream Social + $100 Teacher Card!)`, '', '', '']);
-    } else {
-      outputRows.push([`🏛️ #1 CLASSROOM IN SCHOOL: ${topCl.classroom} with $${topCl.total.toFixed(2)} (Earns Cal Academy of Sciences Field Trip!)`, '', '', '']);
-    }
-  }
-
-  // TCHOTCHKES SUMMARY TABLE (For Weekly Sprints)
-  if (isWeeklyOnly) {
-    outputRows.push(['', '', '', '']);
-    const tchotchkeHeaderRow = outputRows.length + 1;
-    outputRows.push([`🎁 WEEKLY TCHOTCHKES DISTRIBUTION TOTALS (TIER 1: $1–$24 • TIER 2: $25–$99 • TIER 3: $100+)`, '', '', '']);
-    formattingActions.push({ type: 'tierSummaryHeader', row: tchotchkeHeaderRow });
-
-    outputRows.push([
-      'Lower Grades (TK, K, 1, 2, Lower SDC)',
-      `Tier 1: ${lowerTiers[1]}`,
-      `Tier 2: ${lowerTiers[2]}`,
-      `Tier 3: ${lowerTiers[3]}   ➔   Subtotal: ${lowerTotal} tchotchkes`
-    ]);
-    formattingActions.push({ type: 'tierSummaryRow', row: outputRows.length });
-
-    outputRows.push([
-      'Upper Grades (3, 4, 5, 5/6, 6, Upper SDC)',
-      `Tier 1: ${upperTiers[1]}`,
-      `Tier 2: ${upperTiers[2]}`,
-      `Tier 3: ${upperTiers[3]}   ➔   Subtotal: ${upperTotal} tchotchkes`
-    ]);
-    formattingActions.push({ type: 'tierSummaryRow', row: outputRows.length });
-
-    outputRows.push([
-      '⭐ SCHOOLWIDE GRAND TOTAL',
-      `Tier 1 Total: ${lowerTiers[1] + upperTiers[1]}`,
-      `Tier 2 Total: ${lowerTiers[2] + upperTiers[2]}`,
-      `Tier 3 Total: ${lowerTiers[3] + upperTiers[3]}   ➔   TOTAL: ${grandTotalTchotchkes} items`
-    ]);
-    formattingActions.push({ type: 'tierGrandTotalRow', row: outputRows.length });
-  }
-
-  // SORT CLASSROOMS BY GRADE LEVEL (TK -> K -> Lower SDC -> 1 -> 2 -> 3 -> Upper SDC -> 4 -> 5 -> 5/6 -> 6)
-  function sortClassLabelsByGrade(aLabel, bLabel) {
-    const itemA = Object.values(JFS_ROSTER).find(r => aLabel.includes(r.teacher));
-    const itemB = Object.values(JFS_ROSTER).find(r => bLabel.includes(r.teacher));
-    const gA = itemA ? getGradeOrderIndex(itemA.grade) : 99;
-    const gB = itemB ? getGradeOrderIndex(itemB.grade) : 99;
-    if (gA !== gB) return gA - gB;
-    return aLabel.localeCompare(bLabel);
-  }
-
-  const sortedClasses = Object.keys(classrooms).sort(sortClassLabelsByGrade);
-  const activeClasses = sortedClasses.filter(c => Object.keys(classrooms[c]).length > 0);
-  const quietClasses = sortedClasses.filter(c => Object.keys(classrooms[c]).length === 0);
-
-  if (activeClasses.length === 0) {
-    outputRows.push(['', '', '', '']);
-    outputRows.push(['ℹ️ No donations logged yet for this period. All classrooms currently at $0.00.', '', '', '']);
-    formattingActions.push({ type: 'emptyNotice', row: outputRows.length });
-  } else {
-    activeClasses.forEach(cLabel => {
-      outputRows.push(['', '', '', '']);
-      const classStartRow = outputRows.length + 1;
-
-      outputRows.push([`🏫 CLASSROOM: ${cLabel}`, '', '', '']);
-      outputRows.push(['Delivered?', 'Student Name', `${selectedPeriod} Total`, isWeeklyOnly ? 'Weekly Sprint Prize' : 'End-of-Event Reward / Prize']);
-
-      formattingActions.push({ type: 'classHeader', row: classStartRow });
-      formattingActions.push({ type: 'tableHeader', row: classStartRow + 1 });
-
-      const students = classrooms[cLabel];
-      // SORT STUDENTS ALPHABETICALLY BY NAME (A -> Z)
-      const sortedStudents = Object.keys(students).sort((a, b) => a.localeCompare(b));
-      const classLeader = Object.keys(students).sort((a, b) => students[b] - students[a])[0];
-      let classTotal = 0;
-
-      sortedStudents.forEach(studentName => {
-        const studentRowIdx = outputRows.length + 1;
-        const total = students[studentName];
-        classTotal += total;
-        const rank = schoolRankMap[studentName] || 999;
-        const prize = assignPrize(total, rank, isWeeklyOnly);
-        const isClassTop = (studentName === classLeader && sortedStudents.length > 1) ? ' ⭐ Class #1' : '';
-
-        outputRows.push([
-          false,
-          studentName,
-          total,
-          prize + isClassTop
-        ]);
-
-        formattingActions.push({ type: 'studentRow', row: studentRowIdx });
-      });
-
-      const totalRowIdx = outputRows.length + 1;
-      outputRows.push(['', 'Classroom Total:', classTotal, `${sortedStudents.length} contributing student(s)`]);
-      formattingActions.push({ type: 'totalRow', row: totalRowIdx });
-    });
-  }
-
-  // Compact Rollup of Quiet Classrooms at the bottom (4 columns wide)
-  if (quietClasses.length > 0) {
-    outputRows.push(['', '', '', '']);
-    const quietHeaderRow = outputRows.length + 1;
-    outputRows.push([`📋 CLASSROOMS WITH $0 DONATIONS THIS SPRINT (No deliveries needed):`, '', '', '']);
-    formattingActions.push({ type: 'quietHeader', row: quietHeaderRow });
-
-    for (let i = 0; i < quietClasses.length; i += 4) {
-      const chunk = quietClasses.slice(i, i + 4);
-      while (chunk.length < 4) chunk.push('');
-      outputRows.push(chunk);
-      formattingActions.push({ type: 'quietRow', row: outputRows.length });
-    }
-  }
-
-  // Dimension checking
-  const maxRows = reportSheet.getMaxRows();
-  if (maxRows < outputRows.length) {
-    reportSheet.insertRowsAfter(maxRows, outputRows.length - maxRows);
-  }
-
-  reportSheet.getRange(1, 1, outputRows.length, 4).setValues(outputRows);
-
-  const currentCols = reportSheet.getMaxColumns();
-  if (currentCols > 4) {
-    reportSheet.deleteColumns(5, currentCols - 4);
-  }
-
-  const currentRows = reportSheet.getMaxRows();
-  if (currentRows > outputRows.length) {
-    reportSheet.deleteRows(outputRows.length + 1, currentRows - outputRows.length);
-  }
-
-  reportSheet.getRange(1, 1, outputRows.length, 4).setFontFamily('Arial');
-
-  // Title Banner
-  reportSheet.getRange('A1:D1').merge().setFontSize(13).setFontWeight('bold').setBackground('#0b4ea2').setFontColor('#ffffff').setHorizontalAlignment('center');
-  reportSheet.getRange('A2:D2').merge().setFontSize(9).setFontWeight('bold').setBackground('#073570').setFontColor('#e2e8f0').setHorizontalAlignment('center');
-
-  // Highlights
-  reportSheet.getRange('A3:D3').merge().setFontSize(9.5).setFontWeight('bold').setBackground('#ecfdf5').setFontColor('#065f46').setHorizontalAlignment('center');
-  if (classRanks.length > 0 && classRanks[0].total > 0) {
-    reportSheet.getRange('A4:D4').merge().setFontSize(9.5).setFontWeight('bold').setBackground('#eff6ff').setFontColor('#1e40af').setHorizontalAlignment('center');
-  }
-
-  reportSheet.setColumnWidth(1, 95);  // Delivered?
-  reportSheet.setColumnWidth(2, 220); // Student Name
-  reportSheet.setColumnWidth(3, 120); // Amount
-  reportSheet.setColumnWidth(4, 460); // Prize Tier / Reward
-
-  formattingActions.forEach(action => {
-    if (action.type === 'tierSummaryHeader') {
-      reportSheet.getRange(action.row, 1, 1, 4).merge()
-        .setFontSize(10).setFontWeight('bold')
-        .setBackground('#4338ca').setFontColor('#ffffff')
-        .setHorizontalAlignment('center').setVerticalAlignment('middle');
-      reportSheet.setRowHeight(action.row, 26);
-    }
-    else if (action.type === 'tierSummaryRow') {
-      reportSheet.getRange(action.row, 1, 1, 4)
-        .setFontSize(9.5).setBackground('#f5f3ff').setFontColor('#1e1b4b')
-        .setBorder(true, true, true, true, true, true, '#c7d2fe', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.getRange(action.row, 1).setFontWeight('bold');
-      reportSheet.setRowHeight(action.row, 23);
-    }
-    else if (action.type === 'tierGrandTotalRow') {
-      reportSheet.getRange(action.row, 1, 1, 4)
-        .setFontSize(10).setFontWeight('bold').setBackground('#e0e7ff').setFontColor('#1e1b4b')
-        .setBorder(true, true, true, true, true, true, '#818cf8', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.setRowHeight(action.row, 25);
-    }
-    else if (action.type === 'classHeader') {
-      reportSheet.getRange(action.row, 1, 1, 4).merge()
-        .setFontSize(11).setFontWeight('bold')
-        .setBackground('#1e3a8a').setFontColor('#ffffff')
-        .setVerticalAlignment('middle');
-      reportSheet.setRowHeight(action.row, 28);
-    } 
-    else if (action.type === 'tableHeader') {
-      reportSheet.getRange(action.row, 1, 1, 4)
-        .setFontSize(9).setFontWeight('bold')
-        .setBackground('#f1f5f9').setFontColor('#1e293b')
-        .setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.getRange(action.row, 1).setHorizontalAlignment('center');
-      reportSheet.getRange(action.row, 3).setHorizontalAlignment('right');
-      reportSheet.setRowHeight(action.row, 24);
-    }
-    else if (action.type === 'studentRow') {
-      reportSheet.getRange(action.row, 1).insertCheckboxes().setHorizontalAlignment('center');
-      reportSheet.getRange(action.row, 2).setFontWeight('bold');
-      reportSheet.getRange(action.row, 3).setNumberFormat('$#,##0.00').setFontWeight('bold').setHorizontalAlignment('right');
-      reportSheet.getRange(action.row, 1, 1, 4).setBorder(true, true, true, true, true, true, '#e2e8f0', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.setRowHeight(action.row, 24);
-    }
-    else if (action.type === 'totalRow') {
-      reportSheet.getRange(action.row, 1, 1, 4).setFontSize(9.5).setFontWeight('bold').setBackground('#f8fafc');
-      reportSheet.getRange(action.row, 3).setNumberFormat('$#,##0.00').setHorizontalAlignment('right');
-      reportSheet.getRange(action.row, 1, 1, 4).setBorder(true, true, true, true, false, false, '#94a3b8', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.setRowHeight(action.row, 24);
-    }
-    else if (action.type === 'quietHeader') {
-      reportSheet.getRange(action.row, 1, 1, 4).merge()
-        .setFontSize(9).setFontWeight('bold')
-        .setBackground('#f1f5f9').setFontColor('#64748b');
-      reportSheet.setRowHeight(action.row, 22);
-    }
-    else if (action.type === 'quietRow') {
-      reportSheet.getRange(action.row, 1, 1, 4)
-        .setFontSize(8.5).setFontColor('#64748b').setBackground('#ffffff')
-        .setBorder(true, true, true, true, true, true, '#f1f5f9', SpreadsheetApp.BorderStyle.SOLID);
-      reportSheet.setRowHeight(action.row, 20);
-    }
-    else if (action.type === 'emptyNotice') {
-      reportSheet.getRange(action.row, 1, 1, 4).merge()
-        .setFontSize(10).setFontStyle('italic').setFontColor('#64748b').setHorizontalAlignment('center');
-    }
-  });
-
-  SpreadsheetApp.getUi().alert(`✨ '${tabName}' generated with grade sorting, A-Z students, and Tier-wise totals!`);
+  const parsed = new Date(str);
+  return isNaN(parsed.getTime()) ? null : parsed;
 }
 
-// ==========================================================
-// 6. GMAIL SYNC: Auto-syncs new donations with timestamp
-// ==========================================================
+function findCanonicalClass(rawTeacher) {
+  if (!rawTeacher) return null;
+  const t = String(rawTeacher).trim().toUpperCase();
+  for (const [room, info] of Object.entries(JFS_ROSTER)) {
+    if (t === room.toUpperCase() || t === info.teacher.toUpperCase() || t.includes(info.teacher.toUpperCase()) || info.teacher.toUpperCase().includes(t)) {
+      return { teacher: info.teacher, grade: info.grade, roomKey: room };
+    }
+  }
+  return null;
+}
+
+// ==========================================
+// 4. GMAIL LIVE AUTO-SYNC
+// ==========================================
 function syncZeffyDonations() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) {
@@ -815,9 +620,9 @@ function syncZeffyDonations() {
   }
 }
 
-// ==========================================================
-// 7. EXPORT TAB SYNC: Deduplication & Tax Receipt Upgrade
-// ==========================================================
+// ==========================================
+// 5. IMPORT FROM ZEFFY EXPORT TAB
+// ==========================================
 function importFromZeffyExportTab() {
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(30000)) {
@@ -827,12 +632,15 @@ function importFromZeffyExportTab() {
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    
     const exportSheet = getExportSheet(ss);
     const mainSheet = getDonationsSheet(ss);
 
     if (!exportSheet) {
-      SpreadsheetApp.getUi().alert(`⚠️ Could not find a tab named "Export".\nPlease make sure your export tab is named "Export".`);
+      SpreadsheetApp.getUi().alert('⚠️ Could not find a tab named "Export".');
+      return;
+    }
+    if (!mainSheet) {
+      SpreadsheetApp.getUi().alert('⚠️ Could not find "Donations Log" tab.');
       return;
     }
 
@@ -980,9 +788,12 @@ function importFromZeffyExportTab() {
         mainSheet.getRange(2, 1, mainSheet.getLastRow() - 1, 1).setNumberFormat('yyyy-mm-dd hh:mm');
         mainSheet.getRange(2, 2, mainSheet.getLastRow() - 1, 1).setNumberFormat('#,##0.00');
       }
+      SpreadsheetApp.getUi().alert(`🎉 Added ${rowsToAppend.length} new donation(s) and upgraded ${updatedCount} existing transaction(s)!`);
+    } else if (updatedCount > 0) {
+      SpreadsheetApp.getUi().alert(`✅ All donations up-to-date! Upgraded ${updatedCount} transaction(s) with official Tax Receipt IDs / exact timestamps.`);
+    } else {
+      SpreadsheetApp.getUi().alert('✨ All donations in Export tab are already fully synced and deduplicated.');
     }
-
-    SpreadsheetApp.getUi().alert(`Sync Complete!\n• New Rows Added: ${rowsToAppend.length}\n• Existing Rows Updated with Official ID/Time: ${updatedCount}`);
 
   } catch (err) {
     Logger.log('Export Sync Error: ' + err.toString());
@@ -992,39 +803,69 @@ function importFromZeffyExportTab() {
   }
 }
 
-// ==========================================================
-// 8. DATA HYGIENE TOOLS
-// ==========================================================
+// Optional helper to sync backwards into Export tab if needed
+function syncExportTab() {
+  importFromZeffyExportTab();
+}
+
+// ==========================================
+// 6. DATA HYGIENE: CLEAN NAMES & DATES
+// ==========================================
+const STUDENT_NAME_ALIASES = {
+  'evanaleah a': 'Evanaleah Alvarez',
+  'evanaleah a.': 'Evanaleah Alvarez',
+  'evannaleah alvarez': 'Evanaleah Alvarez'
+};
+
+function cleanStudentName(rawName) {
+  if (!rawName) return '';
+  const str = String(rawName).trim();
+  let s = str.replace(/[\"“”][^\"“”]*[\"“”]/g, '');
+  s = s.replace(/\([^)]*\)/g, '');
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s) return str;
+  const cleaned = s.split(' ')
+    .filter(w => w.length > 0)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+
+  const key = cleaned.toLowerCase();
+  if (STUDENT_NAME_ALIASES[key]) {
+    return STUDENT_NAME_ALIASES[key];
+  }
+  return cleaned;
+}
+
 function cleanAllStudentNamesInColumnC() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = getDonationsSheet(ss);
-  const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return;
+  if (!sheet) return;
 
-  const range = sheet.getRange(2, 3, lastRow - 1, 1);
-  const values = range.getValues();
-  let cleanedCount = 0;
-
-  for (let i = 0; i < values.length; i++) {
-    const original = String(values[i][0] || '').trim();
-    const cleaned = cleanStudentName(original);
-    if (cleaned && cleaned !== original) {
-      values[i][0] = cleaned;
-      cleanedCount++;
+  const data = sheet.getDataRange().getValues();
+  let updated = 0;
+  for (let i = 1; i < data.length; i++) {
+    const orig = String(data[i][2] || '');
+    const clean = cleanStudentName(orig);
+    if (orig !== clean) {
+      sheet.getRange(i + 1, 3).setValue(clean);
+      if (!data[i][7] || String(data[i][7]).trim() === '') {
+        sheet.getRange(i + 1, 8).setValue(orig);
+      }
+      updated++;
     }
   }
+  SpreadsheetApp.getUi().alert(`Cleaned ${updated} student names in ${sheet.getName()}.`);
+}
 
-  if (cleanedCount > 0) {
-    range.setValues(values);
-    SpreadsheetApp.getUi().alert(`Cleaned and normalized ${cleanedCount} student name(s) in Column C!`);
-  } else {
-    SpreadsheetApp.getUi().alert('All student names in Column C are already clean!');
-  }
+function cleanStudentNamesInDonations() {
+  cleanAllStudentNamesInColumnC();
 }
 
 function fixAllDatesInColumnA() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = getDonationsSheet(ss);
+  if (!sheet) return;
+
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
 
@@ -1041,13 +882,16 @@ function fixAllDatesInColumnA() {
   SpreadsheetApp.getUi().alert('All dates in Column A are now standardized to YYYY-MM-DD HH:mm!');
 }
 
+function standardizeDatesInDonations() {
+  fixAllDatesInColumnA();
+}
+
 function standardizeDateTime(dateVal, timeVal) {
   if (!dateVal && !timeVal) return "";
   const tz = Session.getScriptTimeZone() || "America/Los_Angeles";
 
   // Case 1: dateVal is already a JS Date object
   if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
-    // If it has hours or minutes, preserve both
     if (dateVal.getHours() !== 0 || dateVal.getMinutes() !== 0 || dateVal.getSeconds() !== 0) {
       return Utilities.formatDate(dateVal, tz, "yyyy-MM-dd HH:mm");
     }
@@ -1114,31 +958,6 @@ function parseTimeComponent(timeVal) {
   return tStr;
 }
 
-const STUDENT_NAME_ALIASES = {
-  'evanaleah a': 'Evanaleah Alvarez',
-  'evanaleah a.': 'Evanaleah Alvarez',
-  'evannaleah alvarez': 'Evanaleah Alvarez'
-};
-
-function cleanStudentName(rawName) {
-  if (!rawName) return '';
-  const str = String(rawName).trim();
-  let s = str.replace(/["“”][^"“”]*["“”]/g, '');
-  s = s.replace(/\([^)]*\)/g, '');
-  s = s.replace(/\s+/g, ' ').trim();
-  if (!s) return str;
-  const cleaned = s.split(' ')
-    .filter(w => w.length > 0)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
-
-  const key = cleaned.toLowerCase();
-  if (STUDENT_NAME_ALIASES[key]) {
-    return STUDENT_NAME_ALIASES[key];
-  }
-  return cleaned;
-}
-
 function ensureHeaders(sheet) {
   const h1 = sheet.getRange(1, 8).getValue();
   if (!h1 || String(h1).trim() === '') {
@@ -1146,9 +965,9 @@ function ensureHeaders(sheet) {
   }
 }
 
-// ==========================================================
-// 9. EMAIL PARSER, REPAIR TOOL & BACKGROUND TRIGGERS
-// ==========================================================
+// ==========================================
+// 7. ROBUST ZEFFY EMAIL PARSER & REPAIR TOOL
+// ==========================================
 function parseZeffyMessage(msg, isRepair) {
   const subject = msg.getSubject() || '';
   let rawBody = msg.getPlainBody() || '';
