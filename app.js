@@ -1036,18 +1036,18 @@ function renderWeeklyTab() {
           <div>
             <div class="spotlight-meta-label">🏫 Top Earning Classroom (${weekLabel})</div>
             <div class="spotlight-leader-name">Awaiting ${weekLabel} donations</div>
-            <div class="spotlight-meta-sub">🏆 Prize: Teacher $100 Gift Card + Student Ice Cream Social!</div>
+            <div class="spotlight-meta-sub">🏆 Prize: Teacher $100 Gift Card + Class Treats!</div>
           </div>
         </div>
       `;
     } else if (topWeeklyClasses.length > 1) {
       classSpotlightEl.innerHTML = `
         <div class="spotlight-left">
-          <div class="spotlight-trophy">🍦</div>
+          <div class="spotlight-trophy">🧁</div>
           <div>
             <div class="spotlight-meta-label">🏆 Top Earning Classrooms (Tied)</div>
             <div class="spotlight-leader-name">${topWeeklyClasses.map(c => c.teacher).join(' & ')}</div>
-            <div class="spotlight-meta-sub">🎉 Tied Reward: Teacher $100 Gift Card + Student Ice Cream Social!</div>
+            <div class="spotlight-meta-sub">🎉 Tied Reward: Teacher $100 Gift Card + Class Treats!</div>
           </div>
         </div>
         <div class="spotlight-stats">
@@ -1061,11 +1061,11 @@ function renderWeeklyTab() {
       const gradeLabel = formatGradeLabel(topCls.grade);
       classSpotlightEl.innerHTML = `
         <div class="spotlight-left">
-          <div class="spotlight-trophy">🍦</div>
+          <div class="spotlight-trophy">🧁</div>
           <div>
             <div class="spotlight-meta-label">🏆 Top Earning Classroom (${weekLabel})</div>
             <div class="spotlight-leader-name">${topCls.teacher}</div>
-            <div class="spotlight-meta-sub">${gradeLabel} &bull; 🏆 Prize: Teacher $100 Gift Card + Student Ice Cream Social!</div>
+            <div class="spotlight-meta-sub">${gradeLabel} &bull; 🏆 Prize: Teacher $100 Gift Card + Class Treats!</div>
           </div>
         </div>
         <div class="spotlight-stats">
@@ -1234,7 +1234,7 @@ function renderClassesTab() {
           <div class="contest-icon">🎬</div>
           <div class="contest-info">
             <div class="contest-title">
-              <strong>Grade Level Leaderboard:</strong> The grade level with the highest total funds raised wins an exclusive <strong>Pizza + Ice Cream Movie Night in the MPR!</strong>
+              <strong>Grade Level Leaderboard:</strong> The grade level with the highest total funds raised wins an exclusive <strong>Pizza + Treats Movie Night in the MPR!</strong>
             </div>
             ${leadingGrades.length > 0 ? `
               <div class="contest-current-leader">
