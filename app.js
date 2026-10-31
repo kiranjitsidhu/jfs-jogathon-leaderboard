@@ -1550,12 +1550,8 @@ function parseCsvText(text) {
       const cleanName = cleanStudentName(rawName);
       if (!cleanName) continue;
 
-      // Special rule: Ananya Prasad's Google corporate match ($125 from Shubhra Sinha on Oct 30) counts in Week 2
-      const noteStr = noteIdx !== -1 && row[noteIdx] ? row[noteIdx].toLowerCase() : '';
-      const txStr = txIdx !== -1 && row[txIdx] ? row[txIdx] : '';
-      if (cleanName === 'Ananya Prasad' && amt === 125 && 
-          (dateStr.includes('2026-10-30') || dateStr.includes('10/30/2026')) && 
-          (noteStr.includes('shubhra') || noteStr.includes('google') || txStr.includes('1793413929296-5'))) {
+      // Special rule: Any Oct 30 donations for Ananya Prasad (including the 6:13 PM Google corporate match) count in Week 2
+      if (cleanName === 'Ananya Prasad' && (dateStr.includes('2026-10-30') || dateStr.includes('10/30/2026'))) {
         weekNum = 2;
       }
 
