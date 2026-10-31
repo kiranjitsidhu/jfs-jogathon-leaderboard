@@ -1018,44 +1018,76 @@ function fixAllDatesInColumnA() {
 }
 
 function standardizeDateTime(dateVal, timeVal) {
-  let s = String(dateVal || '').trim();
-  let datePart = '';
+  if (!dateVal && !timeVal) return "";
+  const tz = Session.getScriptTimeZone() || "America/Los_Angeles";
 
+  // Case 1: dateVal is already a JS Date object
+  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+    // If it has hours or minutes, preserve both
+    if (dateVal.getHours() !== 0 || dateVal.getMinutes() !== 0 || dateVal.getSeconds() !== 0) {
+      return Utilities.formatDate(dateVal, tz, "yyyy-MM-dd HH:mm");
+    }
+    const dateStr = Utilities.formatDate(dateVal, tz, "yyyy-MM-dd");
+    if (timeVal) {
+      const parsedTime = parseTimeComponent(timeVal);
+      if (parsedTime) return `${dateStr} ${parsedTime}`;
+    }
+    return dateStr;
+  }
+
+  // Case 2: string parsing
+  let s = String(dateVal || "").trim();
+  let tStr = String(timeVal || "").trim();
+
+  // Extract embedded time if dateVal has both date & time (e.g. "10/30/2026 6:13 PM")
+  if (!tStr && (s.includes(" ") || s.includes("T"))) {
+    const sep = s.includes("T") ? "T" : " ";
+    const firstSpace = s.indexOf(sep);
+    tStr = s.substring(firstSpace + 1).trim();
+    s = s.substring(0, firstSpace).trim();
+  }
+
+  // Standardize date portion to YYYY-MM-DD
+  let datePart = "";
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
     datePart = s.substring(0, 10);
   } else {
     const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if (m) {
-      const mm = m[1].padStart(2, '0');
-      const dd = m[2].padStart(2, '0');
+      const mm = m[1].padStart(2, "0");
+      const dd = m[2].padStart(2, "0");
       datePart = `${m[3]}-${mm}-${dd}`;
-    } else if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
-      datePart = Utilities.formatDate(dateVal, Session.getScriptTimeZone() || 'America/Los_Angeles', 'yyyy-MM-dd');
     } else {
       datePart = s;
     }
   }
 
-  let tStr = String(timeVal || '').trim();
-  if (!tStr && s.includes(' ')) {
-    const parts = s.split(' ');
-    datePart = parts[0];
-    tStr = parts.slice(1).join(' ');
-  }
-
   if (!tStr) return datePart;
 
+  const parsedTime = parseTimeComponent(tStr);
+  if (parsedTime) {
+    return `${datePart} ${parsedTime}`;
+  }
+  return `${datePart} ${tStr}`.trim();
+}
+
+function parseTimeComponent(timeVal) {
+  if (!timeVal) return "";
+  if (timeVal instanceof Date && !isNaN(timeVal.getTime())) {
+    const tz = Session.getScriptTimeZone() || "America/Los_Angeles";
+    return Utilities.formatDate(timeVal, tz, "HH:mm");
+  }
+  const tStr = String(timeVal).trim();
   const tm = tStr.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?/i);
   if (tm) {
     let h = parseInt(tm[1], 10);
     const mins = tm[2];
-    const ampm = tm[4] ? tm[4].toLowerCase() : '';
-    if (ampm === 'pm' && h < 12) h += 12;
-    if (ampm === 'am' && h === 12) h = 0;
-    return `${datePart} ${String(h).padStart(2, '0')}:${mins}`;
+    const ampm = tm[4] ? tm[4].toLowerCase() : "";
+    if (ampm === "pm" && h < 12) h += 12;
+    if (ampm === "am" && h === 12) h = 0;
+    return `${String(h).padStart(2, "0")}:${mins}`;
   }
-
-  return `${datePart} ${tStr}`.trim();
+  return tStr;
 }
 
 const STUDENT_NAME_ALIASES = {
