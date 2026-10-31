@@ -69,10 +69,29 @@ const DEFAULT_CONFIG = {
 // ==========================================================
 // APPLICATION STATE
 // ==========================================================
+function getCurrentCampaignWeek() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const w1Cutoff = new Date(y, 9, 23, 17, 30, 0); // Oct 23 at 5:30 PM
+  const w2Cutoff = new Date(y, 9, 30, 18, 5, 0);   // Oct 30 at 6:05 PM
+  const w3Cutoff = new Date(y, 10, 6, 16, 0, 0);  // Nov 6 at 4:00 PM
+
+  const t = now.getTime();
+  if (t < w1Cutoff.getTime()) {
+    return 1;
+  } else if (t < w2Cutoff.getTime()) {
+    return 2;
+  } else if (t < w3Cutoff.getTime()) {
+    return 3;
+  } else {
+    return 4;
+  }
+}
+
 let state = {
   students: [],
   config: { ...DEFAULT_CONFIG },
-  activeWeek: 1,
+  activeWeek: getCurrentCampaignWeek(),
   activeTab: 'overall',
   isAdminUnlocked: false,
   cardFormat: 'story',
@@ -248,7 +267,11 @@ function switchTab(tabId) {
   if (activePanel) activePanel.classList.add('active');
 
   // Specific tab actions
-  if (tabId === 'donate') {
+  if (tabId === 'weekly') {
+    // Default to the current competition week if user hasn't explicitly selected one
+    const currentWk = getCurrentCampaignWeek();
+    selectWeeklyTab(state.activeWeek || currentWk);
+  } else if (tabId === 'donate') {
     initDonationIframe();
   } else if (tabId === 'volunteer') {
     initVolunteerIframe();
