@@ -1522,6 +1522,8 @@ function parseCsvText(text) {
   const gradeIdx = headers.findIndex(h => h.includes('grade'));
   const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('time') || h.includes('when'));
   const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('donation') || h.includes('pledge') || h.includes('$'));
+  const noteIdx = headers.findIndex(h => h.includes('note') || h.includes('donor') || h.includes('comment'));
+  const txIdx = headers.findIndex(h => h.includes('transaction') || h.includes('order') || h.includes('id'));
 
   const isTransactionLog = dateIdx !== -1 && amountIdx !== -1 && nameIdx !== -1;
 
@@ -1543,15 +1545,19 @@ function parseCsvText(text) {
       const dateStr = row[dateIdx] ? row[dateIdx].trim() : '';
 
       // Determine which week this donation belongs to based on date
-      const weekNum = determineWeekFromDate(dateStr);
-
-      const rc = findCanonicalRosterClass(teacher, room);
-      const canonicalTeacher = rc ? rc.teacher : teacher;
-      const canonicalRoom = rc ? rc.room : room;
-      const canonicalGrade = rc ? rc.grade : grade;
+      let weekNum = determineWeekFromDate(dateStr);
 
       const cleanName = cleanStudentName(rawName);
       if (!cleanName) continue;
+
+      // Special rule: Ananya Prasad's Google corporate match ($125 from Shubhra Sinha on Oct 30) counts in Week 2
+      const noteStr = noteIdx !== -1 && row[noteIdx] ? row[noteIdx].toLowerCase() : '';
+      const txStr = txIdx !== -1 && row[txIdx] ? row[txIdx] : '';
+      if (cleanName === 'Ananya Prasad' && amt === 125 && 
+          (dateStr.includes('2026-10-30') || dateStr.includes('10/30/2026')) && 
+          (noteStr.includes('shubhra') || noteStr.includes('google') || txStr.includes('1793413929296-5'))) {
+        weekNum = 2;
+      }
 
       const groupKey = cleanName.toLowerCase();
 
