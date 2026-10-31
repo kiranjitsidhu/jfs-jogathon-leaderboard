@@ -1547,6 +1547,11 @@ function parseCsvText(text) {
       // Determine which week this donation belongs to based on date
       let weekNum = determineWeekFromDate(dateStr);
 
+      const rc = findCanonicalRosterClass(teacher, room);
+      const canonicalTeacher = rc ? rc.teacher : teacher;
+      const canonicalRoom = rc ? rc.room : room;
+      const canonicalGrade = rc ? rc.grade : grade;
+
       const cleanName = cleanStudentName(rawName);
       if (!cleanName) continue;
 
