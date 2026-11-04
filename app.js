@@ -1560,7 +1560,10 @@ function parseCsvText(text) {
         weekNum = 2;
       }
 
-      const groupKey = cleanName.toLowerCase();
+      // Group by student + classroom so students with the same name in different classes are kept distinct
+      const groupKey = canonicalTeacher && canonicalTeacher !== 'General'
+        ? `${cleanName.toLowerCase()}|${canonicalTeacher.toLowerCase()}`
+        : cleanName.toLowerCase();
 
       if (!studentMap.has(groupKey)) {
         studentMap.set(groupKey, {
@@ -1589,6 +1592,19 @@ function parseCsvText(text) {
 
       s.total += amt;
     }
+
+    // Flag cross-classroom students in console for transparency
+    const crossClassMap = new Map();
+    studentMap.forEach(s => {
+      const lower = s.name.toLowerCase();
+      if (!crossClassMap.has(lower)) crossClassMap.set(lower, { name: s.name, teachers: [] });
+      crossClassMap.get(lower).teachers.push(s.teacher);
+    });
+    crossClassMap.forEach(info => {
+      if (info.teachers.length > 1 && typeof console !== 'undefined' && console.warn) {
+        console.warn(`[Jag-a-Thon Flag] Same student name in multiple classrooms: "${info.name}" (${info.teachers.join(', ')}). Kept as distinct students.`);
+      }
+    });
 
     return Array.from(studentMap.values());
   }

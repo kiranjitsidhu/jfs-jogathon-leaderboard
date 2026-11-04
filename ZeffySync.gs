@@ -112,7 +112,8 @@ function onOpen() {
     .addSeparator()
     .addSubMenu(ui.createMenu('🧹 Data Hygiene')
       .addItem('Clean Student Names in Donations Tab', 'cleanAllStudentNamesInColumnC')
-      .addItem('Standardize Dates in Donations Tab', 'fixAllDatesInColumnA'))
+      .addItem('Standardize Dates in Donations Tab', 'fixAllDatesInColumnA')
+      .addItem('Check Cross-Classroom Names', 'checkCrossClassroomDuplicates'))
     .addSeparator()
     .addItem('🧪 Test Zeffy Email Parse', 'testLatestEmailParse')
     .addItem('⏰ Enable 15-Min Auto-Sync', 'createZeffyAutoTrigger')
@@ -675,9 +676,14 @@ function importFromZeffyExportTab() {
 
     const headers = exportData[0].map(h => String(h).trim().toLowerCase());
     
+    // Header index resolution
     const colDate = headers.findIndex(h => h.includes('date'));
     const colTime = headers.findIndex(h => h.includes('time'));
-    const colAmount = headers.findIndex(h => h.includes('amount') || h.includes('total'));
+    
+    // Find amount column, prioritizing donation amount over tip/fee
+    let colAmount = headers.findIndex(h => (h.includes('amount') || h.includes('total')) && !h.includes('fee') && !h.includes('tip') && !h.includes('contribution'));
+    if (colAmount === -1) colAmount = headers.findIndex(h => h.includes('amount') || h.includes('total'));
+
     const colStatus = headers.findIndex(h => h.includes('status'));
     const colFirst = headers.findIndex(h => h.includes('first name'));
     const colLast = headers.findIndex(h => h.includes('last name'));
@@ -701,17 +707,20 @@ function importFromZeffyExportTab() {
     for (let i = 1; i < exportData.length; i++) {
       const row = exportData[i];
 
+      // Filter out only explicitly failed, cancelled, refunded, or disputed transactions
       if (colStatus !== -1 && row[colStatus]) {
         const status = String(row[colStatus]).trim().toLowerCase();
-        if (status && !status.includes('succeed') && !status.includes('paid') && !status.includes('complete')) {
+        if (status.includes('fail') || status.includes('cancel') || status.includes('refund') || status.includes('chargeback') || status.includes('dispute') || status.includes('void')) {
           continue;
         }
       }
 
+      // Safe numeric parsing handling commas ($2,000.00 -> 2000.00)
+      const amount = parseFloat(String(row[colAmount] || '0').replace(/[^0-9.-]/g, '')) || 0;
+      if (amount <= 0) continue;
+
       const rawStudent = colStudent !== -1 ? String(row[colStudent] || '').trim() : '';
       const cleanStudent = cleanStudentName(rawStudent);
-      const amount = parseFloat(row[colAmount]) || 0;
-      if (amount <= 0 && !cleanStudent) continue;
 
       const rawDateVal = colDate !== -1 ? row[colDate] : '';
       const rawTimeVal = colTime !== -1 ? row[colTime] : '';
@@ -836,6 +845,43 @@ function cleanStudentName(rawName) {
   return cleaned;
 }
 
+function checkCrossClassroomDuplicates() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = getDonationsSheet(ss);
+  if (!sheet) return;
+
+  const data = sheet.getDataRange().getValues();
+  const crossMap = new Map();
+
+  for (let i = 1; i < data.length; i++) {
+    const student = String(data[i][2] || '').trim();
+    const grade = String(data[i][3] || '').trim();
+    const teacher = String(data[i][4] || '').trim();
+    if (student && teacher) {
+      const key = student.toLowerCase();
+      if (!crossMap.has(key)) crossMap.set(key, { name: student, entries: new Set() });
+      crossMap.get(key).entries.add(`${teacher} (${grade || 'N/A'})`);
+    }
+  }
+
+  const flagged = [];
+  crossMap.forEach(info => {
+    if (info.entries.size > 1) {
+      flagged.push(`• ${info.name}: ${Array.from(info.entries).join(' vs ')}`);
+    }
+  });
+
+  if (flagged.length > 0) {
+    SpreadsheetApp.getUi().alert(
+      `⚠️ Cross-Classroom Notice (${flagged.length} name(s) found in multiple classes):\n\n` +
+      flagged.join('\n') +
+      `\n\n📌 The website keeps students with the same name in different classrooms as distinct students so each class receives proper credit. Please verify if these are two different students or a donor typo.`
+    );
+  } else {
+    SpreadsheetApp.getUi().alert('✅ All student names belong to a single classroom. No cross-classroom duplicates found!');
+  }
+}
+
 function cleanAllStudentNamesInColumnC() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = getDonationsSheet(ss);
@@ -843,9 +889,14 @@ function cleanAllStudentNamesInColumnC() {
 
   const data = sheet.getDataRange().getValues();
   let updated = 0;
+  const crossMap = new Map();
+
   for (let i = 1; i < data.length; i++) {
     const orig = String(data[i][2] || '');
     const clean = cleanStudentName(orig);
+    const grade = String(data[i][3] || '').trim();
+    const teacher = String(data[i][4] || '').trim();
+
     if (orig !== clean) {
       sheet.getRange(i + 1, 3).setValue(clean);
       if (!data[i][7] || String(data[i][7]).trim() === '') {
@@ -853,8 +904,29 @@ function cleanAllStudentNamesInColumnC() {
       }
       updated++;
     }
+
+    const currentName = clean || orig;
+    if (currentName && teacher) {
+      const key = currentName.toLowerCase();
+      if (!crossMap.has(key)) crossMap.set(key, { name: currentName, entries: new Set() });
+      crossMap.get(key).entries.add(`${teacher} (${grade || 'N/A'})`);
+    }
   }
-  SpreadsheetApp.getUi().alert(`Cleaned ${updated} student names in ${sheet.getName()}.`);
+
+  const flagged = [];
+  crossMap.forEach(info => {
+    if (info.entries.size > 1) {
+      flagged.push(`• ${info.name}: ${Array.from(info.entries).join(' vs ')}`);
+    }
+  });
+
+  let msg = `✨ Normalized and cleaned ${updated} student names in ${sheet.getName()}.`;
+  if (flagged.length > 0) {
+    msg += `\n\n⚠️ Cross-Classroom Notice (${flagged.length} name(s) in multiple classes):\n` +
+           flagged.join('\n') +
+           `\n\n📌 The website keeps students with the same name in different classrooms as distinct students so each class receives proper credit. Please verify if these are two different students or a donor typo.`;
+  }
+  SpreadsheetApp.getUi().alert(msg);
 }
 
 function cleanStudentNamesInDonations() {
