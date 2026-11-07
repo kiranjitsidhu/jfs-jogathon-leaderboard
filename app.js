@@ -74,7 +74,7 @@ function getCurrentCampaignWeek() {
   const y = now.getFullYear();
   const w1Cutoff = new Date(y, 9, 23, 17, 30, 0); // Oct 23 at 5:30 PM
   const w2Cutoff = new Date(y, 9, 30, 18, 5, 0);   // Oct 30 at 6:05 PM
-  const w3Cutoff = new Date(y, 10, 6, 16, 0, 0);  // Nov 6 at 4:00 PM
+  const w3Cutoff = new Date(y, 10, 6, 17, 5, 0);   // Nov 6 at 5:05 PM (includes all Week 3 entries up to 5:05 PM)
 
   const t = now.getTime();
   if (t < w1Cutoff.getTime()) {
@@ -1716,12 +1716,12 @@ function determineWeekFromDate(dateStr) {
   // Official Jag-a-Thon Weekly Cutoffs:
   // Week 1 Cutoff: Friday, Oct 23, 2026 at 5:30 PM (17:30) [Includes 5:13 PM donation]
   // Week 2 Cutoff: Friday, Oct 30, 2026 at 6:05 PM (18:05) [Includes all Friday entries up to 6:05 PM]
-  // Week 3 Cutoff: Friday, Nov 6, 2026 at 4:00 PM (16:00 sharp)
+  // Week 3 Cutoff: Friday, Nov 6, 2026 at 5:05 PM (17:05) [Includes all Friday entries up to 5:05 PM]
   // Week 4 Cutoff: Friday, Nov 13, 2026 at 4:00 PM (16:00 sharp)
   const y = parsed.getFullYear();
   const w1Cutoff = new Date(y, 9, 23, 17, 30, 0); // Oct 23 at 5:30 PM (Month 9 = October)
   const w2Cutoff = new Date(y, 9, 30, 18, 5, 0);   // Oct 30 at 6:05 PM
-  const w3Cutoff = new Date(y, 10, 6, 16, 0, 0);  // Nov 6 at 4:00 PM
+  const w3Cutoff = new Date(y, 10, 6, 17, 5, 0);  // Nov 6 at 5:05 PM
 
   const t = parsed.getTime();
   if (t < w1Cutoff.getTime()) {
