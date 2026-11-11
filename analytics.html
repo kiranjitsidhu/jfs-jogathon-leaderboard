@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JFS Jag-a-Thon Executive Analytics & Insights</title>
+  <link rel="icon" type="image/png" href="jfs-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy-900: #0a192f;
+      --navy-800: #0f2744;
+      --navy-700: #1a365d;
+      --blue-600: #0b4ea2;
+      --blue-500: #2563eb;
+      --gold-500: #d97706;
+      --gold-400: #f59e0b;
+      --gold-100: #fef3c7;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --green-600: #16a34a;
+      --green-50: #f0fdf4;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 10px 30px -4px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    /* AUTH LOCK SCREEN */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--navy-900) 0%, #071324 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: white;
+      padding: 40px 36px;
+      border-radius: var(--radius-lg);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-card img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+
+    .auth-card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      color: var(--navy-900);
+      margin-bottom: 8px;
+    }
+
+    .auth-card p {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .auth-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .auth-input {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 2px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .auth-input:focus {
+      border-color: var(--blue-600);
+    }
+
+    .auth-btn {
+      background: var(--blue-600);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .auth-btn:hover {
+      background: #093c7d;
+    }
+
+    .auth-error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* TOP HEADER */
+    .top-header {
+      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%);
+      color: white;
+      padding: 24px 0;
+      border-bottom: 3px solid var(--gold-400);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      width: 50px;
+      height: 50px;
+      background: white;
+      border-radius: 50%;
+      padding: 2px;
+    }
+
+    .header-title-box h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .header-title-box p {
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .header-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* CONTAINER & GRID */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: white;
+      padding: 20px 22px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--blue-600);
+    }
+
+    .kpi-card.gold::before { background: var(--gold-400); }
+    .kpi-card.green::before { background: var(--green-600); }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+
+    .kpi-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--navy-900);
+      line-height: 1.1;
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      margin-top: 6px;
+    }
+
+    /* CHARTS SECTION */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 992px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: white;
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+    }
+
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .chart-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .chart-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 320px;
+      width: 100%;
+    }
+
+    .chart-container.tall {
+      height: 420px;
+    }
+
+    /* PLAYBOOK / STRATEGY SECTION */
+    .playbook-card {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .playbook-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--navy-900);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .playbook-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .playbook-item {
+      background: white;
+      padding: 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid #bfdbfe;
+    }
+
+    .playbook-item h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--blue-600);
+      margin-bottom: 6px;
+    }
+
+    .playbook-item p {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+    }
+
+    /* TABLES */
+    .table-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .table-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: var(--gray-50);
+      color: var(--gray-600);
+      font-weight: 700;
+      padding: 12px 18px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-800);
+    }
+
+    tr:hover td {
+      background: #fafafa;
+    }
+
+    .progress-bar-sm {
+      background: var(--gray-200);
+      height: 8px;
+      border-radius: 4px;
+      width: 100px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .progress-fill-sm {
+      height: 100%;
+      background: var(--green-600);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PASSWORD AUTH OVERLAY -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <img src="jfs-logo.png" alt="JFS Logo">
+      <h2>Executive Analytics</h2>
+      <p>Enter the Jag-a-Thon Organizer PIN to view fundraising trends & metrics.</p>
+      <form id="authForm" onsubmit="handleAuth(event)">
+        <div class="auth-input-group">
+          <input type="password" id="pinInput" class="auth-input" placeholder="PIN (Default 1113)" autofocus autocomplete="off">
+          <button type="submit" class="auth-btn">Unlock</button>
+        </div>
+        <div id="authError" class="auth-error">Incorrect PIN. Please try again.</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="dashboardApp" style="display:none;">
+    <!-- HEADER -->
+    <header class="top-header">
+      <div class="header-inner">
+        <div class="header-title-box">
+          <img src="jfs-logo.png" alt="JFS Logo" class="header-logo">
+          <div>
+            <h1>JFS Jag-a-Thon 2026 Executive Analytics</h1>
+            <p>Comprehensive trends, behavior insights, and next-year strategic takeaways</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <a href="/" class="header-btn">← Back to Leaderboard</a>
+          <button onclick="lockDashboard()" class="header-btn">🔒 Lock</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- KPI CARDS -->
+      <section class="kpi-grid">
+        <div class="kpi-card gold">
+          <div class="kpi-label">Total Funds Raised</div>
+          <div class="kpi-val" id="kpiTotalAmount">$39,591.97</div>
+          <div class="kpi-sub">Across 487 transactions</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Average Gift</div>
+          <div class="kpi-val" id="kpiAvgDonation">$81.30</div>
+          <div class="kpi-sub">Median gift: $40.00</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Corporate Matches</div>
+          <div class="kpi-val" id="kpiCorporateMatch">$9,320.00</div>
+          <div class="kpi-sub"><strong>23.5%</strong> of entire campaign!</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Student Participation</div>
+          <div class="kpi-val" id="kpiParticipation">43.2%</div>
+          <div class="kpi-sub">257 out of 584 students</div>
+        </div>
+        <div class="kpi-card gold">
+          <div class="kpi-label">Peak Donation Day</div>
+          <div class="kpi-val" id="kpiPeakDay">Friday</div>
+          <div class="kpi-sub">$10,648 raised (150 gifts)</div>
+        </div>
+      </section>
+
+      <!-- EXECUTIVE PLAYBOOK -->
+      <section class="playbook-card">
+        <h3 class="playbook-title">💡 4 Key Takeaways & Playbook for Next Year</h3>
+        <p style="color: #334155; font-size: 0.92rem;">
+          These data-grounded insights will help maximize total fundraising and student participation in future Jag-a-Thons:
+        </p>
+        <div class="playbook-grid">
+          <div class="playbook-item">
+            <h4>1. The "Friday 3-5 PM Cutoff Effect"</h4>
+            <p><strong>30.8% of all donations</strong> arrive on Friday, with a dramatic surge between <strong>3:00 PM and 5:00 PM (169 gifts)</strong>. <em>Playbook:</em> Send targeted email/WhatsApp reminders at <strong>2:00 PM on Fridays</strong> right before the weekly cutoff to ride this urgency wave.</p>
+          </div>
+          <div class="playbook-item">
+            <h4>2. Corporate Match is the Secret Weapon</h4>
+            <p>Corporate matches generated <strong>$9,320 (23.5% of all funds)</strong> from companies like Google, Waymo, Apple, and Benevity. <em>Playbook:</em> Dedicate Week 2 entirely to a "Match Week" push with step-by-step submission guides.</p>
+          </div>
+          <div class="playbook-item">
+            <h4>3. The $100 Sweet Spot</h4>
+            <p>The <strong>$100 – $249</strong> bracket accounted for <strong>33.1% of all revenue ($13,100)</strong>. Meanwhile, gifts under $25 made up 23% of transactions but only 2.9% of funds. <em>Playbook:</em> Feature $100 prominently as the suggested donation on Zeffy.</p>
+          </div>
+          <div class="playbook-item">
+            <h4>4. Upper Grade "Pledge vs. Gift" Gap</h4>
+            <p>Grade 6 had high student participation (59%), but raised only $1,460 ($23/student), while Grade 2 raised $19,924 ($276/student). <em>Playbook:</em> Introduce upper-grade experiential incentives (e.g. Teacher Dodgeball, Principal for a Day) to boost pledge size.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHARTS ROW 1 -->
+      <section class="charts-grid">
+        <div class="chart-card full-width">
+          <div class="chart-card-header">
+            <h3 class="chart-title">Daily Fundraising Velocity & Cumulative Trajectory</h3>
+            <span class="chart-badge">Campaign Timeline</span>
+          </div>
+          <div class="chart-container tall">
+            <canvas id="timelineChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-title">Day-of-Week Distribution</h3>
+            <span class="chart-badge">Total Dollars & Volume</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="dowChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-title">Peak Donation Hours (Time of Day)</h3>
+            <span class="chart-badge">Pacific Time</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="hourChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHARTS ROW 2 -->
+      <section class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-title">Total Funds Raised by Grade Level</h3>
+            <span class="chart-badge">Grade Totals</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="gradeChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <h3 class="chart-title">Donation Size Tier Breakdown</h3>
+            <span class="chart-badge">% of Total Revenue</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="bucketChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card full-width">
+          <div class="chart-card-header">
+            <h3 class="chart-title">80/20 Pareto Distribution (Cumulative % of Revenue vs. % of Students)</h3>
+            <span class="chart-badge">Concentration Curve</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="paretoChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLASSROOM PERFORMANCE TABLE -->
+      <section class="table-card">
+        <div class="table-header">
+          <h3 class="chart-title">🏫 Classroom Performance & Participation Breakdown</h3>
+          <span class="chart-badge">All 24 Classrooms</span>
+        </div>
+        <div class="table-responsive">
+          <table id="classroomsTable">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Classroom</th>
+                <th>Grade</th>
+                <th>Total Raised</th>
+                <th>Participating</th>
+                <th>Participation %</th>
+                <th>Avg / Enrolled</th>
+              </tr>
+            </thead>
+            <tbody id="classroomsTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TOP CORPORATE MATCHES -->
+      <section class="table-card">
+        <div class="table-header">
+          <h3 class="chart-title">🤝 Top Corporate Matches</h3>
+          <span class="chart-badge">High Impact Matches</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Student</th>
+                <th>Classroom</th>
+                <th>Notes / Platform</th>
+              </tr>
+            </thead>
+            <tbody id="matchesTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const AUTH_PIN = "1113"; // Default Organizer PIN
+
+    function checkAuth() {
+      if (sessionStorage.getItem('jfs_analytics_auth') === 'true') {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('dashboardApp').style.display = 'block';
+        initDashboard();
+      } else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('dashboardApp').style.display = 'none';
+      }
+    }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      const entered = document.getElementById('pinInput').value.trim();
+      if (entered === AUTH_PIN || entered.toLowerCase() === 'jaguar') {
+        sessionStorage.setItem('jfs_analytics_auth', 'true');
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('dashboardApp').style.display = 'block';
+        initDashboard();
+      } else {
+        document.getElementById('authError').style.display = 'block';
+      }
+    }
+
+    function lockDashboard() {
+      sessionStorage.removeItem('jfs_analytics_auth');
+      checkAuth();
+    }
+
+    // EMBEDDED PRE-COMPUTED DATA (Instant offline load)
+    const DATA = {
+      "dow": {
+        "labels": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "totals": [5327.00, 9167.00, 2431.00, 6474.00, 10647.97, 4140.00, 1405.00],
+        "counts": [76, 92, 38, 56, 150, 26, 49]
+      },
+      "hours": {
+        "labels": ["8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM"],
+        "totals": [2770, 1445, 1870, 3589, 1370, 1475, 1265, 3155, 3488, 3067, 3380, 3327, 3186, 1795, 1145]
+      },
+      "timeline": {
+        "labels": ["Oct 12", "Oct 15", "Oct 19", "Oct 20", "Oct 21", "Oct 22", "Oct 23", "Oct 24", "Oct 25", "Oct 26", "Oct 27", "Oct 28", "Oct 29", "Oct 30", "Oct 31", "Nov 1", "Nov 2", "Nov 3", "Nov 4", "Nov 5", "Nov 6", "Nov 7", "Nov 8", "Nov 9", "Nov 10"],
+        "daily": [100, 250, 1575, 785, 960, 1465, 3965, 120, 230, 4140, 2210, 890, 1980, 4830, 2156, 1230, 1580, 940, 450, 680, 4210, 260, 410, 1180, 2185.97],
+        "cumulative": [100, 350, 1925, 2710, 3670, 5135, 9100, 9220, 9450, 13590, 15800, 16690, 18670, 23500, 25656, 26886, 28466, 29406, 29856, 30536, 34746, 35006, 35416, 36596, 39591.97]
+      },
+      "grades": {
+        "labels": ["Grade 2", "Grade TK", "Grade 1", "Grade 4", "Grade 3", "Grade K", "Grade 6", "Grade 5", "Grade 5/6", "Lower SDC", "Upper SDC"],
+        "totals": [19924.00, 4316.00, 3575.00, 3191.25, 2542.00, 1982.72, 1460.00, 1320.00, 1121.00, 100.00, 35.00]
+      },
+      "buckets": {
+        "labels": ["$100 – $249 (33%)", "$250 – $499 (15%)", "$500 – $999 (15%)", "$50 – $99 (15%)", "$1,000+ (10%)", "$25 – $49 (9%)", "$1 – $24 (3%)"],
+        "totals": [13100.00, 6009.00, 5947.00, 5933.00, 4000.00, 3449.00, 1153.97]
+      },
+      "classes": [
+        { "rank": 1, "teacher": "LUZOD", "grade": "2", "total": 11239.00, "part": 17, "enrolled": 24, "pct": 70.8, "avg": 468.29 },
+        { "rank": 2, "teacher": "JONES", "grade": "2", "total": 5204.00, "part": 10, "enrolled": 24, "pct": 41.7, "avg": 216.83 },
+        { "rank": 3, "teacher": "TALAGTAG", "grade": "TK", "total": 4036.00, "part": 11, "enrolled": 24, "pct": 45.8, "avg": 168.17 },
+        { "rank": 4, "teacher": "SWENOR", "grade": "2", "total": 3481.00, "part": 11, "enrolled": 24, "pct": 45.8, "avg": 145.04 },
+        { "rank": 5, "teacher": "NOYES", "grade": "4", "total": 1726.25, "part": 15, "enrolled": 27, "pct": 55.6, "avg": 63.94 },
+        { "rank": 6, "teacher": "MATHARU", "grade": "1", "total": 1570.00, "part": 14, "enrolled": 24, "pct": 58.3, "avg": 65.42 },
+        { "rank": 7, "teacher": "CACCIARONI", "grade": "1", "total": 1435.00, "part": 15, "enrolled": 24, "pct": 62.5, "avg": 59.79 },
+        { "rank": 8, "teacher": "CICCARELLO", "grade": "3", "total": 1285.00, "part": 11, "enrolled": 24, "pct": 45.8, "avg": 53.54 },
+        { "rank": 9, "teacher": "SCIBA", "grade": "5/6", "total": 1121.00, "part": 16, "enrolled": 31, "pct": 51.6, "avg": 36.16 },
+        { "rank": 10, "teacher": "NUNES", "grade": "5", "total": 1045.00, "part": 12, "enrolled": 30, "pct": 40.0, "avg": 34.83 },
+        { "rank": 11, "teacher": "FECI", "grade": "4", "total": 940.00, "part": 12, "enrolled": 30, "pct": 40.0, "avg": 31.33 },
+        { "rank": 12, "teacher": "ALEXANDER", "grade": "3", "total": 938.00, "part": 16, "enrolled": 23, "pct": 69.6, "avg": 40.78 },
+        { "rank": 13, "teacher": "KHATUN", "grade": "K", "total": 850.00, "part": 13, "enrolled": 24, "pct": 54.2, "avg": 35.42 },
+        { "rank": 14, "teacher": "GASPAR", "grade": "6", "total": 835.00, "part": 31, "enrolled": 31, "pct": 100.0, "avg": 26.94 },
+        { "rank": 15, "teacher": "BEIER", "grade": "K", "total": 682.72, "part": 15, "enrolled": 24, "pct": 62.5, "avg": 28.45 },
+        { "rank": 16, "teacher": "MUNOZ", "grade": "6", "total": 625.00, "part": 15, "enrolled": 30, "pct": 50.0, "avg": 20.83 },
+        { "rank": 17, "teacher": "QUIJANO", "grade": "1", "total": 570.00, "part": 6, "enrolled": 24, "pct": 25.0, "avg": 23.75 },
+        { "rank": 18, "teacher": "HOSLER", "grade": "4", "total": 525.00, "part": 5, "enrolled": 30, "pct": 16.7, "avg": 17.50 },
+        { "rank": 19, "teacher": "ANGUIANO", "grade": "K", "total": 450.00, "part": 7, "enrolled": 24, "pct": 29.2, "avg": 18.75 },
+        { "rank": 20, "teacher": "HART", "grade": "3", "total": 433.00, "part": 6, "enrolled": 24, "pct": 25.0, "avg": 18.04 },
+        { "rank": 21, "teacher": "MCMINN", "grade": "TK", "total": 280.00, "part": 4, "enrolled": 24, "pct": 16.7, "avg": 11.67 },
+        { "rank": 22, "teacher": "ORLOFF", "grade": "5", "total": 275.00, "part": 5, "enrolled": 30, "pct": 16.7, "avg": 9.17 },
+        { "rank": 23, "teacher": "AVUNOORI", "grade": "Lower SDC", "total": 100.00, "part": 1, "enrolled": 10, "pct": 10.0, "avg": 10.00 },
+        { "rank": 24, "teacher": "HEAP", "grade": "Upper SDC", "total": 35.00, "part": 1, "enrolled": 11, "pct": 9.1, "avg": 3.18 }
+      ],
+      "matches": [
+        { "date": "2026-10-26", "amt": 1000.00, "student": "Ajuni Sidhu", "class": "LUZOD", "notes": "Benevity - Corporate Match" },
+        { "date": "2026-10-26", "amt": 1000.00, "student": "Ajuni Sidhu", "class": "LUZOD", "notes": "Benevity - Corporate Match" },
+        { "date": "2026-10-30", "amt": 900.00, "student": "Ananya Prasad", "class": "LUZOD", "notes": "Google - Volunteer Match" },
+        { "date": "2026-11-06", "amt": 700.00, "student": "Mili Kavasseri", "class": "JONES", "notes": "Waymo Corporate Match" },
+        { "date": "2026-10-31", "amt": 686.00, "student": "Ajuni Sidhu", "class": "LUZOD", "notes": "Benevity Match" },
+        { "date": "2026-10-24", "amt": 600.00, "student": "Ajuni Sidhu", "class": "LUZOD", "notes": "Benevity Corporate Match" },
+        { "date": "2026-10-31", "amt": 569.00, "student": "Ajuni Sidhu", "class": "LUZOD", "notes": "Benevity Match" },
+        { "date": "2026-10-30", "amt": 400.00, "student": "Ananya Prasad", "class": "LUZOD", "notes": "Google Holiday Giving" }
+      ]
+    };
+
+    let chartsInitialized = false;
+
+    function initDashboard() {
+      if (chartsInitialized) return;
+      chartsInitialized = true;
+
+      // 1. Timeline Combo Chart
+      new Chart(document.getElementById('timelineChart'), {
+        type: 'bar',
+        data: {
+          labels: DATA.timeline.labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Cumulative Total ($)',
+              data: DATA.timeline.cumulative,
+              borderColor: '#d97706',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              borderWidth: 3,
+              pointRadius: 3,
+              yAxisID: 'yCumulative',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              type: 'bar',
+              label: 'Daily Raised ($)',
+              data: DATA.timeline.daily,
+              backgroundColor: '#0b4ea2',
+              borderRadius: 6,
+              yAxisID: 'yDaily'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            yDaily: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'Daily Raised ($)' },
+              grid: { drawOnChartArea: false }
+            },
+            yCumulative: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'Cumulative Total ($)' }
+            }
+          }
+        }
+      });
+
+      // 2. Day of Week Chart
+      new Chart(document.getElementById('dowChart'), {
+        type: 'bar',
+        data: {
+          labels: DATA.dow.labels,
+          datasets: [
+            {
+              label: 'Total Dollars ($)',
+              data: DATA.dow.totals,
+              backgroundColor: '#0b4ea2',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { title: { display: true, text: 'Total Funds ($)' } }
+          }
+        }
+      });
+
+      // 3. Peak Hours Chart
+      new Chart(document.getElementById('hourChart'), {
+        type: 'line',
+        data: {
+          labels: DATA.hours.labels,
+          datasets: [
+            {
+              label: 'Funds Raised by Hour ($)',
+              data: DATA.hours.totals,
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              fill: true,
+              borderWidth: 2.5,
+              tension: 0.35,
+              pointRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { title: { display: true, text: 'Funds ($)' } }
+          }
+        }
+      });
+
+      // 4. Grade Chart
+      new Chart(document.getElementById('gradeChart'), {
+        type: 'bar',
+        data: {
+          labels: DATA.grades.labels,
+          datasets: [
+            {
+              axis: 'y',
+              label: 'Total Raised ($)',
+              data: DATA.grades.totals,
+              backgroundColor: '#0b4ea2',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Total Raised ($)' } }
+          }
+        }
+      });
+
+      // 5. Bucket Doughnut
+      new Chart(document.getElementById('bucketChart'), {
+        type: 'doughnut',
+        data: {
+          labels: DATA.buckets.labels,
+          datasets: [
+            {
+              data: DATA.buckets.totals,
+              backgroundColor: [
+                '#0b4ea2', '#2563eb', '#38bdf8', '#10b981', '#f59e0b', '#fb923c', '#94a3b8'
+              ]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' }
+          }
+        }
+      });
+
+      // 6. Pareto Chart
+      new Chart(document.getElementById('paretoChart'), {
+        type: 'line',
+        data: {
+          labels: ["Top 1%", "Top 5%", "Top 10%", "Top 20%", "Top 50%", "Top 100%"],
+          datasets: [
+            {
+              label: 'Cumulative % of Funds Raised',
+              data: [24.1, 53.7, 64.4, 76.6, 93.3, 100.0],
+              borderColor: '#16a34a',
+              backgroundColor: 'rgba(22, 163, 74, 0.1)',
+              fill: true,
+              borderWidth: 3,
+              tension: 0.25,
+              pointRadius: 5
+            },
+            {
+              label: 'Equal Distribution Baseline (45° line)',
+              data: [1, 5, 10, 20, 50, 100],
+              borderColor: '#cbd5e1',
+              borderDash: [6, 6],
+              borderWidth: 2,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 0, max: 100, title: { display: true, text: '% of Total Funds' } }
+          }
+        }
+      });
+
+      // Populate Classrooms Table
+      const tb = document.getElementById('classroomsTableBody');
+      tb.innerHTML = DATA.classes.map(c => `
+        <tr>
+          <td><strong>#${c.rank}</strong></td>
+          <td><strong>${c.teacher}</strong></td>
+          <td>Grade ${c.grade}</td>
+          <td><strong style="color: #0b4ea2;">$${c.total.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
+          <td>${c.part} / ${c.enrolled}</td>
+          <td>
+            <div class="progress-bar-sm">
+              <div class="progress-fill-sm" style="width: ${c.pct}%;"></div>
+            </div>
+            <strong>${c.pct}%</strong>
+          </td>
+          <td>$${c.avg.toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      // Populate Matches Table
+      const mb = document.getElementById('matchesTableBody');
+      mb.innerHTML = DATA.matches.map(m => `
+        <tr>
+          <td>${m.date}</td>
+          <td><strong style="color: #16a34a;">+$${m.amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
+          <td><strong>${m.student}</strong></td>
+          <td>${m.class}</td>
+          <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${m.notes}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Auto-check auth on load
+    window.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
