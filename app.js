@@ -256,6 +256,11 @@ function saveConfigToStorage() {
 function switchTab(tabId) {
   state.activeTab = tabId;
 
+  // Track virtual pageview in Google Analytics 4
+  if (typeof gtag === 'function') {
+    gtag('event', 'screen_view', { app_name: 'Jagathon Leaderboard', screen_name: tabId });
+  }
+
   // Toggle button styling
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById(`tabBtn-${tabId}`);
