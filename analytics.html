@@ -505,19 +505,23 @@
         </p>
         <div class="playbook-grid">
           <div class="playbook-item">
-            <h4>1. The "Friday 3-5 PM Cutoff Effect"</h4>
-            <p><strong>30.8% of all donations</strong> arrive on Friday, with a dramatic surge between <strong>3:00 PM and 5:00 PM (169 gifts)</strong>. <em>Playbook:</em> Send targeted email/WhatsApp reminders at <strong>2:00 PM on Fridays</strong> right before the weekly cutoff to ride this urgency wave.</p>
+            <h4>1. The "Friday Cutoff & Batch-Log" Surge</h4>
+            <p><strong>30.8% of all donations</strong> are recorded on Friday, particularly from <strong>3:00 PM to 5:00 PM</strong>. This peak combines last-minute online parent urgency with the organizer batch-logging classroom envelopes, cash/checks, and match receipts right before the deadline. <em>Playbook:</em> Set classroom envelope turn-in by <strong>Thursday afternoon</strong> or <strong>Friday morning</strong> so organizers have buffer time to log offline gifts before the 4/5 PM buzzer.</p>
           </div>
           <div class="playbook-item">
-            <h4>2. Corporate Match is the Secret Weapon</h4>
+            <h4>2. The Multi-Donor "Flywheel Effect"</h4>
+            <p><strong>72% of students</strong> received only 1 donation (averaging $50). But the <strong>14% of students who received 3+ donations</strong> accounted for <strong>67.1% ($26,500+) of all money raised</strong>. <em>Playbook:</em> The biggest revenue driver isn't asking parents to give more—it's giving them 1-click tools (WhatsApp/text templates) to easily ask grandparents, aunts, uncles, and friends.</p>
+          </div>
+          <div class="playbook-item">
+            <h4>3. Corporate Match is the Secret Weapon</h4>
             <p>Corporate matches generated <strong>$9,320 (23.5% of all funds)</strong> from companies like Google, Waymo, Apple, and Benevity. <em>Playbook:</em> Dedicate Week 2 entirely to a "Match Week" push with step-by-step submission guides.</p>
           </div>
           <div class="playbook-item">
-            <h4>3. The $100 Sweet Spot</h4>
+            <h4>4. The $100 Sweet Spot</h4>
             <p>The <strong>$100 – $249</strong> bracket accounted for <strong>33.1% of all revenue ($13,100)</strong>. Meanwhile, gifts under $25 made up 23% of transactions but only 2.9% of funds. <em>Playbook:</em> Feature $100 prominently as the suggested donation on Zeffy.</p>
           </div>
           <div class="playbook-item">
-            <h4>4. Upper Grade "Pledge vs. Gift" Gap</h4>
+            <h4>5. Upper Grade "Pledge vs. Gift" Gap</h4>
             <p>Grade 6 had high student participation (59%), but raised only $1,460 ($23/student), while Grade 2 raised $19,924 ($276/student). <em>Playbook:</em> Introduce upper-grade experiential incentives (e.g. Teacher Dodgeball, Principal for a Day) to boost pledge size.</p>
           </div>
         </div>
@@ -609,30 +613,6 @@
               </tr>
             </thead>
             <tbody id="classroomsTableBody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TOP CORPORATE MATCHES -->
-      <section class="table-card">
-        <div class="table-header">
-          <h3 class="chart-title">🤝 Top Corporate Matches</h3>
-          <span class="chart-badge">High Impact Matches</span>
-        </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Student</th>
-                <th>Classroom</th>
-                <th>Notes / Platform</th>
-              </tr>
-            </thead>
-            <tbody id="matchesTableBody">
               <!-- Populated by JS -->
             </tbody>
           </table>
@@ -938,18 +918,6 @@
             <strong>${c.pct}%</strong>
           </td>
           <td>$${c.avg.toFixed(2)}</td>
-        </tr>
-      `).join('');
-
-      // Populate Matches Table
-      const mb = document.getElementById('matchesTableBody');
-      mb.innerHTML = DATA.matches.map(m => `
-        <tr>
-          <td>${m.date}</td>
-          <td><strong style="color: #16a34a;">+$${m.amt.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td>
-          <td><strong>${m.student}</strong></td>
-          <td>${m.class}</td>
-          <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">${m.notes}</span></td>
         </tr>
       `).join('');
     }
