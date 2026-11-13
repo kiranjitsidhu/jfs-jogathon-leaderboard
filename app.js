@@ -2200,3 +2200,238 @@ function downloadPledgeCard() {
   link.click();
   showToast('📥 Downloading high-res Jag-a-Thon card!');
 }
+
+// ==========================================
+// SHUBHRA 2-COLUMN PRIZE REPORT MODAL & GENERATOR
+// ==========================================
+function openShubhraReportModal() {
+  const modal = document.getElementById('shubhraReportModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  const sel = document.getElementById('shubhraWeekSelect');
+  if (sel && state.activeWeek) {
+    sel.value = String(state.activeWeek);
+  }
+  renderShubhraReportInModal();
+}
+
+function closeShubhraReportModal() {
+  const modal = document.getElementById('shubhraReportModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function renderShubhraReportInModal() {
+  const container = document.getElementById('shubhraReportContainer');
+  const sel = document.getElementById('shubhraWeekSelect');
+  if (!container || !sel) return;
+
+  const val = sel.value;
+  const isCumulative = val === 'cumulative';
+  const weekNum = parseInt(val, 10);
+  const weekKey = isCumulative ? 'total' : `week${weekNum}`;
+
+  const eligible = state.students.filter(s => (s[weekKey] || 0) >= 1);
+
+  const isLowerGrade = (g) => {
+    const lower = String(g || '').toLowerCase();
+    return lower.includes('tk') || lower === 'k' || lower === '1' || lower === '2' || lower.includes('lower');
+  };
+
+  const formatGradeLabel = (g) => {
+    const str = String(g || '').trim();
+    if (str.toUpperCase() === 'TK') return 'TK';
+    if (str.toUpperCase() === 'K') return 'Kindergarten';
+    if (str.toUpperCase() === 'LOWER SDC') return 'Lower SDC';
+    if (str.toUpperCase() === 'UPPER SDC') return 'Upper SDC';
+    if (str.includes('/')) return `Grade ${str}`;
+    if (/^\d+$/.test(str)) return `Grade ${str}`;
+    return str;
+  };
+
+  const GRADE_ORDER = ["TK", "K", "1", "2", "Lower SDC", "3", "Upper SDC", "4", "5", "5/6", "6"];
+  const getGradeWeight = (g) => {
+    const idx = GRADE_ORDER.indexOf(String(g));
+    return idx !== -1 ? idx : 999;
+  };
+
+  const tiers = [
+    {
+      num: 1,
+      min: 1,
+      max: 24.999,
+      rangeLower: "$1.00+",
+      rangeUpper: "$1+",
+      lowerPrize: "(Pencil, Bookmark, or Stickers)",
+      upperPrize: "(Pencil, Bookmark, or Wristband)"
+    },
+    {
+      num: 2,
+      min: 25,
+      max: 99.999,
+      rangeLower: "$25.00+",
+      rangeUpper: "$25+",
+      lowerPrize: "(Transformer + Pen) or Mouth organ?",
+      upperPrize: "(Colorful Wooden Puzzle)"
+    },
+    {
+      num: 3,
+      min: 100,
+      max: 9999999,
+      rangeLower: "$100.00+",
+      rangeUpper: "$100+",
+      lowerPrize: "(Grand Tchotchke / High-Tier Prize)",
+      upperPrize: "(Grand Tchotchke / High-Tier Prize)"
+    }
+  ];
+
+  function buildClassHtml(studentList) {
+    if (studentList.length === 0) {
+      return '<p style="color:#94a3b8; font-style:italic; margin:8px 0;">No students in this tier</p>';
+    }
+
+    const classMap = {};
+    studentList.forEach(s => {
+      const key = `${s.grade}__${s.teacher}__${s.room || ''}`;
+      if (!classMap[key]) {
+        classMap[key] = { grade: s.grade, teacher: s.teacher, room: s.room, students: [] };
+      }
+      classMap[key].students.push(s);
+    });
+
+    const sortedClasses = Object.values(classMap).sort((a, b) => {
+      const gwA = getGradeWeight(a.grade);
+      const gwB = getGradeWeight(b.grade);
+      if (gwA !== gwB) return gwA - gwB;
+      return a.teacher.localeCompare(b.teacher);
+    });
+
+    let html = '<div style="font-family: Arial, sans-serif; font-size: 0.9rem; line-height: 1.5; color: #1e293b;">';
+    sortedClasses.forEach(c => {
+      const gLabel = formatGradeLabel(c.grade);
+      const roomLabel = c.room ? ` &bull; Room ${c.room}` : '';
+      html += `<div style="margin-top: 10px; font-weight: 700; color: #000;">&bull; ${c.teacher} (${gLabel}${roomLabel}):</div>`;
+      html += '<ol style="margin: 2px 0 8px 24px; padding-left: 0;">';
+
+      c.students.sort((a, b) => a.name.localeCompare(b.name));
+      c.students.forEach(s => {
+        const amt = s[weekKey] || 0;
+        html += `<li style="margin: 2px 0;">${s.name} ($${amt.toFixed(2)})</li>`;
+      });
+      html += '</ol>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  let tableHtml = `
+    <table id="shubhraReportTable" style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-family: Arial, sans-serif; background: #fff;">
+  `;
+
+  tiers.forEach(t => {
+    const lowerStudents = eligible.filter(s => (s[weekKey] || 0) >= t.min && (s[weekKey] || 0) <= t.max && isLowerGrade(s.grade));
+    const upperStudents = eligible.filter(s => (s[weekKey] || 0) >= t.min && (s[weekKey] || 0) <= t.max && !isLowerGrade(s.grade));
+
+    const lowerContent = buildClassHtml(lowerStudents);
+    const upperContent = buildClassHtml(upperStudents);
+
+    tableHtml += `
+      <!-- TIER ${t.num} HEADER -->
+      <tr style="border-top: 2px solid #000;">
+        <th style="width: 50%; padding: 10px 14px; text-align: left; vertical-align: top; border-right: 2px solid #000; border-bottom: 1px solid #000; background: #fff;">
+          <span style="color: #1a73e8; font-size: 1.05rem; font-weight: 800; text-decoration: underline;">
+            Tier ${t.num} &rArr; Lower Grade (${t.rangeLower}) &mdash; ${lowerStudents.length} Students
+          </span>
+        </th>
+        <th style="width: 50%; padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid #000; background: #fff;">
+          <span style="color: #1a73e8; font-size: 1.05rem; font-weight: 800; text-decoration: underline;">
+            Tier ${t.num} &rArr; Upper Grade (${t.rangeUpper}) &mdash; ${upperStudents.length} Students
+          </span>
+        </th>
+      </tr>
+
+      <!-- TIER ${t.num} PRIZE SUBTITLE -->
+      <tr style="border-bottom: 2px solid #000;">
+        <td style="width: 50%; padding: 6px 14px; font-weight: 700; font-size: 0.9rem; background: #fff59d; color: #000; border-right: 2px solid #000; border-bottom: 1px solid #000;">
+          ${t.lowerPrize}
+        </td>
+        <td style="width: 50%; padding: 6px 14px; font-weight: 700; font-size: 0.9rem; background: #fff59d; color: #000; border-bottom: 1px solid #000;">
+          ${t.upperPrize}
+        </td>
+      </tr>
+
+      <!-- TIER ${t.num} CONTENT -->
+      <tr style="border-bottom: 2px solid #000;">
+        <td style="width: 50%; padding: 12px 14px; vertical-align: top; border-right: 2px solid #000;">
+          ${lowerContent}
+        </td>
+        <td style="width: 50%; padding: 12px 14px; vertical-align: top;">
+          ${upperContent}
+        </td>
+      </tr>
+    `;
+  });
+
+  tableHtml += '</table>';
+  container.innerHTML = tableHtml;
+}
+
+function copyShubhraReportHtml() {
+  const container = document.getElementById('shubhraReportContainer');
+  if (!container) return;
+  const sel = document.getElementById('shubhraWeekSelect');
+  const weekLabel = sel ? sel.options[sel.selectedIndex].text : 'Weekly';
+
+  const range = document.createRange();
+  range.selectNode(container);
+  window.getSelection().removeAllRanges();
+  window.getSelection().addRange(range);
+
+  try {
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    showToast(`📋 Copied ${weekLabel} Report to clipboard! Ready to paste into Google Docs.`);
+  } catch (err) {
+    navigator.clipboard.writeText(container.innerText).then(() => {
+      showToast('📋 Copied report text to clipboard!');
+    });
+  }
+}
+
+function printShubhraReport() {
+  const container = document.getElementById('shubhraReportContainer');
+  const sel = document.getElementById('shubhraWeekSelect');
+  if (!container || !sel) return;
+  const weekLabel = sel.options[sel.selectedIndex].text;
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>JFS Jag-a-Thon — ${weekLabel} (Shubhra Format)</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #000; margin: 0; }
+        h2 { text-align: center; margin-bottom: 4px; font-size: 16pt; }
+        p.sub { text-align: center; margin-top: 0; margin-bottom: 16px; font-size: 10pt; color: #475569; }
+        table { width: 100%; border-collapse: collapse; border: 2px solid #000; }
+        th, td { border: 1px solid #000; }
+        @media print {
+          @page { margin: 0.5in; size: portrait; }
+        }
+      </style>
+    </head>
+    <body>
+      <h2>🐾 JFS Jag-a-Thon &mdash; Weekly Prize Report</h2>
+      <p class="sub">${weekLabel} &bull; Generated ${new Date().toLocaleDateString()}</p>
+      ${container.innerHTML}
+      <script>
+        window.onload = function() { window.print(); }
+      </script>
+    </body>
+    </html>
+  `);
+  printWin.document.close();
+}

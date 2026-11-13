@@ -101,6 +101,12 @@ function onOpen() {
       .addItem('Week 3 Report', 'generateWeek3Report')
       .addItem('Week 4 Report', 'generateWeek4Report')
       .addItem('🏆 Cumulative Overall Report', 'generateCumulativeReport'))
+    .addSubMenu(ui.createMenu('📋 Weekly Prize Reports (Shubhra Format)')
+      .addItem('Week 1 (Shubhra Format)', 'generateWeek1ReportShubhra')
+      .addItem('Week 2 (Shubhra Format)', 'generateWeek2ReportShubhra')
+      .addItem('Week 3 (Shubhra Format)', 'generateWeek3ReportShubhra')
+      .addItem('Week 4 (Shubhra Format)', 'generateWeek4ReportShubhra')
+      .addItem('🏆 Cumulative (Shubhra Format)', 'generateCumulativeReportShubhra'))
     .addSeparator()
     .addSubMenu(ui.createMenu('🎲 Draw Raffle Winners')
       .addItem('🎲 Draw Week 1 Raffle Winners', 'drawWeek1RaffleWinners')
@@ -125,6 +131,13 @@ function generateWeek2Report() { generatePrizeReport("Week 2"); }
 function generateWeek3Report() { generatePrizeReport("Week 3"); }
 function generateWeek4Report() { generatePrizeReport("Week 4"); }
 function generateCumulativeReport() { generatePrizeReport("Cumulative"); }
+
+// Shubhra Format Handlers
+function generateWeek1ReportShubhra() { generatePrizeReportShubhra("Week 1"); }
+function generateWeek2ReportShubhra() { generatePrizeReportShubhra("Week 2"); }
+function generateWeek3ReportShubhra() { generatePrizeReportShubhra("Week 3"); }
+function generateWeek4ReportShubhra() { generatePrizeReportShubhra("Week 4"); }
+function generateCumulativeReportShubhra() { generatePrizeReportShubhra("Cumulative"); }
 
 // Aliases for compatibility
 function runWeek1Report() { generatePrizeReport("Week 1"); }
@@ -453,6 +466,269 @@ function generatePrizeReport(period) {
 
   reportSheet.activate();
   SpreadsheetApp.getUi().alert(`✅ ${tabTitle} generated with sorted rosters, checkboxes, and tier summary!`);
+}
+
+// ==========================================
+// 3B. SHUBHRA 2-COLUMN PRIZE REPORT GENERATOR
+// ==========================================
+function generatePrizeReportShubhra(period) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = getDonationsSheet(ss);
+  if (!dataSheet) {
+    SpreadsheetApp.getUi().alert("Could not find Donations Log sheet.");
+    return;
+  }
+
+  const data = dataSheet.getDataRange().getValues();
+  if (data.length < 2) {
+    SpreadsheetApp.getUi().alert("No donation data found in the main tab.");
+    return;
+  }
+
+  const headers = data[0].map(h => String(h || '').trim().toLowerCase());
+  const dateIdx = headers.findIndex(h => h.includes('date'));
+  const nameIdx = headers.findIndex(h => h.includes('student'));
+  const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('room'));
+  const amountIdx = headers.findIndex(h => h.includes('amount') || h.includes('total') || h.includes('$'));
+
+  if (nameIdx === -1 || amountIdx === -1) {
+    SpreadsheetApp.getUi().alert("Required columns (Student Name, Amount) not found.");
+    return;
+  }
+
+  const studentMap = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const rawDate = dateIdx !== -1 ? row[dateIdx] : null;
+
+    if (period !== "Cumulative" && !isValidForWeek(rawDate, period)) {
+      continue;
+    }
+
+    const rawName = String(row[nameIdx] || '').trim();
+    const cleanName = cleanStudentName(rawName);
+    if (!cleanName) continue;
+
+    const amt = parseFloat(String(row[amountIdx] || '0').replace(/[^0-9.-]+/g, '')) || 0;
+    const teacherRaw = teacherIdx !== -1 ? String(row[teacherIdx] || '').trim() : 'General';
+    const match = findCanonicalClass(teacherRaw);
+    const teacher = match ? match.teacher : (teacherRaw || 'General');
+    const grade = match ? match.grade : 'General';
+    const room = match ? match.roomKey : '';
+
+    if (!studentMap[cleanName]) {
+      studentMap[cleanName] = {
+        name: cleanName,
+        teacher: teacher,
+        grade: grade,
+        room: room,
+        total: 0
+      };
+    }
+    studentMap[cleanName].total += amt;
+  }
+
+  const allEligibleStudents = Object.values(studentMap).filter(s => s.total >= MIN_DONATION_FOR_TCHOTCHKE);
+  if (allEligibleStudents.length === 0) {
+    SpreadsheetApp.getUi().alert(`No donations found for ${period}.`);
+    return;
+  }
+
+  const isLowerGrade = (g) => {
+    const lower = String(g).toLowerCase();
+    return lower.includes('tk') || lower === 'k' || lower === '1' || lower === '2' || lower.includes('lower');
+  };
+
+  const formatGradeLabel = (g) => {
+    const str = String(g || '').trim();
+    if (str.toUpperCase() === 'TK') return 'TK';
+    if (str.toUpperCase() === 'K') return 'Kindergarten';
+    if (str.toUpperCase() === 'LOWER SDC') return 'Lower SDC';
+    if (str.toUpperCase() === 'UPPER SDC') return 'Upper SDC';
+    if (str.includes('/')) return `Grade ${str}`;
+    if (/^\d+$/.test(str)) return `Grade ${str}`;
+    return str;
+  };
+
+  const GRADE_ORDER = ["TK", "K", "1", "2", "Lower SDC", "3", "Upper SDC", "4", "5", "5/6", "6"];
+  const getGradeWeight = (g) => {
+    const idx = GRADE_ORDER.indexOf(String(g));
+    return idx !== -1 ? idx : 999;
+  };
+
+  // Define Tiers exactly matching Shubhra's format
+  const tiersConfig = [
+    {
+      tierNum: 1,
+      min: 1,
+      max: 24.999,
+      rangeLabelLower: "$1.00+",
+      rangeLabelUpper: "$1+",
+      lowerPrize: "(Pencil, Bookmark, or Stickers)",
+      upperPrize: "(Pencil, Bookmark, or Wristband)"
+    },
+    {
+      tierNum: 2,
+      min: 25,
+      max: 99.999,
+      rangeLabelLower: "$25.00+",
+      rangeLabelUpper: "$25+",
+      lowerPrize: "(Transformer + Pen) or Mouth organ?",
+      upperPrize: "(Colorful Wooden Puzzle)"
+    },
+    {
+      tierNum: 3,
+      min: 100,
+      max: 9999999,
+      rangeLabelLower: "$100.00+",
+      rangeLabelUpper: "$100+",
+      lowerPrize: "(Grand Tchotchke / High-Tier Prize)",
+      upperPrize: "(Grand Tchotchke / High-Tier Prize)"
+    }
+  ];
+
+  // Tab Title
+  const tabTitle = period === "Cumulative" ? "Shubhra — Cumulative" : `Shubhra — ${period}`;
+  let reportSheet = ss.getSheetByName(tabTitle);
+  if (reportSheet) {
+    reportSheet.clear();
+  } else {
+    reportSheet = ss.insertSheet(tabTitle);
+  }
+
+  // Build classroom blocks for a student list
+  function buildClassLines(studentList) {
+    const classMap = {};
+    studentList.forEach(s => {
+      const key = `${s.grade}__${s.teacher}__${s.room}`;
+      if (!classMap[key]) {
+        classMap[key] = { grade: s.grade, teacher: s.teacher, room: s.room, students: [] };
+      }
+      classMap[key].students.push(s);
+    });
+
+    const sortedClasses = Object.values(classMap).sort((a, b) => {
+      const gwA = getGradeWeight(a.grade);
+      const gwB = getGradeWeight(b.grade);
+      if (gwA !== gwB) return gwA - gwB;
+      return a.teacher.localeCompare(b.teacher);
+    });
+
+    const lines = [];
+    sortedClasses.forEach(c => {
+      const gLabel = formatGradeLabel(c.grade);
+      const roomLabel = c.room ? ` • Room ${c.room}` : '';
+      lines.push({ isHeader: true, text: `• ${c.teacher} (${gLabel}${roomLabel}):` });
+
+      c.students.sort((a, b) => a.name.localeCompare(b.name));
+      c.students.forEach((s, idx) => {
+        lines.push({ isHeader: false, text: `    ${idx + 1}. ${s.name} ($${s.total.toFixed(2)})` });
+      });
+    });
+    return lines;
+  }
+
+  const outputRows = [];
+  const stylingDirectives = [];
+
+  // Top Title Banner
+  outputRows.push([`🐾 JFS JAG-A-THON — WEEKLY PRIZE REPORT (${period.toUpperCase()}) — SHUBHRA FORMAT`, ""]);
+  stylingDirectives.push({ type: 'main_title' });
+
+  outputRows.push([`Run Date: ${Utilities.formatDate(new Date(), "America/Los_Angeles", "MMM d, yyyy h:mm a")} | Total Students Receiving Prizes: ${allEligibleStudents.length}`, ""]);
+  stylingDirectives.push({ type: 'subtitle' });
+
+  outputRows.push(["", ""]);
+  stylingDirectives.push({ type: 'blank' });
+
+  tiersConfig.forEach(t => {
+    const lowerStudents = allEligibleStudents.filter(s => s.total >= t.min && s.total <= t.max && isLowerGrade(s.grade));
+    const upperStudents = allEligibleStudents.filter(s => s.total >= t.min && s.total <= t.max && !isLowerGrade(s.grade));
+
+    const lowerLines = buildClassLines(lowerStudents);
+    const upperLines = buildClassLines(upperStudents);
+
+    // Header Row
+    const headerLeft = `Tier ${t.tierNum} ⇒ Lower Grade (${t.rangeLabelLower}) — ${lowerStudents.length} Students`;
+    const headerRight = `Tier ${t.tierNum} ⇒ Upper Grade (${t.rangeLabelUpper}) — ${upperStudents.length} Students`;
+    outputRows.push([headerLeft, headerRight]);
+    stylingDirectives.push({ type: 'tier_header' });
+
+    // Subtitle Row
+    outputRows.push([t.lowerPrize, t.upperPrize]);
+    stylingDirectives.push({ type: 'tier_prize' });
+
+    // Content lines side-by-side
+    const maxLines = Math.max(lowerLines.length, upperLines.length);
+    for (let i = 0; i < maxLines; i++) {
+      const leftObj = lowerLines[i] || { text: "", isHeader: false };
+      const rightObj = upperLines[i] || { text: "", isHeader: false };
+      outputRows.push([leftObj.text, rightObj.text]);
+      stylingDirectives.push({
+        type: 'content_row',
+        leftHeader: leftObj.isHeader,
+        rightHeader: rightObj.isHeader
+      });
+    }
+
+    // Spacer between tiers
+    outputRows.push(["", ""]);
+    stylingDirectives.push({ type: 'tier_separator' });
+  });
+
+  reportSheet.getRange(1, 1, outputRows.length, 2).setValues(outputRows);
+
+  // Apply visual styling exactly matching Shubhra's format
+  reportSheet.setColumnWidth(1, 460);
+  reportSheet.setColumnWidth(2, 460);
+
+  // Main title
+  reportSheet.getRange(1, 1, 1, 2).merge().setBackground("#0F2942").setFontColor("#FFFFFF").setFontWeight("bold").setFontSize(13).setHorizontalAlignment("center");
+  reportSheet.getRange(2, 1, 1, 2).merge().setBackground("#F0F4F8").setFontColor("#334E68").setFontStyle("italic").setFontSize(10).setHorizontalAlignment("center");
+
+  for (let r = 0; r < stylingDirectives.length; r++) {
+    const rowNum = r + 1;
+    const dir = stylingDirectives[r];
+
+    if (dir.type === 'tier_header') {
+      const rng = reportSheet.getRange(rowNum, 1, 1, 2);
+      rng.setFontColor("#1B64DA")
+         .setFontWeight("bold")
+         .setFontSize(11)
+         .setUnderline(true)
+         .setBackground("#FFFFFF");
+      reportSheet.getRange(rowNum, 1, 1, 2).setBorder(true, true, false, true, true, false, "#000000", SpreadsheetApp.BorderStyle.SOLID);
+    } else if (dir.type === 'tier_prize') {
+      const rng = reportSheet.getRange(rowNum, 1, 1, 2);
+      rng.setBackground("#FFF9C4")
+         .setFontColor("#000000")
+         .setFontWeight("bold")
+         .setFontSize(10);
+      reportSheet.getRange(rowNum, 1, 1, 2).setBorder(false, true, true, true, true, true, "#000000", SpreadsheetApp.BorderStyle.SOLID);
+    } else if (dir.type === 'content_row') {
+      const cellLeft = reportSheet.getRange(rowNum, 1);
+      const cellRight = reportSheet.getRange(rowNum, 2);
+
+      if (dir.leftHeader) {
+        cellLeft.setFontWeight("bold").setFontColor("#000000").setFontSize(10);
+      } else {
+        cellLeft.setFontWeight("normal").setFontColor("#1E293B").setFontSize(9.5);
+      }
+
+      if (dir.rightHeader) {
+        cellRight.setFontWeight("bold").setFontColor("#000000").setFontSize(10);
+      } else {
+        cellRight.setFontWeight("normal").setFontColor("#1E293B").setFontSize(9.5);
+      }
+
+      reportSheet.getRange(rowNum, 1, 1, 2).setBorder(false, true, false, true, true, false, "#000000", SpreadsheetApp.BorderStyle.SOLID);
+    } else if (dir.type === 'tier_separator') {
+      reportSheet.getRange(rowNum, 1, 1, 2).setBorder(true, false, false, false, false, false, "#000000", SpreadsheetApp.BorderStyle.SOLID);
+    }
+  }
+
+  reportSheet.activate();
+  SpreadsheetApp.getUi().alert(`✅ ${tabTitle} generated in Shubhra Format!`);
 }
 
 function getPrizeTierDescription(amt, isCumulative) {

@@ -264,11 +264,16 @@
         </div>
 
         <!-- Week Sub Tabs -->
-        <div class="week-pills" role="tablist">
-          <button class="pill-btn active" id="weekPill-1" onclick="selectWeeklyTab(1)">Week 1: Oct 19 - 23</button>
-          <button class="pill-btn" id="weekPill-2" onclick="selectWeeklyTab(2)">Week 2: Oct 24 - 30</button>
-          <button class="pill-btn" id="weekPill-3" onclick="selectWeeklyTab(3)">Week 3: Oct 31 - Nov 6</button>
-          <button class="pill-btn" id="weekPill-4" onclick="selectWeeklyTab(4)">Week 4: Nov 7 - 13</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:14px; width:100%;">
+          <div class="week-pills" role="tablist">
+            <button class="pill-btn active" id="weekPill-1" onclick="selectWeeklyTab(1)">Week 1: Oct 19 - 23</button>
+            <button class="pill-btn" id="weekPill-2" onclick="selectWeeklyTab(2)">Week 2: Oct 24 - 30</button>
+            <button class="pill-btn" id="weekPill-3" onclick="selectWeeklyTab(3)">Week 3: Oct 31 - Nov 6</button>
+            <button class="pill-btn" id="weekPill-4" onclick="selectWeeklyTab(4)">Week 4: Nov 7 - 13</button>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="openShubhraReportModal()" style="background:#fff; border: 1.5px solid #0b4ea2; color: #0b4ea2; font-weight:700; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            📋 Prize Report (Shubhra Format)
+          </button>
         </div>
       </div>
 
@@ -732,6 +737,9 @@
             <button class="btn btn-outline btn-sm" onclick="exportCurrentDataCsv()">
               📤 Export Current Data as CSV
             </button>
+            <button class="btn btn-primary btn-sm" onclick="openShubhraReportModal()" style="background:#0b4ea2; color:white;">
+              📋 Weekly Prize Report (Shubhra Format)
+            </button>
           </div>
         </div>
 
@@ -786,6 +794,50 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeAdminModal()">Close</button>
         <button class="btn btn-primary" onclick="saveAdminSettings()">Save All Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Prize Report (Shubhra Format) Modal -->
+  <div class="modal-backdrop" id="shubhraReportModal" aria-hidden="true" style="display:none; z-index: 10000;">
+    <div class="modal-box" role="dialog" aria-modal="true" style="max-width: 1000px; width: 95%;">
+      <div class="modal-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">
+          📋 Weekly Prize Distribution Report <span style="font-size:0.75rem; background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:12px; font-weight:700;">Shubhra Format</span>
+        </h3>
+        <button class="modal-close" onclick="closeShubhraReportModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:#f8fafc; padding:12px 16px; border-radius:8px; border:1px solid #e2e8f0;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <label for="shubhraWeekSelect" style="font-weight:700; font-size:0.9rem; color:#1e293b;">Select Week:</label>
+            <select id="shubhraWeekSelect" onchange="renderShubhraReportInModal()" style="padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; font-weight:600; font-size:0.9rem;">
+              <option value="4" selected>Week 4 (Final Sprint • Nov 6 - Nov 13)</option>
+              <option value="3">Week 3 (Oct 30 - Nov 6)</option>
+              <option value="2">Week 2 (Oct 24 - Oct 30)</option>
+              <option value="1">Week 1 (Oct 12 - Oct 23)</option>
+              <option value="cumulative">🏆 Cumulative (All 4 Weeks Combined)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="copyShubhraReportHtml()">
+              📋 Copy for Google Docs
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="printShubhraReport()">
+              🖨️ Print / PDF
+            </button>
+          </div>
+        </div>
+
+        <div id="shubhraReportContainer" style="overflow-x:auto; background:white; padding:16px; border-radius:8px; border:1px solid #cbd5e1; max-height:65vh; overflow-y:auto;">
+          <!-- Dynamically generated 2-column report -->
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.8rem; color:#64748b;">Tip: Use "Copy for Google Docs" to paste directly into Google Docs or Sheets with formatting intact.</span>
+        <button class="btn btn-outline" onclick="closeShubhraReportModal()">Close</button>
       </div>
     </div>
   </div>
