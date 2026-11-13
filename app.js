@@ -1374,19 +1374,54 @@ function renderClassesTab() {
 }
 
 // ==========================================================
-// COUNTDOWN TIMER (Jag-a-Thon: Friday, Nov 13th)
+// COUNTDOWN TIMER & 3:15 PM CAMPAIGN CLOSURE (Friday, Nov 13th)
 // ==========================================================
 function setupCountdown() {
   const countdownEl = document.getElementById('countdownDaysText');
   if (!countdownEl) return;
 
   function update() {
-    const target = new Date("2026-11-13T08:30:00");
+    const closeTarget = new Date("2026-11-13T15:15:00-08:00");
+    const runTarget = new Date("2026-11-13T08:30:00-08:00");
     const now = new Date();
-    const diffMs = target - now;
 
+    const closedBanner = document.getElementById('campaignClosedBanner');
+    const announceBar = document.getElementById('announcementBarContent');
+    const heroDonateBtn = document.getElementById('heroDonateBtn');
+    const donateOpen = document.getElementById('donateOpenContainer');
+    const donateClosed = document.getElementById('donateClosedContainer');
+    const countdownCardSub = countdownEl.parentElement ? countdownEl.parentElement.querySelector('.metric-sub') : null;
+    const countdownCardLabel = countdownEl.parentElement ? countdownEl.parentElement.querySelector('.metric-label') : null;
+
+    if (now >= closeTarget) {
+      countdownEl.textContent = "COMPLETE!";
+      if (countdownCardLabel) countdownCardLabel.textContent = "Campaign Status";
+      if (countdownCardSub) countdownCardSub.textContent = "2026 Jag-a-Thon Closed • Thank You!";
+
+      if (closedBanner) closedBanner.style.display = 'block';
+      if (announceBar) {
+        announceBar.innerHTML = `
+          <span class="badge pulse-badge">🎉 THANK YOU JAGUARS!</span>
+          <span><strong>The 2026 JFS Jag-a-Thon is now complete &amp; closed! Thank you to everyone for helping us crush our $50,000 goal!</strong></span>
+        `;
+      }
+      if (heroDonateBtn) {
+        heroDonateBtn.innerHTML = `<span class="btn-icon">🎉</span> Campaign Complete`;
+      }
+      if (donateOpen) donateOpen.style.display = 'none';
+      if (donateClosed) donateClosed.style.display = 'block';
+      return;
+    }
+
+    const diffMs = runTarget - now;
     if (diffMs <= 0) {
       countdownEl.textContent = "TODAY!";
+      const minsLeft = Math.max(1, Math.ceil((closeTarget - now) / 60000));
+      const hrs = Math.floor(minsLeft / 60);
+      const mins = minsLeft % 60;
+      if (countdownCardSub) {
+        countdownCardSub.textContent = hrs > 0 ? `Donations close at 3:15 PM (${hrs}h ${mins}m left)` : `Donations close at 3:15 PM (${mins}m left)`;
+      }
       return;
     }
 
@@ -1395,7 +1430,7 @@ function setupCountdown() {
   }
 
   update();
-  setInterval(update, 60000);
+  setInterval(update, 15000);
 }
 
 // ==========================================================
@@ -2205,6 +2240,18 @@ function downloadPledgeCard() {
 // SHUBHRA 2-COLUMN PRIZE REPORT MODAL & GENERATOR
 // ==========================================
 function openShubhraReportModal() {
+  if (!state.isAdminUnlocked) {
+    const enteredPin = prompt("🔒 Organizer Access\nPlease enter the Admin PIN to view prize reports:");
+    if (!enteredPin) return;
+    const expectedPin = state.config.adminPin || "1113";
+    if (enteredPin.trim() === expectedPin || enteredPin.trim().toLowerCase() === 'jaguar') {
+      state.isAdminUnlocked = true;
+      sessionStorage.setItem('jfs_admin_session', 'true');
+    } else {
+      showToast("❌ Incorrect Admin PIN.");
+      return;
+    }
+  }
   const modal = document.getElementById('shubhraReportModal');
   if (!modal) return;
   modal.style.display = 'flex';

@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JFS Jag-a-Thon Organizer Admin & Prize Reports</title>
+  <link rel="icon" type="image/png" href="/jfs-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BKT1B70E1E"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BKT1B70E1E');
+  </script>
+
+  <style>
+    :root {
+      --navy-900: #0a192f;
+      --navy-800: #0f2744;
+      --navy-700: #1a365d;
+      --blue-600: #0b4ea2;
+      --blue-500: #2563eb;
+      --gold-500: #d97706;
+      --gold-400: #f59e0b;
+      --gold-100: #fef3c7;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --green-600: #16a34a;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow: 0 4px 20px rgba(10, 25, 47, 0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+    }
+
+    /* AUTH OVERLAY */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: white;
+      padding: 40px 36px;
+      border-radius: var(--radius-lg);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+
+    .auth-card img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      margin-bottom: 16px;
+    }
+
+    .auth-card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      color: var(--navy-900);
+      margin-bottom: 8px;
+    }
+
+    .auth-card p {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      margin-bottom: 24px;
+    }
+
+    .auth-input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .auth-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+    }
+
+    .auth-input:focus { border-color: var(--blue-600); }
+
+    .auth-btn {
+      background: var(--blue-600);
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .auth-btn:hover { background: var(--navy-800); }
+
+    .auth-error {
+      color: #dc2626;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* HEADER */
+    .top-header {
+      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%);
+      color: white;
+      padding: 24px 0;
+      border-bottom: 4px solid var(--gold-400);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      background: white;
+      padding: 4px;
+    }
+
+    .header-title-box h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 800;
+    }
+
+    .header-title-box p {
+      color: #cbd5e1;
+      font-size: 0.88rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .header-btn {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      text-decoration: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .header-btn:hover { background: rgba(255,255,255,0.22); }
+    .header-btn.gold { background: var(--gold-400); color: var(--navy-900); border-color: var(--gold-400); font-weight: 700; }
+
+    /* CONTAINER */
+    .container {
+      max-width: 1280px;
+      margin: 28px auto 60px;
+      padding: 0 24px;
+    }
+
+    /* CONTROLS BAR */
+    .controls-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .controls-left label {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--navy-900);
+    }
+
+    .week-select {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 2px solid var(--blue-600);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--navy-900);
+      background: #eff6ff;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .controls-right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: 1px solid var(--gray-300);
+      background: white;
+      color: var(--gray-800);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-action:hover { background: var(--gray-100); }
+    .btn-action.primary { background: var(--blue-600); color: white; border-color: var(--blue-600); }
+    .btn-action.primary:hover { background: var(--navy-800); }
+    .btn-action.success { background: var(--green-600); color: white; border-color: var(--green-600); }
+
+    /* SUMMARY CARDS */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .summary-card {
+      background: white;
+      padding: 18px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card.highlight {
+      border-top: 4px solid var(--gold-500);
+      background: #fffbeb;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-600);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .summary-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--navy-900);
+    }
+
+    .summary-sub {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      margin-top: 2px;
+    }
+
+    /* REPORT CARD */
+    .report-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy-900);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      display: none;
+      z-index: 99999;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PASSWORD AUTH OVERLAY -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <img src="/jfs-logo.png" alt="JFS Logo">
+      <h2>Organizer Admin</h2>
+      <p>Enter the Jag-a-Thon Organizer PIN to access Weekly Prize Reports & Admin Tools.</p>
+      <form onsubmit="handleAuth(event)">
+        <div class="auth-input-group">
+          <input type="password" id="pinInput" class="auth-input" placeholder="Enter PIN" autofocus autocomplete="off">
+          <button type="submit" class="auth-btn">Unlock</button>
+        </div>
+        <div id="authError" class="auth-error">Incorrect PIN. Please try again.</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN APP -->
+  <div id="adminApp" style="display:none;">
+    <header class="top-header">
+      <div class="header-inner">
+        <div class="header-title-box">
+          <img src="/jfs-logo.png" alt="JFS Logo" class="header-logo">
+          <div>
+            <h1>JFS Jag-a-Thon Organizer Admin & Prize Hub</h1>
+            <p>Generate Weekly Prize Distribution Reports (Shubhra 2-Column Format)</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <a href="/analytics" class="header-btn gold">📊 Executive Analytics</a>
+          <a href="/" class="header-btn">← Main Leaderboard</a>
+          <button onclick="lockAdmin()" class="header-btn">🔒 Lock</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- CONTROLS BAR -->
+      <section class="controls-card">
+        <div class="controls-left">
+          <label>📅 Select Report:</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;" id="periodPills">
+            <button class="btn-action" id="pill-Week 1" onclick="selectPeriod('Week 1')">Week 1</button>
+            <button class="btn-action" id="pill-Week 2" onclick="selectPeriod('Week 2')">Week 2</button>
+            <button class="btn-action" id="pill-Week 3" onclick="selectPeriod('Week 3')">Week 3</button>
+            <button class="btn-action primary" id="pill-Week 4" onclick="selectPeriod('Week 4')">Week 4</button>
+            <button class="btn-action" id="pill-Cumulative" onclick="selectPeriod('Cumulative')">🏆 Cumulative</button>
+          </div>
+          <input type="hidden" id="weekSelector" value="Week 4">
+          <span id="syncStatusBadge" style="font-size:0.8rem; color:var(--green-600); font-weight:700; padding:4px 10px; background:#f0fdf4; border-radius:20px; border:1px solid #bbf7d0;">
+            ● Synced Live with Google Sheet
+          </span>
+        </div>
+
+        <div class="controls-right">
+          <button class="btn-action" onclick="fetchLiveSheetData()">
+            🔄 Refresh Sheet Data
+          </button>
+          <button class="btn-action success" onclick="copyReportForDocs()">
+            📋 Copy for Google Docs
+          </button>
+          <button class="btn-action primary" onclick="printReport()">
+            🖨️ Print / Save PDF
+          </button>
+        </div>
+      </section>
+
+      <!-- SUMMARY STATS FOR SELECTED PERIOD -->
+      <section class="summary-grid" id="periodSummaryGrid">
+        <!-- Populated dynamically -->
+      </section>
+
+      <!-- 2-COLUMN SHUBHRA FORMAT REPORT -->
+      <section class="report-card">
+        <div id="reportOutputContainer">
+          <p style="text-align:center; padding:40px; color:var(--gray-600);">Loading live donation data from Google Sheets...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const AUTH_PIN = "1113";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQu-eBhkVNZJ2Tl4QlanuCBO-a1bCy9rZMfuCg6O_uU7udBcWnIgeKlrsiJTe-kS_Um5PoLYCJ_EFfv/pub?gid=0&single=true&output=csv";
+
+    const JFS_ROSTER = {
+      "K-A1": { teacher: "MCMINN", grade: "TK" },
+      "A-4":  { teacher: "TALAGTAG", grade: "TK" },
+      "K-3":  { teacher: "ANGUIANO", grade: "K" },
+      "K-1":  { teacher: "BEIER", grade: "K" },
+      "K-2":  { teacher: "KHATUN", grade: "K" },
+      "B-15": { teacher: "AVUNOORI", grade: "Lower SDC" },
+      "B-7":  { teacher: "CACCIARONI", grade: "1" },
+      "B-8":  { teacher: "MATHARU", grade: "1" },
+      "B-9":  { teacher: "QUIJANO", grade: "1" },
+      "B-5":  { teacher: "JONES", grade: "2" },
+      "B-11": { teacher: "LUZOD", grade: "2" },
+      "B-6":  { teacher: "SWENOR", grade: "2" },
+      "A-5":  { teacher: "ALEXANDER", grade: "3" },
+      "A-3":  { teacher: "CICCARELLO", grade: "3" },
+      "A-2":  { teacher: "HART", grade: "3" },
+      "B-13": { teacher: "HEAP", grade: "Upper SDC" },
+      "C-1":  { teacher: "FECI", grade: "4" },
+      "C-2":  { teacher: "NOYES", grade: "4" },
+      "C-4":  { teacher: "HOSLER", grade: "4" },
+      "C-7":  { teacher: "NUNES", grade: "5" },
+      "C-5":  { teacher: "ORLOFF", grade: "5" },
+      "A-8":  { teacher: "SCIBA", grade: "5/6" },
+      "A-9":  { teacher: "GASPAR", grade: "6" },
+      "A-10": { teacher: "MUNOZ", grade: "6" }
+    };
+
+    const SPRINT_CUTOFFS = {
+      w1: new Date(2026, 9, 23, 17, 30, 0).getTime(),
+      w2: new Date(2026, 9, 30, 18, 5, 0).getTime(),
+      w3: new Date(2026, 10, 6, 17, 5, 0).getTime(),
+      w4: new Date(2026, 10, 13, 16, 0, 0).getTime()
+    };
+
+    const STUDENT_ALIASES = {
+      'evanaleah a': 'Evanaleah Alvarez',
+      'evanaleah a.': 'Evanaleah Alvarez',
+      'evannaleah alvarez': 'Evanaleah Alvarez',
+      'olivia bslasire': 'Olivia Balasire'
+    };
+
+    let rawTransactions = [];
+
+    function checkAuth() {
+      if (sessionStorage.getItem('jfs_analytics_auth') === 'true' || sessionStorage.getItem('jfs_admin_session') === 'true') {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('adminApp').style.display = 'block';
+        fetchLiveSheetData();
+      } else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('adminApp').style.display = 'none';
+      }
+    }
+
+    function handleAuth(e) {
+      e.preventDefault();
+      const val = document.getElementById('pinInput').value.trim();
+      if (val === AUTH_PIN || val.toLowerCase() === 'jaguar') {
+        sessionStorage.setItem('jfs_analytics_auth', 'true');
+        sessionStorage.setItem('jfs_admin_session', 'true');
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('adminApp').style.display = 'block';
+        fetchLiveSheetData();
+      } else {
+        document.getElementById('authError').style.display = 'block';
+      }
+    }
+
+    function lockAdmin() {
+      sessionStorage.removeItem('jfs_analytics_auth');
+      sessionStorage.removeItem('jfs_admin_session');
+      checkAuth();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3200);
+    }
+
+    function selectPeriod(p) {
+      document.getElementById('weekSelector').value = p;
+      const pills = document.querySelectorAll('#periodPills button');
+      pills.forEach(btn => {
+        if (btn.id === 'pill-' + p) {
+          btn.classList.add('primary');
+        } else {
+          btn.classList.remove('primary');
+        }
+      });
+      renderReport();
+    }
+
+    function splitCsvRow(line) {
+      const res = [];
+      let cur = '', inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === ',' && !inQuotes) {
+          res.push(cur);
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      res.push(cur);
+      return res;
+    }
+
+    function cleanStudentName(raw) {
+      if (!raw) return '';
+      let s = String(raw).trim().replace(/\s+/g, ' ');
+      const lower = s.toLowerCase();
+      if (STUDENT_ALIASES[lower]) return STUDENT_ALIASES[lower];
+      return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+
+    function findCanonicalClass(rawTeacher) {
+      if (!rawTeacher) return { teacher: 'General', grade: 'General', room: '' };
+      const t = String(rawTeacher).trim().toUpperCase();
+      for (const [room, info] of Object.entries(JFS_ROSTER)) {
+        if (t === room.toUpperCase() || t === info.teacher.toUpperCase() || t.includes(info.teacher.toUpperCase()) || info.teacher.toUpperCase().includes(t)) {
+          return { teacher: info.teacher, grade: info.grade, room: room };
+        }
+      }
+      return { teacher: rawTeacher, grade: 'General', room: '' };
+    }
+
+    function parseSheetDate(str) {
+      if (!str) return null;
+      const s = String(str).trim();
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{1,2}):(\d{2}))?/);
+      if (iso) {
+        return new Date(parseInt(iso[1],10), parseInt(iso[2],10)-1, parseInt(iso[3],10), iso[4]?parseInt(iso[4],10):0, iso[5]?parseInt(iso[5],10):0, 0);
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function getWeekForDate(dt) {
+      if (!dt) return "Week 4";
+      const t = dt.getTime();
+      if (t <= SPRINT_CUTOFFS.w1) return "Week 1";
+      if (t <= SPRINT_CUTOFFS.w2) return "Week 2";
+      if (t <= SPRINT_CUTOFFS.w3) return "Week 3";
+      return "Week 4";
+    }
+
+    async function fetchLiveSheetData() {
+      const badge = document.getElementById('syncStatusBadge');
+      if (badge) badge.textContent = '⏳ Fetching latest Google Sheet data...';
+      try {
+        const resp = await fetch(SHEET_CSV_URL + '&_t=' + Date.now());
+        const csvText = await resp.text();
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        if (lines.length < 2) return;
+
+        const headers = splitCsvRow(lines[0]).map(h => h.trim().toLowerCase());
+        const dateIdx = headers.findIndex(h => h.includes('date'));
+        const amtIdx = headers.findIndex(h => h.includes('amount') || h.includes('$'));
+        const nameIdx = headers.findIndex(h => h.includes('student'));
+        const teacherIdx = headers.findIndex(h => h.includes('teacher') || h.includes('room'));
+
+        rawTransactions = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = splitCsvRow(lines[i]);
+          const amt = parseFloat(String(cols[amtIdx] || '0').replace(/[^0-9.-]/g, '')) || 0;
+          const name = cleanStudentName(cols[nameIdx]);
+          if (!name || amt <= 0) continue;
+          const dt = parseSheetDate(cols[dateIdx]);
+          const cls = findCanonicalClass(cols[teacherIdx]);
+
+          rawTransactions.push({
+            date: dt,
+            week: getWeekForDate(dt),
+            amount: amt,
+            name: name,
+            teacher: cls.teacher,
+            grade: cls.grade,
+            room: cls.room
+          });
+        }
+
+        if (badge) {
+          const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          badge.textContent = `● Live (${rawTransactions.length} donations synced at ${nowStr})`;
+        }
+        renderReport();
+      } catch (err) {
+        console.error('Failed to fetch sheet:', err);
+        if (badge) badge.textContent = '⚠️ Error fetching live sheet';
+      }
+    }
+
+    function renderReport() {
+      const period = document.getElementById('weekSelector').value;
+      const studentMap = {};
+      const classTotals = {};
+
+      rawTransactions.forEach(tx => {
+        if (period !== 'Cumulative' && tx.week !== period) return;
+
+        if (!studentMap[tx.name]) {
+          studentMap[tx.name] = {
+            name: tx.name,
+            teacher: tx.teacher,
+            grade: tx.grade,
+            room: tx.room,
+            total: 0
+          };
+        }
+        studentMap[tx.name].total += tx.amount;
+
+        if (tx.teacher && tx.teacher !== 'General') {
+          classTotals[tx.teacher] = (classTotals[tx.teacher] || 0) + tx.amount;
+        }
+      });
+
+      const eligible = Object.values(studentMap).filter(s => s.total >= 1);
+      eligible.sort((a, b) => b.total - a.total);
+
+      const isLowerGrade = (g) => {
+        const lower = String(g || '').toLowerCase();
+        return lower.includes('tk') || lower === 'k' || lower === '1' || lower === '2' || lower.includes('lower');
+      };
+
+      const formatGradeLabel = (g) => {
+        const str = String(g || '').trim();
+        if (str.toUpperCase() === 'TK') return 'TK';
+        if (str.toUpperCase() === 'K') return 'Kindergarten';
+        if (str.toUpperCase() === 'LOWER SDC') return 'Lower SDC';
+        if (str.toUpperCase() === 'UPPER SDC') return 'Upper SDC';
+        if (str.includes('/')) return `Grade ${str}`;
+        if (/^\d+$/.test(str)) return `Grade ${str}`;
+        return str;
+      };
+
+      const GRADE_ORDER = ["TK", "K", "1", "2", "Lower SDC", "3", "Upper SDC", "4", "5", "5/6", "6"];
+      const getGradeWeight = (g) => {
+        const idx = GRADE_ORDER.indexOf(String(g));
+        return idx !== -1 ? idx : 999;
+      };
+
+      const tiers = [
+        {
+          num: 1,
+          min: 1,
+          max: 24.999,
+          rangeLower: "$1.00+",
+          rangeUpper: "$1+",
+          lowerPrize: "(Pencil, Bookmark, or Stickers)",
+          upperPrize: "(Pencil, Bookmark, or Wristband)"
+        },
+        {
+          num: 2,
+          min: 25,
+          max: 99.999,
+          rangeLower: "$25.00+",
+          rangeUpper: "$25+",
+          lowerPrize: "(Transformer + Pen) or Mouth organ?",
+          upperPrize: "(Colorful Wooden Puzzle)"
+        },
+        {
+          num: 3,
+          min: 100,
+          max: 9999999,
+          rangeLower: "$100.00+",
+          rangeUpper: "$100+",
+          lowerPrize: "(Grand Tchotchke / High-Tier Prize)",
+          upperPrize: "(Grand Tchotchke / High-Tier Prize)"
+        }
+      ];
+
+      // Top Student & Top Class for Summary Cards
+      const topStudent = eligible[0] || null;
+      const sortedClasses = Object.entries(classTotals).sort((a, b) => b[1] - a[1]);
+      const topClass = sortedClasses[0] || null;
+      const periodTotal = eligible.reduce((s, x) => s + x.total, 0);
+
+      const t1Count = eligible.filter(s => s.total >= 1 && s.total < 25).length;
+      const t2Count = eligible.filter(s => s.total >= 25 && s.total < 100).length;
+      const t3Count = eligible.filter(s => s.total >= 100).length;
+
+      document.getElementById('periodSummaryGrid').innerHTML = `
+        <div class="summary-card">
+          <div class="summary-label">${period} Total Raised</div>
+          <div class="summary-val" style="color:var(--blue-600);">$${periodTotal.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+          <div class="summary-sub">${eligible.length} students earning prizes</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Tchotchke Breakdown</div>
+          <div class="summary-val">${t1Count} / ${t2Count} / ${t3Count}</div>
+          <div class="summary-sub">Tier 1 ($1+) &bull; Tier 2 ($25+) &bull; Tier 3 ($100+)</div>
+        </div>
+        <div class="summary-card highlight">
+          <div class="summary-label">🏆 ${period} Top Student</div>
+          <div class="summary-val" style="font-size:1.25rem;">${topStudent ? topStudent.name : '—'}</div>
+          <div class="summary-sub">${topStudent ? `$${topStudent.total.toFixed(2)} • ${topStudent.teacher} (Room ${topStudent.room})` : 'No donations'}</div>
+        </div>
+        <div class="summary-card highlight">
+          <div class="summary-label">🏫 ${period} Top Classroom</div>
+          <div class="summary-val" style="font-size:1.25rem;">${topClass ? topClass[0] : '—'}</div>
+          <div class="summary-sub">${topClass ? `$${topClass[1].toLocaleString('en-US', {minimumFractionDigits:2})} raised in ${period}` : 'No donations'}</div>
+        </div>
+      `;
+
+      function buildClassHtml(studentList) {
+        if (studentList.length === 0) {
+          return '<p style="color:#94a3b8; font-style:italic; margin:8px 0;">No students in this tier</p>';
+        }
+
+        const classMap = {};
+        studentList.forEach(s => {
+          const key = `${s.grade}__${s.teacher}__${s.room || ''}`;
+          if (!classMap[key]) {
+            classMap[key] = { grade: s.grade, teacher: s.teacher, room: s.room, students: [] };
+          }
+          classMap[key].students.push(s);
+        });
+
+        const sortedCls = Object.values(classMap).sort((a, b) => {
+          const gwA = getGradeWeight(a.grade);
+          const gwB = getGradeWeight(b.grade);
+          if (gwA !== gwB) return gwA - gwB;
+          return a.teacher.localeCompare(b.teacher);
+        });
+
+        let html = '<div style="font-family: Arial, sans-serif; font-size: 0.92rem; line-height: 1.55; color: #1e293b;">';
+        sortedCls.forEach(c => {
+          const gLabel = formatGradeLabel(c.grade);
+          const roomLabel = c.room ? ` &bull; Room ${c.room}` : '';
+          html += `<div style="margin-top: 12px; font-weight: 700; color: #000;">&bull; ${c.teacher} (${gLabel}${roomLabel}):</div>`;
+          html += '<ol style="margin: 2px 0 8px 26px; padding-left: 0;">';
+
+          c.students.sort((a, b) => a.name.localeCompare(b.name));
+          c.students.forEach(s => {
+            html += `<li style="margin: 2px 0;">${s.name} ($${s.total.toFixed(2)})</li>`;
+          });
+          html += '</ol>';
+        });
+        html += '</div>';
+        return html;
+      }
+
+      let tableHtml = `
+        <table id="shubhraReportTable" style="width: 100%; border-collapse: collapse; border: 2px solid #000; font-family: Arial, sans-serif; background: #fff;">
+      `;
+
+      tiers.forEach(t => {
+        const lowerStudents = eligible.filter(s => s.total >= t.min && s.total <= t.max && isLowerGrade(s.grade));
+        const upperStudents = eligible.filter(s => s.total >= t.min && s.total <= t.max && !isLowerGrade(s.grade));
+
+        const lowerContent = buildClassHtml(lowerStudents);
+        const upperContent = buildClassHtml(upperStudents);
+
+        tableHtml += `
+          <tr style="border-top: 2px solid #000;">
+            <th style="width: 50%; padding: 10px 14px; text-align: left; vertical-align: top; border-right: 2px solid #000; border-bottom: 1px solid #000; background: #fff;">
+              <span style="color: #1a73e8; font-size: 1.05rem; font-weight: 800; text-decoration: underline;">
+                Tier ${t.num} &rArr; Lower Grade (${t.rangeLower}) &mdash; ${lowerStudents.length} Students
+              </span>
+            </th>
+            <th style="width: 50%; padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid #000; background: #fff;">
+              <span style="color: #1a73e8; font-size: 1.05rem; font-weight: 800; text-decoration: underline;">
+                Tier ${t.num} &rArr; Upper Grade (${t.rangeUpper}) &mdash; ${upperStudents.length} Students
+              </span>
+            </th>
+          </tr>
+
+          <tr style="border-bottom: 2px solid #000;">
+            <td style="width: 50%; padding: 6px 14px; font-weight: 700; font-size: 0.92rem; background: #fff59d; color: #000; border-right: 2px solid #000; border-bottom: 1px solid #000;">
+              ${t.lowerPrize}
+            </td>
+            <td style="width: 50%; padding: 6px 14px; font-weight: 700; font-size: 0.92rem; background: #fff59d; color: #000; border-bottom: 1px solid #000;">
+              ${t.upperPrize}
+            </td>
+          </tr>
+
+          <tr style="border-bottom: 2px solid #000;">
+            <td style="width: 50%; padding: 12px 16px; vertical-align: top; border-right: 2px solid #000;">
+              ${lowerContent}
+            </td>
+            <td style="width: 50%; padding: 12px 16px; vertical-align: top;">
+              ${upperContent}
+            </td>
+          </tr>
+        `;
+      });
+
+      tableHtml += '</table>';
+      document.getElementById('reportOutputContainer').innerHTML = tableHtml;
+    }
+
+    function copyReportForDocs() {
+      const container = document.getElementById('reportOutputContainer');
+      const period = document.getElementById('weekSelector').value;
+      const range = document.createRange();
+      range.selectNode(container);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      try {
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        showToast(`📋 Copied ${period} Prize Report! Paste directly into Google Docs.`);
+      } catch (e) {
+        navigator.clipboard.writeText(container.innerText).then(() => {
+          showToast('📋 Copied report text to clipboard!');
+        });
+      }
+    }
+
+    function printReport() {
+      const container = document.getElementById('reportOutputContainer');
+      const period = document.getElementById('weekSelector').value;
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>JFS Jag-a-Thon — ${period} Prize Report (Shubhra Format)</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #000; margin: 0; }
+            h2 { text-align: center; margin-bottom: 4px; font-size: 16pt; }
+            p.sub { text-align: center; margin-top: 0; margin-bottom: 16px; font-size: 10pt; color: #475569; }
+            table { width: 100%; border-collapse: collapse; border: 2px solid #000; }
+            th, td { border: 1px solid #000; }
+            @media print { @page { margin: 0.5in; size: portrait; } }
+          </style>
+        </head>
+        <body>
+          <h2>🐾 JFS Jag-a-Thon &mdash; Weekly Prize Report (${period})</h2>
+          <p class="sub">Generated ${new Date().toLocaleString()}</p>
+          ${container.innerHTML}
+          <script>window.onload = function() { window.print(); }<\/script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    window.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>

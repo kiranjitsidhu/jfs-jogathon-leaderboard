@@ -26,7 +26,7 @@
 
   <!-- Top Announcement Bar -->
   <aside class="announcement-bar">
-    <div class="container bar-content">
+    <div class="container bar-content" id="announcementBarContent">
       <span class="badge pulse-badge">🐾 GO JAGUARS!</span>
       <span><strong>JFS Jag-a-Thon on Friday, Nov 13th!</strong></span>
       <a href="#donate" class="bar-link" onclick="switchTab('donate')">Donate Now &rarr;</a>
@@ -48,7 +48,7 @@
       </div>
 
       <div class="hero-actions">
-        <button class="btn btn-primary" onclick="switchTab('donate')">
+        <button class="btn btn-primary" id="heroDonateBtn" onclick="switchTab('donate')">
           <span class="btn-icon">💛</span> Donate Now
         </button>
         <button class="btn btn-secondary" onclick="switchTab('prizes')">
@@ -57,6 +57,22 @@
       </div>
     </div>
   </header>
+
+  <!-- Campaign Complete & Closed Celebration Banner (Auto-activates at 3:15 PM on Nov 13) -->
+  <section id="campaignClosedBanner" style="display: none; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-bottom: 3px solid #f59e0b; padding: 22px 0; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.12);">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 280px;">
+        <div style="font-size: 2.6rem; line-height: 1; background: #fff; width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.18); border: 2px solid #fcd34d; flex-shrink: 0;">🎉</div>
+        <div>
+          <div style="display: inline-block; background: #d97706; color: #fff; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px;">2026 Campaign Officially Complete &amp; Closed</div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; color: #0a192f; margin: 0 0 4px 0;">Thank You, JFS Families, Friends &amp; Sponsors! 🐾💛</h2>
+          <p style="margin: 0; font-size: 0.92rem; color: #334155; line-height: 1.45;">
+            The 2026 JFS Jag-a-Thon has officially concluded and donations are now closed! A huge, heartfelt thank you to every student, parent, family member, teacher, corporate match sponsor, and PTA volunteer for your incredible generosity and for helping us crush our $50,000 school goal!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Main Campaign Stats Banner -->
   <section class="stats-ribbon">
@@ -264,16 +280,11 @@
         </div>
 
         <!-- Week Sub Tabs -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:14px; width:100%;">
-          <div class="week-pills" role="tablist">
-            <button class="pill-btn active" id="weekPill-1" onclick="selectWeeklyTab(1)">Week 1: Oct 19 - 23</button>
-            <button class="pill-btn" id="weekPill-2" onclick="selectWeeklyTab(2)">Week 2: Oct 24 - 30</button>
-            <button class="pill-btn" id="weekPill-3" onclick="selectWeeklyTab(3)">Week 3: Oct 31 - Nov 6</button>
-            <button class="pill-btn" id="weekPill-4" onclick="selectWeeklyTab(4)">Week 4: Nov 7 - 13</button>
-          </div>
-          <button class="btn btn-outline btn-sm" onclick="openShubhraReportModal()" style="background:#fff; border: 1.5px solid #0b4ea2; color: #0b4ea2; font-weight:700; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-            📋 Prize Report (Shubhra Format)
-          </button>
+        <div class="week-pills" role="tablist">
+          <button class="pill-btn active" id="weekPill-1" onclick="selectWeeklyTab(1)">Week 1: Oct 19 - 23</button>
+          <button class="pill-btn" id="weekPill-2" onclick="selectWeeklyTab(2)">Week 2: Oct 24 - 30</button>
+          <button class="pill-btn" id="weekPill-3" onclick="selectWeeklyTab(3)">Week 3: Oct 31 - Nov 6</button>
+          <button class="pill-btn" id="weekPill-4" onclick="selectWeeklyTab(4)">Week 4: Nov 7 - 13</button>
         </div>
       </div>
 
@@ -565,7 +576,23 @@
 
     <!-- TAB 6: DONATE PAGE -->
     <section id="tabContent-donate" class="tab-panel">
-      <div class="donate-container">
+      <!-- Campaign Closed State (Shown after 3:15 PM on Nov 13) -->
+      <div id="donateClosedContainer" style="display: none; max-width: 760px; margin: 20px auto; text-align: center; background: #ffffff; border: 2px solid #fcd34d; border-radius: 20px; padding: 48px 32px; box-shadow: 0 12px 32px rgba(10, 25, 47, 0.08);">
+        <div style="font-size: 3.5rem; margin-bottom: 16px;">🎉🐾💛</div>
+        <span class="badge badge-gold" style="margin-bottom: 12px; display: inline-block;">2026 Campaign Complete &amp; Closed</span>
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #0a192f; margin-bottom: 14px;">The 2026 JFS Jag-a-Thon is Now Closed!</h2>
+        <p style="font-size: 1.05rem; color: #334155; line-height: 1.65; margin-bottom: 20px;">
+          Thank you so much to all of our wonderful <strong>students, parents, families, grandparents, friends, teachers, corporate match sponsors, and PTA volunteers</strong>! Because of your incredible support and generosity, we officially crushed our $50,000 school fundraising goal!
+        </p>
+        <p style="font-size: 0.95rem; color: #475569; background: #f8fafc; padding: 16px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+          Online donations are now closed as we finalize all student and classroom prize tallies. Every dollar raised goes directly toward STEM &amp; Arts programs, classroom supplies, student enrichment, and campus enhancements at James Franklin Smith Elementary!
+        </p>
+        <button class="btn btn-primary" onclick="switchTab('overall')">
+          🏆 View Final Leaderboard Standings
+        </button>
+      </div>
+
+      <div class="donate-container" id="donateOpenContainer">
 
         <div class="donate-header-card">
           <div class="donate-copy">
